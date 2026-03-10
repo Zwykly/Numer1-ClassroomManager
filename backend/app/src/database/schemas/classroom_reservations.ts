@@ -10,3 +10,9 @@ export const classroomReservations = pgTable("classroom_reservations", {
     createdOn: timestamp("created_on").defaultNow().notNull(),
     editedOn: timestamp("edited_on").defaultNow().notNull(),
 });
+
+export const table = {
+    classroomReservations
+} as const;
+
+export type table = typeof table;

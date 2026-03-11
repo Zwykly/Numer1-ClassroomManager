@@ -64,6 +64,13 @@
       "when": 1773256082080,
       "tag": "0008_melted_living_mummy",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1773258147789,
+      "tag": "0009_lame_loa",
+      "breakpoints": true
     }
   ]
 }

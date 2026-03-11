@@ -3,7 +3,7 @@ import { username } from "better-auth/plugins/username";
 import { t } from "elysia";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db/db";
-import * as auth_schema from "../db/auth-schema";
+import * as auth_schema from "../../auth-schema";
 import * as schema from "../db/schema";
 import { eq } from "drizzle-orm";
 import { insertUserSchema } from "../models/users";
@@ -15,12 +15,7 @@ type InsertUserPayload = typeof insertUserSchema._type;
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
         provider: "pg",
-        schema: {
-            user: auth_schema.authUsers,
-            session: auth_schema.authSessions,
-            account: auth_schema.authAccounts,
-            verification: auth_schema.authVerification,
-        },
+        schema: auth_schema,
     }),
     emailAndPassword: {
         enabled: true,

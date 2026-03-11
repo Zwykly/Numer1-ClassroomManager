@@ -1,7 +1,6 @@
 import { db } from "../db/db";
 import { insertUserSchema, updateUserSchema, removeUserSchema, loginRequestUsersSchema } from "../models/users";
 import { table, users } from "../db/schema";
-import * as authSchema from "../db/auth-schema";
 import { eq } from "drizzle-orm";
 import { auth } from "../auth/auth";
 

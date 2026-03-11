@@ -1,4 +1,4 @@
-import { db } from "..";
+import { db } from "../db/db";
 import { insertOnlineClassroomSchema, updateOnlineClassroomSchema, removeOnlineClassroomSchema } from "../models/online_classrooms";
 import { table } from "../db/schema";
 import { eq } from "drizzle-orm";

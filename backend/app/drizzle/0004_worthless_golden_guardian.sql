@@ -1,0 +1,1 @@
+ALTER TABLE "auth_users" ADD COLUMN "updated_at" timestamp DEFAULT now();

@@ -5,10 +5,6 @@ import { insertUserSchema, selectUserSchema, updateUserSchema, removeUserSchema,
 const usersRoutes = new Elysia({
     prefix: "/users",
 })
-    .post("/login", async ({ body }) => await usersController.loginUser(body), {
-        body: loginRequestUsersSchema,
-        response: loginResponseUsersSchema
-    })
     .get("/", async () => await usersController.getAllUsers(), {
         response: t.Array(selectUserSchema)
     })

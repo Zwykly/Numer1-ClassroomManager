@@ -1,27 +1,9 @@
-import { db } from "..";
+import { db } from "../db/db";
 import { insertUserSchema, updateUserSchema, removeUserSchema, loginRequestUsersSchema } from "../models/users";
-import { table } from "../db/schema";
+import { table, users } from "../db/schema";
+import * as authSchema from "../db/auth-schema";
 import { eq } from "drizzle-orm";
-
-const loginUser = async (payload: typeof loginRequestUsersSchema.static) => {
-    const [user] = await db
-        .select()
-        .from(table.users)
-        .where(eq(table.users.username, payload.username) 
-            && eq(table.users.password, payload.password));
-    if (!user)
-    {
-        return {
-            success: false,
-            message: "User wasn't found in DB",
-        }
-    }
-    return {
-        user: user,
-        success: true,
-        message: "User found, you can log in remember to add JWT token",
-    };
-};
+import { auth } from "../auth/auth";
 
 const createUser = async (payload: typeof insertUserSchema.static) => {
     const [newUser] = await db
@@ -62,7 +44,6 @@ export const usersController = {
     getAllUsers,
     updateUser,
     removeUser,
-    loginUser,
 } as const;
 
 export type usersController = typeof usersController;

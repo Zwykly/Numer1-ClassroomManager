@@ -1,4 +1,4 @@
-import { db } from "..";
+import { db } from "../db/db";
 import { insertReservationGroupSchema, updateReservationGroupSchema, removeReservationGroupSchema } from "../models/reservation_groups";
 import { table } from "../db/schema";
 import { eq } from "drizzle-orm";

@@ -1,4 +1,4 @@
-import { db } from "..";
+import { db } from "../db/db";
 import { insertStudentSchema, updateStudentSchema, removeStudentSchema } from "../models/students";
 import { table } from "../db/schema";
 import { eq } from "drizzle-orm";

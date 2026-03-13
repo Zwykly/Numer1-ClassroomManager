@@ -1,13 +1,11 @@
 import { Elysia } from "elysia";
-import 'dotenv/config';
-import { drizzle } from 'drizzle-orm/node-postgres';
 import { openapi } from '@elysiajs/openapi';
 import routes from "./routes";
-
-const db = drizzle(process.env.DATABASE_URL!);
-export { db };
+import { auth } from "./auth/auth";
+export { db } from "./db/db";
 
 const app = new Elysia()
+  .mount(auth.handler)
   .use(openapi())
   .use(routes.classroomReservationsRoutes)
   .use(routes.classroomsRoutes)

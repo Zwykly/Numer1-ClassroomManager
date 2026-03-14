@@ -12,6 +12,23 @@ const createUser = async (payload: typeof insertUserSchema.static) => {
     return newUser;
 };
 
+const getUserInfoAuthId = async (authId: string) => {
+    console.log("authId");
+    const [user] = await db
+        .select()
+        .from(table.users)
+        .where(eq(table.users.authId, authId));
+    return user;
+};
+
+const getUserInfo = async (id: string) => {
+    const [user] = await db
+        .select()
+        .from(table.users)
+        .where(eq(table.users.id, id));
+    return user;
+};
+
 const getAllUsers = async () => {
     const users = await db
         .select()
@@ -43,6 +60,8 @@ export const usersController = {
     getAllUsers,
     updateUser,
     removeUser,
+    getUserInfo,
+    getUserInfoAuthId,
 } as const;
 
 export type usersController = typeof usersController;

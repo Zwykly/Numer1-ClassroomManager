@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { classroomsController } from "../controllers/classrooms";
 import { insertClassroomSchema, selectClassroomSchema, updateClassroomSchema, removeClassroomSchema } from "../models/classrooms"
+import { authGuard } from "../auth/authGuard";
 
 const classroomsRoutes = new Elysia({
     prefix: "/classrooms",

@@ -1,88 +1,88 @@
-import { pgTable, uuid, timestamp, text, varchar, integer, pgEnum } from "drizzle-orm/pg-core";
+import * as p from "drizzle-orm/pg-core";
 import { defineRelations } from 'drizzle-orm';
 import { user } from "../../auth-schema";
 
-export const classroomReservations = pgTable("classroom_reservations", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    classroomID: uuid("classroom_id").references(() => classrooms.id),
-    onlineClassroomID: uuid("online_classroom_id").references(() => onlineClassrooms.id),
-    startDate: timestamp("start_date").notNull(),
-    endDate: timestamp("end_date").notNull(),
-    teacherId: uuid("teacher_id").references(() => users.id).notNull(),
-    additionalInfo: text("additional_info"),
-    createdOn: timestamp("created_on").defaultNow().notNull(),
-    editedOn: timestamp("edited_on").defaultNow().notNull(),
+export const classroomReservations = p.pgTable("classroom_reservations", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    classroomID: p.uuid("classroom_id").references(() => classrooms.id).notNull(),
+    onlineClassroomID: p.uuid("online_classroom_id").references(() => onlineClassrooms.id).notNull(),
+    startDate: p.timestamp("start_date").notNull(),
+    endDate: p.timestamp("end_date").notNull(),
+    teacherId: p.uuid("teacher_id").references(() => users.id).notNull(),
+    additionalInfo: p.text("additional_info"),
+    createdOn: p.timestamp("created_on").defaultNow().notNull(),
+    editedOn: p.timestamp("edited_on").defaultNow().notNull(),
 });
 
-export const classrooms = pgTable("classrooms", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: varchar("name").notNull(),
-    maxNumberOfPeople: integer("max_number_of_people").notNull(),
-    additionalInfo: text("additional_info"),
-    status: varchar("status").notNull(),
+export const classrooms = p.pgTable("classrooms", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    name: p.varchar("name").notNull(),
+    maxNumberOfPeople: p.integer("max_number_of_people").notNull(),
+    additionalInfo: p.text("additional_info"),
+    status: p.varchar("status").notNull(),
 });
 
-export const rolesEnum = pgEnum("roles", ["admin", "teacher"]);
+export const rolesEnum = p.pgEnum("roles", ["admin", "teacher"]);
 
-export const users = pgTable("users", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    authId: varchar('auth_id', { length: 255 }).unique(),
-    firstName: varchar("first_name").notNull(),
-    lastName: varchar("last_name").notNull(),
-    email: varchar("email").notNull(),
-    additionalInfo: text("additional_info"),
+export const users = p.pgTable("users", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    authId: p.varchar('auth_id', { length: 255 }).unique(),
+    firstName: p.varchar("first_name").notNull(),
+    lastName: p.varchar("last_name").notNull(),
+    email: p.varchar("email").notNull(),
+    additionalInfo: p.text("additional_info"),
     role: rolesEnum().default("teacher")
 });
 
-export const groupStudents = pgTable("group_students", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    groupId: uuid("group_id").references(() => groups.id).notNull(),
-    studentId: uuid("student_id").references(() => students.id).notNull(),
+export const groupStudents = p.pgTable("group_students", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    groupId: p.uuid("group_id").references(() => groups.id).notNull(),
+    studentId: p.uuid("student_id").references(() => students.id).notNull(),
 });
 
-export const groups = pgTable("groups", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: varchar("name").notNull(),
-    description: text("description"),
+export const groups = p.pgTable("groups", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    name: p.varchar("name").notNull(),
+    description: p.text("description"),
 });
 
-export const onlineClassrooms = pgTable("online_classrooms", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: varchar("name").notNull(),
-    teacherId: uuid("teacher_id").references(() => users.id).notNull(),
-    comment: text("comment"),
-    status: varchar("status").notNull(),
+export const onlineClassrooms = p.pgTable("online_classrooms", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    name: p.varchar("name").notNull(),
+    teacherId: p.uuid("teacher_id").references(() => users.id).notNull(),
+    comment: p.text("comment"),
+    status: p.varchar("status").notNull(),
 });
 
-export const reservationGroups = pgTable("reservation_groups", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: varchar("name"),
-    description: text("description"),
-    reservationId: uuid("reservation_id").references(() => classroomReservations.id).notNull(),
-    groupId: uuid("group_id").references(() => groups.id).notNull(),
-    additionalInfo: text("additional_info"),
+export const reservationGroups = p.pgTable("reservation_groups", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    name: p.varchar("name"),
+    description: p.text("description"),
+    reservationId: p.uuid("reservation_id").references(() => classroomReservations.id).notNull(),
+    groupId: p.uuid("group_id").references(() => groups.id).notNull(),
+    additionalInfo: p.text("additional_info"),
 });
 
-export const reservationStudents = pgTable("reservation_students", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    reservationId: uuid("reservation_id").references(() => classroomReservations.id).notNull(),
-    studentId: uuid("student_id").references(() => students.id).notNull(),
-    additionalInfo: text("additional_info"),
+export const reservationStudents = p.pgTable("reservation_students", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    reservationId: p.uuid("reservation_id").references(() => classroomReservations.id).notNull(),
+    studentId: p.uuid("student_id").references(() => students.id).notNull(),
+    additionalInfo: p.text("additional_info"),
 });
 
-export const students = pgTable("students", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    firstName: varchar("first_name").notNull(),
-    lastName: varchar("last_name").notNull(),
-    phoneNumber: varchar("phone_number"),
-    email: varchar("email"),
-    additionalInfo: text("additional_info"),
+export const students = p.pgTable("students", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    firstName: p.varchar("first_name").notNull(),
+    lastName: p.varchar("last_name").notNull(),
+    phoneNumber: p.varchar("phone_number"),
+    email: p.varchar("email"),
+    additionalInfo: p.text("additional_info"),
 });
 
-export const teacherGroups = pgTable("teacher_groups", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    groupId: uuid("group_id").references(() => groups.id).unique().notNull(),
-    teacherId: uuid("teacher_id").references(() => users.id).notNull(),
+export const teacherGroups = p.pgTable("teacher_groups", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    groupId: p.uuid("group_id").references(() => groups.id).unique().notNull(),
+    teacherId: p.uuid("teacher_id").references(() => users.id).notNull(),
 });
 
 
@@ -139,6 +139,10 @@ export const relations = defineRelations({ ...table, user },
             groups: r.many.groups({
                 from: r.users.id.through(r.teacherGroups.teacherId),
                 to: r.groups.id.through(r.teacherGroups.groupId)
+            }),
+            user: r.one.user({
+                from: r.users.authId,
+                to: r.user.id
             })
         },
         groups: {
@@ -214,6 +218,6 @@ export const relations = defineRelations({ ...table, user },
                 from: r.user.id,
                 to: r.users.authId
             })
-        }
+        },    
     })
 ) 

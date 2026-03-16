@@ -19,7 +19,7 @@ export function HeroButtons() {
                 <div className="w-[30%] h-auto flex flex-col justify-center items-center rounded-2xl bg-white hover:bg-yellow" >
                     <div className="w-[70%] h-[40%] flex flex-col justify-end items-center">
                         <div className="z-10 w-full h-full"> </div>
-                        <GraduationCap className="z-0 w-full h-full" size={120} />
+                        <GraduationCap className="z-0 w-full h-full animate-up-down" size={120} />
                     </div>
                     <div className="w-[70%] h-[40%] mt-5 text-2xl text-center font-bold">
                         Schedule your next class or manage exisitng ones.
@@ -28,7 +28,7 @@ export function HeroButtons() {
                 <div className="w-[30%] h-auto flex flex-col justify-center items-center rounded-2xl bg-white hover:bg-yellow" >
                     <div className="w-[70%] h-[40%] flex flex-col justify-end items-center">
                         <div className="z-10 w-full h-full"> </div>
-                        <UsersRound className="z-0 w-full h-full" size={120} />
+                        <UsersRound className="z-0 w-full h-full animate-up-down" size={120} />
                     </div>
                     <div className="w-[70%] h-[40%] mt-5 text-2xl text-center font-bold">
                         Manage your groups and students.

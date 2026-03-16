@@ -11,6 +11,7 @@ const usersRoutes = new Elysia({
         response: selectUserSchema,
         isAuth: true,
     })
+    
     .get("/", async () => await usersController.getAllUsers(), {
         response: t.Array(selectUserSchema)
     })

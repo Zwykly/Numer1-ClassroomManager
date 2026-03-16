@@ -16,6 +16,8 @@ const _updateClassroomReservationSchema = createUpdateSchema(table.classroomRese
     teacherId: t.String({ format: 'uuid', default: '' })
 });
 
+
+
 export const insertClassroomReservationSchema = t.Omit(_insertClassroomReservationSchema, ['id', 'createdOn', 'editedOn']);
 export const selectClassroomReservationSchema = _selectClassroomReservationSchema;
 export const updateClassroomReservationSchema = t.Omit(_updateClassroomReservationSchema, ['createdOn', 'editedOn']);

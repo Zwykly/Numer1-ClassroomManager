@@ -8,7 +8,7 @@ import { router } from "./router/router";
 
 export function App() {
   return (
-    <div className="App">
+    <div className="App w-full h-full bg-white">
       <RouterProvider router={router} />
     </div>
   );

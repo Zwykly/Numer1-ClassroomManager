@@ -1,10 +1,13 @@
 import { Topbar } from "../components/Topbar";
+import { HeroButtons } from "../components/HeroButtons";
+import { WelcomeBanner } from "../components/WelcomeBanner";
 
 export function Home() {
     return (
         <div className="w-full h-full flex flex-col">
             <Topbar />
-            <h1 className="text-3xl font-bold underline">Home</h1>
+            <WelcomeBanner />
+            <HeroButtons />
         </div>
     );
 }

@@ -8,11 +8,11 @@ export function LoginForm() {
                 </div>
                 <div className="mt-10 w-[90%] h-auto flex flex-col justify-start">
                     <a className="text-l text-black font-bold">Username / E-mail:</a>
-                    <input placeholder="eg. ireneuszKozicki2024 or kawa@gmail.com" className="mt-2 text-l text-black p-3 rounded-2xl placeholder-gray-500 border-black border-2 bg-white"></input>
+                    <input placeholder="eg. ireneuszKozicki2024 or kawa@gmail.com" className="mt-1 text-l text-black p-3 rounded-2xl placeholder-gray-500 border-black border-2 bg-white"></input>
                 </div>
                 <div className="mt-3 w-[90%] h-auto flex flex-col justify-start">
                     <a className="text-l text-black font-bold">Password:</a>
-                    <input type="mt-2 password" className="text-l text-black p-3 rounded-2xl border-black border-2 bg-white"></input>
+                    <input type="password" placeholder="•••••••" className="mt-1 text-l text-black p-3 rounded-2xl placeholder-gray-500 placeholder:font-black border-black border-2 bg-white"></input>
                 </div>
                 <button className="mt-6 text-xl text-black font-bold bg-yellow px-10 py-3 rounded-2xl"> LOGIN </button>
             </form>

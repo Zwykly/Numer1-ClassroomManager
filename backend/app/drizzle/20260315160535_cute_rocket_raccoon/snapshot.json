@@ -1,9 +1,9 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "2e0b50d9-43ad-4aca-a43e-528e44299b4a",
+  "id": "73144414-49ac-4122-b80e-16535e205eb9",
   "prevIds": [
-    "e2d7af9d-361b-4540-99bc-cc7109aeebbb"
+    "00000000-0000-0000-0000-000000000000"
   ],
   "ddl": [
     {
@@ -1365,7 +1365,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "classroom_reservations_teacher_id_users_id_fk",
+      "name": "classroom_reservations_teacher_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "classroom_reservations"
@@ -1382,7 +1382,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "group_students_group_id_groups_id_fk",
+      "name": "group_students_group_id_groups_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "group_students"
@@ -1399,7 +1399,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "group_students_student_id_students_id_fk",
+      "name": "group_students_student_id_students_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "group_students"
@@ -1416,7 +1416,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "online_classrooms_teacher_id_users_id_fk",
+      "name": "online_classrooms_teacher_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "online_classrooms"
@@ -1433,7 +1433,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "reservation_groups_reservation_id_classroom_reservations_id_fk",
+      "name": "reservation_groups_mZogy7Pq04Ng_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "reservation_groups"
@@ -1450,7 +1450,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "reservation_groups_group_id_groups_id_fk",
+      "name": "reservation_groups_group_id_groups_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "reservation_groups"
@@ -1467,7 +1467,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "reservation_students_reservation_id_classroom_reservations_id_f",
+      "name": "reservation_students_sZSCq2qpoQmo_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "reservation_students"
@@ -1484,7 +1484,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "reservation_students_student_id_students_id_fk",
+      "name": "reservation_students_student_id_students_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "reservation_students"
@@ -1501,7 +1501,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "teacher_groups_group_id_groups_id_fk",
+      "name": "teacher_groups_group_id_groups_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "teacher_groups"
@@ -1518,7 +1518,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "teacher_groups_teacher_id_users_id_fk",
+      "name": "teacher_groups_teacher_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "teacher_groups"
@@ -1535,7 +1535,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "account_user_id_user_id_fk",
+      "name": "account_user_id_user_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "account"
@@ -1552,7 +1552,7 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "session_user_id_user_id_fk",
+      "name": "session_user_id_user_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "session"
@@ -1703,7 +1703,7 @@
         "group_id"
       ],
       "nullsNotDistinct": false,
-      "name": "teacher_groups_group_id_unique",
+      "name": "teacher_groups_group_id_key",
       "schema": "public",
       "table": "teacher_groups",
       "entityType": "uniques"
@@ -1714,7 +1714,7 @@
         "auth_id"
       ],
       "nullsNotDistinct": false,
-      "name": "users_auth_id_unique",
+      "name": "users_auth_id_key",
       "schema": "public",
       "table": "users",
       "entityType": "uniques"
@@ -1725,7 +1725,7 @@
         "token"
       ],
       "nullsNotDistinct": false,
-      "name": "session_token_unique",
+      "name": "session_token_key",
       "schema": "public",
       "table": "session",
       "entityType": "uniques"
@@ -1736,7 +1736,7 @@
         "email"
       ],
       "nullsNotDistinct": false,
-      "name": "user_email_unique",
+      "name": "user_email_key",
       "schema": "public",
       "table": "user",
       "entityType": "uniques"
@@ -1747,7 +1747,7 @@
         "username"
       ],
       "nullsNotDistinct": false,
-      "name": "user_username_unique",
+      "name": "user_username_key",
       "schema": "public",
       "table": "user",
       "entityType": "uniques"

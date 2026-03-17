@@ -8,7 +8,12 @@ import { cors } from "@elysiajs/cors";
 const app = new Elysia()
   .mount(auth.handler)
   .use(openapi())
-  .use(cors())
+  .use(cors({
+    origin: ["http://localhost:3030", "http://zwykly.duckdns.org", "http://zwykly.duckdns.org:3030"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"]
+  }))
   .use(routes.classroomReservationsRoutes)
   .use(routes.classroomsRoutes)
   .use(routes.usersRoutes)

@@ -17,6 +17,7 @@ export const auth = betterAuth({
         provider: "pg",
         schema: auth_schema,
     }),
+    trustedOrigins: ["http://localhost:3030", "http://zwykly.duckdns.org", "http://zwykly.duckdns.org:3030"],
     emailAndPassword: {
         enabled: true,
     },

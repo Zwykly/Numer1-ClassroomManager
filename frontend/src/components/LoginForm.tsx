@@ -1,6 +1,8 @@
 import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/utils/AuthProvider";
 import type React from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 type LoginFormData = {
     username: string;
@@ -8,8 +10,9 @@ type LoginFormData = {
 }
 
 export function LoginForm() {
+    const navigate = useNavigate();
     const validateEmailRegex = /^\S+@\S+\.\S+$/;
-
+    const { refetch } = useAuth();
     const {
         register,
         handleSubmit,
@@ -17,7 +20,6 @@ export function LoginForm() {
     } = useForm<LoginFormData>();
 
     const onSubmit = async (data: LoginFormData) => {
-
         console.log(data);
         const isEmailLogin = validateEmailRegex.test(data.username);
         try {
@@ -27,7 +29,10 @@ export function LoginForm() {
                     password: data.password,
                 });
                 if (result.error) {
-                    console.log(result.error)
+                    console.log(result.error);
+                } else {
+                    await refetch();
+                    navigate("/myHome", { replace: true });
                 };
             } else {
                 const result = await authClient.signIn.username({
@@ -35,9 +40,11 @@ export function LoginForm() {
                     password: data.password,
                 });
                 if (result.error) {
-                    console.log(result.error)
+                    console.log(result.error);
+                } else {
+                    await refetch();
+                    navigate("/myHome", { replace: true });
                 };
-                console.log(result);
             }
 
         } catch (err) {

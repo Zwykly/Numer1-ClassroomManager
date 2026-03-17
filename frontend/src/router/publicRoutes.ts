@@ -1,12 +1,7 @@
-import { Home } from "../pages/Home";
 import { Login } from "../pages/Login";
 import { Register } from "../pages/Register";
 
-export const ROUTES = [
-    {
-        path: "/myHome",
-        element: Home,
-    },
+export const publicRoutes = [
     {
         path: "/",
         element: Login,

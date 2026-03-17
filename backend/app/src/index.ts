@@ -3,10 +3,12 @@ import { openapi } from '@elysiajs/openapi';
 import routes from "./routes";
 import { auth } from "./auth/auth";
 export { db } from "./db/db";
+import { cors } from "@elysiajs/cors";
 
 const app = new Elysia()
   .mount(auth.handler)
   .use(openapi())
+  .use(cors())
   .use(routes.classroomReservationsRoutes)
   .use(routes.classroomsRoutes)
   .use(routes.usersRoutes)

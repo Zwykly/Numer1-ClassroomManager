@@ -28,7 +28,7 @@ export function RegisterForm() {
                     <a className="text-l text-black font-bold">Password:</a>
                     <input type="password" placeholder="•••••••" className="mt-1 text-l text-black p-3 rounded-2xl placeholder-gray-500 border-black border-2 bg-white"></input>
                 </div>
-                <button className="mt-6 text-xl text-black font-bold bg-yellow px-10 py-3 rounded-2xl"> REGISTER </button>
+                <button className="mt-6 cursor-pointer text-xl text-black font-bold bg-yellow px-10 py-3 rounded-2xl"> REGISTER </button>
             </form>
             <div className="flex flex-col justify-center items-center">
                 <div className="text-black text-l">

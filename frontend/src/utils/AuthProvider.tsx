@@ -1,11 +1,10 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { type Session, type User } from "better-auth";
 import { authClient } from "@/lib/auth-client";
 import { error } from "better-auth/api";
+import type { userData } from "./models";
 
 type AuthContextType = {
-  session: Session | null;
-  user: User | null;
+  UserData: userData | null;
   isLoading: boolean;
   refetch: () => Promise<void>;
 };
@@ -13,24 +12,22 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const cachedSession = localStorage.getItem("session");
-  const initialSession = cachedSession ? JSON.parse(cachedSession) : null;
+  const cachedUserData = localStorage.getItem("UserData");
+  const initialUserData = cachedUserData ? JSON.parse(cachedUserData) : null;
 
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [UserData, setUserData] = useState<userData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const refetch = async () => {
     setIsLoading(true);
     try {
-      const { data } = await authClient.getSession();
-      setSession(data?.session ?? null);
-      setUser(data?.user ?? null);
-      localStorage.setItem("session", JSON.stringify(data));
+      const { data: userData } = await authClient.getSession();
+      setUserData(userData ?? null);
+      console.log("User Data",userData)
+      localStorage.setItem("UserData", JSON.stringify(userData));
     } catch (error) {
       localStorage.removeItem("session");
-      setSession(null);
-      setUser(null);
+      setUserData(null);
     } finally {
       setIsLoading(false);
     }
@@ -41,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ session, user, isLoading, refetch }}>
+    <AuthContext.Provider value={{ UserData, isLoading, refetch }}>
       {children}
     </AuthContext.Provider>
   );

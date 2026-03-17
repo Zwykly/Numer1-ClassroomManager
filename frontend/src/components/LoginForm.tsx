@@ -20,7 +20,6 @@ export function LoginForm() {
     } = useForm<LoginFormData>();
 
     const onSubmit = async (data: LoginFormData) => {
-        console.log(data);
         const isEmailLogin = validateEmailRegex.test(data.username);
         try {
             if (isEmailLogin) {

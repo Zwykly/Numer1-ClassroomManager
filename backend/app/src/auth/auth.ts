@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { createAuthMiddleware } from "better-auth/api";
+import { createAuthMiddleware, getSession } from "better-auth/api";
 import { username } from "better-auth/plugins/username";
 import { t } from "elysia";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -70,7 +70,8 @@ export const auth = betterAuth({
     },
     hooks: {
         after: createAuthMiddleware(async (ctx) => {
-            if (ctx.path === "/sign-in/email" || ctx.path === "/sign-in/username") {
+            console.log(ctx.path);
+            if (ctx.path === "/sign-in/email" || "/sign-in/username" || "/get-session") {
                 const returned = ctx.context.returned;
                 if (returned.user != null) {
                     try {

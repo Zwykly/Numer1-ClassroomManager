@@ -37,10 +37,11 @@ export function LoginForm() {
                 if (result.error) {
                     console.log(result.error)
                 };
+                console.log(result);
             }
 
         } catch (err) {
-
+            console.log(err);
         }
     }
 

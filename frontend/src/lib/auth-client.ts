@@ -2,7 +2,7 @@ import { createAuthClient } from "better-auth/react";
 import { usernameClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-    baseURL: "http://localhost:3000",
+    baseURL: import.meta.env?.BUN_PUBLIC_BETTER_AUTH_URL ?? "http://localhost:3000",
     plugins: [
         usernameClient(),
     ]

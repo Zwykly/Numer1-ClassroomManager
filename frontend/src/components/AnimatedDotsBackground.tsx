@@ -1,8 +1,8 @@
 
 export function AnimatedDotsBackground() {
     return (
-        <div className="absolute left-0 w-full h-[120%] flex flex-col justify-around py-4 opacity-20 pointer-events-none z-0">
-            {[...Array(8)].map((_, i) => (
+        <div className="absolute left-0 w-full h-[120%] flex flex-col justify-around py-4 opacity-20 pointer-events-none z-0 ">
+            {[...Array(6)].map((_, i) => (
                 <div
                     key={i}
                     className="bg-dot-row animate-dots"

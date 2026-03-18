@@ -3,10 +3,17 @@ import { openapi } from '@elysiajs/openapi';
 import routes from "./routes";
 import { auth } from "./auth/auth";
 export { db } from "./db/db";
+import { cors } from "@elysiajs/cors";
 
 const app = new Elysia()
   .mount(auth.handler)
   .use(openapi())
+  .use(cors({
+    origin: ["http://localhost:3030", "http://zwykly.duckdns.org", "http://zwykly.duckdns.org:3030"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"]
+  }))
   .use(routes.classroomReservationsRoutes)
   .use(routes.classroomsRoutes)
   .use(routes.usersRoutes)

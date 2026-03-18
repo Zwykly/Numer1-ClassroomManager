@@ -1,13 +1,16 @@
 @theme {
-    
+
     --animate-dots: rowStretch 5s ease-in-out infinite;
     --animate-up-down: up-down 5s ease-in-out infinite;
+    --animate-up-down-jump: up-down-jump 0.5s ease-in-out;
 
     @keyframes rowStretch {
+
         0%,
         100% {
             transform: translateY(0%);
         }
+
         50% {
             transform: translateY(-100%);
         }
@@ -22,6 +25,21 @@
 
         50% {
             transform: translateY(0);
+        }
+    }
+
+    @keyframes up-down-jump {
+
+        0% {
+            transform: translateY(0%);
+        }
+
+        50% {
+            transform: translateY(-5%);
+        }
+
+        100% {
+            transform: translateY(0%);
         }
     }
 }

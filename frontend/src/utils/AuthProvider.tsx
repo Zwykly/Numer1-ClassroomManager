@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
-import { error } from "better-auth/api";
 import type { userData } from "./models";
 
 type AuthContextType = {
@@ -12,10 +11,10 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const cachedUserData = localStorage.getItem("UserData");
-  const initialUserData = cachedUserData ? JSON.parse(cachedUserData) : null;
-
-  const [UserData, setUserData] = useState<userData | null>(null);
+  const [UserData, setUserData] = useState<userData | null>(() => {
+    const cachedUserData = localStorage.getItem("UserData");
+    return cachedUserData ? JSON.parse(cachedUserData) : null;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   const refetch = async () => {
@@ -23,10 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: userData } = await authClient.getSession();
       setUserData(userData ?? null);
-      console.log("User Data",userData)
       localStorage.setItem("UserData", JSON.stringify(userData));
     } catch (error) {
-      localStorage.removeItem("session");
+      localStorage.removeItem("UserData");
       setUserData(null);
     } finally {
       setIsLoading(false);

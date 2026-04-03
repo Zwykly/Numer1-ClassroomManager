@@ -1,13 +1,32 @@
 import { Elysia } from "elysia";
-import 'dotenv/config';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { openapi } from '@elysiajs/openapi';
+import routes from "./routes";
+import { auth } from "./auth/auth";
+export { db } from "./db/db";
+import { cors } from "@elysiajs/cors";
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
-const db = drizzle(process.env.DATABASE_URL!);
-export { db };
+const app = new Elysia()
+  .mount(auth.handler)
+  .use(openapi())
+  .use(cors({
+    origin: ["http://localhost:3030", "http://zwykly.duckdns.org", "http://zwykly.duckdns.org:3030"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"]
+  }))
+  .use(routes.classroomReservationsRoutes)
+  .use(routes.classroomsRoutes)
+  .use(routes.usersRoutes)
+  .use(routes.groupsRoutes)
+  .use(routes.groupStudentsRoutes)
+  .use(routes.onlineClassroomsRoutes)
+  .use(routes.reservationGroupsRoutes)
+  .use(routes.reservationStudentsRoutes)
+  .use(routes.studentsRoutes)
+  .use(routes.teacherGroupsRoutes)
+  .get("/", () => "Hello Elysia")
+  .listen(3000);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
 );
-const result = await db.execute('select 1');
-console.log(result);

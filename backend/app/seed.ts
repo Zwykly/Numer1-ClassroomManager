@@ -1,17 +1,18 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import * as schema from "./src/database/schemas"; // Assuming your schemas are in a schema.ts file
+import { table as schema } from "./src/db/schema";
+
 import { Client } from "pg";
 
 // Ensure you have DATABASE_URL set in your .env file
 const connectionString = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/my_database";
 
 // Setup Postgres client and Drizzle
-    const client = new Client({
-        connectionString: process.env.DATABASE_URL,
-    });
+const client = new Client({
+  connectionString: process.env.DATABASE_URL,
+});
 
-    await client.connect();
-    const db = drizzle(client);
+await client.connect();
+const db = drizzle(client);
 
 async function seed() {
   console.log("🌱 Starting database seeding...");
@@ -107,7 +108,7 @@ async function seed() {
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(now.getDate() + 1);
-    
+
     const nextWeek = new Date(now);
     nextWeek.setDate(now.getDate() + 7);
 
@@ -130,7 +131,7 @@ async function seed() {
     // 4. SEED DEPENDENT TABLES (Level 2)
     // ---------------------------------------------------------------------------
     console.log("📌 Linking Reservations to Groups and Students...");
-    
+
     // Link reservation 1 to the Calculus group
     await db.insert(schema.reservationGroups).values([
       {

@@ -1,0 +1,57 @@
+@theme {
+
+    --animate-dots: rowStretch 5s ease-in-out infinite;
+    --animate-up-down: up-down 5s ease-in-out infinite;
+    --animate-up-down-jump: up-down-jump 0.5s ease-in-out;
+
+    @keyframes rowStretch {
+
+        0%,
+        100% {
+            transform: translateY(0%);
+        }
+
+        50% {
+            transform: translateY(-100%);
+        }
+    }
+
+    @keyframes up-down {
+
+        0%,
+        100% {
+            transform: translateY(-25%);
+        }
+
+        50% {
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes up-down-jump {
+
+        0% {
+            transform: translateY(0%);
+        }
+
+        50% {
+            transform: translateY(-5%);
+        }
+
+        100% {
+            transform: translateY(0%);
+        }
+    }
+}
+
+@layer components {
+    .bg-dot-row {
+        background-image: radial-gradient(circle at center, white, 60px, transparent 10px);
+        background-size: 240px 240px;
+        background-repeat: repeat-x;
+        background-position: center;
+        width: 200%;
+        height: 960px;
+        opacity: 0.5;
+    }
+}

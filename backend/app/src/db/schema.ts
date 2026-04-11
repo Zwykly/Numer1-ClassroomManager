@@ -4,6 +4,8 @@ import { user } from "../../auth-schema";
 
 export const reservationStatusEnum = p.pgEnum("reservationStatus", ["scheduled", "canceled", "ongoing", "completed","cyclical"])
 
+//Rezerwacja klasy wykonana przez użytkownika/nauczyciela
+//Relacje: users, classrooms, onlineClassrooms
 export const classroomReservations = p.pgTable("classroomReservations", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     classroomId: p.uuid("classroomId").references(() => classrooms.id),
@@ -17,8 +19,12 @@ export const classroomReservations = p.pgTable("classroomReservations", {
     editedOn: p.timestamp("editedOn").defaultNow().notNull(),
 });
 
+//Enum mówiący o tym czy rezerwacja cykliczna powina być aktywna i aktywowana,
+// czy rezerwacje związane z nią powinny być aktywne lub zarchiwizowane
 export const reservationCycleStatusEnum = p.pgEnum("reservationCycleStatus", ["active", "archived"])
 
+//Rekord który infomuje o cykliczności rezerwacji, definiuje to czy cykliczność jest określana
+// przez datę końcową czy przez ilość spotkań.
 export const reservationCycles = p.pgTable("reservationCycles", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     teacherId: p.uuid("teacherId").references(() => users.id).notNull(),
@@ -31,6 +37,8 @@ export const reservationCycles = p.pgTable("reservationCycles", {
     createdOn: p.timestamp("createdOn").defaultNow().notNull(),
 });
 
+// Instancja klasy w szkole, jest to sala która może posadzić określoną liczbę osób
+// To one przypisywane są do rezerwacji.
 export const classrooms = p.pgTable("classrooms", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     name: p.varchar("name").notNull(),
@@ -41,6 +49,8 @@ export const classrooms = p.pgTable("classrooms", {
 
 export const rolesEnum = p.pgEnum("roles", ["admin", "teacher"]);
 
+// Użytkownik to nauczyciel, ma on wyznaczoną rolę czyli może być zwykłym lub adminem.
+// Jest to tabela przechowująca tylko informacje o użytkowniku, nie przechowuje ona loginu
 export const users = p.pgTable("users", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     authId: p.varchar('authId', { length: 255 }).unique(),
@@ -51,27 +61,31 @@ export const users = p.pgTable("users", {
     role: rolesEnum().default("teacher")
 });
 
-
+// Tabela przejściowa, aby pomiędzy grupami a studentami była relacja wiele do wielu.
 export const groupStudents = p.pgTable("groupStudents", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     groupId: p.uuid("groupId").references(() => groups.id).notNull(),
     studentId: p.uuid("studentId").references(() => students.id).notNull(),
 });
 
+// Tabela group, przechowuje informacje o gropuach do których mogą być przypisani uczniowe 
 export const groups = p.pgTable("groups", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     name: p.varchar("name").notNull(),
     description: p.text("description"),
 });
 
+// Tabela onlineclassrooms to table która przechowuje inydwulną klasę online dla nauczyciela.
+// Dostęp do niej ma jedynie nauczyciel do którego należy oraz administrator
 export const onlineClassrooms = p.pgTable("onlineClassrooms", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     name: p.varchar("name").notNull(),
-    teacherId: p.uuid("teacherId").references(() => users.id).notNull(),
+    teacherId: p.uuid("teacherId").references(() => users.id).notNull().unique(),
     comment: p.text("comment"),
     status: p.varchar("status").notNull(),
 });
 
+// Tabela przejściowa łącząca relacją wiele do wielu grupy z rezerwacjami
 export const reservationGroups = p.pgTable("reservationGroups", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     name: p.varchar("name"),
@@ -81,6 +95,7 @@ export const reservationGroups = p.pgTable("reservationGroups", {
     additionalInfo: p.text("additionalInfo"),
 });
 
+// Tabela przejściowa łącząca relacją wiele do wielu uczniów z rezerwacjami
 export const reservationStudents = p.pgTable("reservationStudents", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     reservationId: p.uuid("reservationId").references(() => classroomReservations.id).notNull(),
@@ -88,6 +103,7 @@ export const reservationStudents = p.pgTable("reservationStudents", {
     additionalInfo: p.text("additionalInfo"),
 });
 
+// Tabela ta przechowuje instancje uczniów, jest to prosty zbiór danych który pozwala dodwać uczniów oraz informacje o nich
 export const students = p.pgTable("students", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     firstName: p.varchar("firstName").notNull(),
@@ -97,6 +113,7 @@ export const students = p.pgTable("students", {
     additionalInfo: p.text("additionalInfo"),
 });
 
+// Tabela pozwalając przypysiwayć grupy nauczycielom, nauczyciele nadal widzą wszystkie grupy ale te są prioretyzowane w wyborze do rezerwacji
 export const teacherGroups = p.pgTable("teacherGroups", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     groupId: p.uuid("groupId").references(() => groups.id).notNull(),

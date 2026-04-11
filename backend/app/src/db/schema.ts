@@ -2,23 +2,40 @@ import * as p from "drizzle-orm/pg-core";
 import { defineRelations } from 'drizzle-orm';
 import { user } from "../../auth-schema";
 
-export const classroomReservations = p.pgTable("classroom_reservations", {
+export const reservationStatusEnum = p.pgEnum("reservationStatus", ["scheduled", "canceled", "ongoing", "completed","cyclical"])
+
+export const classroomReservations = p.pgTable("classroomReservations", {
     id: p.uuid("id").primaryKey().defaultRandom(),
-    classroomID: p.uuid("classroom_id").references(() => classrooms.id).notNull(),
-    onlineClassroomID: p.uuid("online_classroom_id").references(() => onlineClassrooms.id).notNull(),
-    startDate: p.timestamp("start_date").notNull(),
-    endDate: p.timestamp("end_date").notNull(),
-    teacherId: p.uuid("teacher_id").references(() => users.id).notNull(),
-    additionalInfo: p.text("additional_info"),
-    createdOn: p.timestamp("created_on").defaultNow().notNull(),
-    editedOn: p.timestamp("edited_on").defaultNow().notNull(),
+    classroomId: p.uuid("classroomId").references(() => classrooms.id),
+    onlineClassroomId: p.uuid("onlineClassroomId").references(() => onlineClassrooms.id),
+    reservationTime: p.timestamp("reservationTime").notNull(),
+    teacherId: p.uuid("teacherId").references(() => users.id).notNull(),
+    additionalInfo: p.text("additionalInfo"),
+    createdOn: p.timestamp("createdOn").defaultNow().notNull(),
+    status: reservationStatusEnum().default("scheduled").notNull(),
+    cycleId: p.uuid("cycleId").references(() => reservationCycles.id),
+    editedOn: p.timestamp("editedOn").defaultNow().notNull(),
+});
+
+export const reservationCycleStatusEnum = p.pgEnum("reservationCycleStatus", ["active", "archived"])
+
+export const reservationCycles = p.pgTable("reservationCycles", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    teacherId: p.uuid("teacherId").references(() => users.id).notNull(),
+    additionalInfo: p.text("additionalInfo"),
+    anchorDate: p.timestamp("anchorDate").notNull(),
+    cycleEndDate: p.timestamp("cycleEndDate"),
+    numberOfOccurrences: p.integer("numberOfOccurrences"),
+    frequency: p.integer("frequency").notNull(),
+    status: reservationCycleStatusEnum().default("active").notNull(),
+    createdOn: p.timestamp("createdOn").defaultNow().notNull(),
 });
 
 export const classrooms = p.pgTable("classrooms", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     name: p.varchar("name").notNull(),
-    maxNumberOfPeople: p.integer("max_number_of_people").notNull(),
-    additionalInfo: p.text("additional_info"),
+    maxNumberOfPeople: p.integer("maxNumberOfPeople").notNull(),
+    additionalInfo: p.text("additionalInfo"),
     status: p.varchar("status").notNull(),
 });
 
@@ -26,18 +43,19 @@ export const rolesEnum = p.pgEnum("roles", ["admin", "teacher"]);
 
 export const users = p.pgTable("users", {
     id: p.uuid("id").primaryKey().defaultRandom(),
-    authId: p.varchar('auth_id', { length: 255 }).unique(),
-    firstName: p.varchar("first_name").notNull(),
-    lastName: p.varchar("last_name").notNull(),
+    authId: p.varchar('authId', { length: 255 }).unique(),
+    firstName: p.varchar("firstName").notNull(),
+    lastName: p.varchar("lastName").notNull(),
     email: p.varchar("email").notNull(),
-    additionalInfo: p.text("additional_info"),
+    additionalInfo: p.text("additionalInfo"),
     role: rolesEnum().default("teacher")
 });
 
-export const groupStudents = p.pgTable("group_students", {
+
+export const groupStudents = p.pgTable("groupStudents", {
     id: p.uuid("id").primaryKey().defaultRandom(),
-    groupId: p.uuid("group_id").references(() => groups.id).notNull(),
-    studentId: p.uuid("student_id").references(() => students.id).notNull(),
+    groupId: p.uuid("groupId").references(() => groups.id).notNull(),
+    studentId: p.uuid("studentId").references(() => students.id).notNull(),
 });
 
 export const groups = p.pgTable("groups", {
@@ -46,43 +64,43 @@ export const groups = p.pgTable("groups", {
     description: p.text("description"),
 });
 
-export const onlineClassrooms = p.pgTable("online_classrooms", {
+export const onlineClassrooms = p.pgTable("onlineClassrooms", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     name: p.varchar("name").notNull(),
-    teacherId: p.uuid("teacher_id").references(() => users.id).notNull(),
+    teacherId: p.uuid("teacherId").references(() => users.id).notNull(),
     comment: p.text("comment"),
     status: p.varchar("status").notNull(),
 });
 
-export const reservationGroups = p.pgTable("reservation_groups", {
+export const reservationGroups = p.pgTable("reservationGroups", {
     id: p.uuid("id").primaryKey().defaultRandom(),
     name: p.varchar("name"),
     description: p.text("description"),
-    reservationId: p.uuid("reservation_id").references(() => classroomReservations.id).notNull(),
-    groupId: p.uuid("group_id").references(() => groups.id).notNull(),
-    additionalInfo: p.text("additional_info"),
+    reservationId: p.uuid("reservationId").references(() => classroomReservations.id).notNull(),
+    groupId: p.uuid("groupId").references(() => groups.id).notNull(),
+    additionalInfo: p.text("additionalInfo"),
 });
 
-export const reservationStudents = p.pgTable("reservation_students", {
+export const reservationStudents = p.pgTable("reservationStudents", {
     id: p.uuid("id").primaryKey().defaultRandom(),
-    reservationId: p.uuid("reservation_id").references(() => classroomReservations.id).notNull(),
-    studentId: p.uuid("student_id").references(() => students.id).notNull(),
-    additionalInfo: p.text("additional_info"),
+    reservationId: p.uuid("reservationId").references(() => classroomReservations.id).notNull(),
+    studentId: p.uuid("studentId").references(() => students.id).notNull(),
+    additionalInfo: p.text("additionalInfo"),
 });
 
 export const students = p.pgTable("students", {
     id: p.uuid("id").primaryKey().defaultRandom(),
-    firstName: p.varchar("first_name").notNull(),
-    lastName: p.varchar("last_name").notNull(),
-    phoneNumber: p.varchar("phone_number"),
+    firstName: p.varchar("firstName").notNull(),
+    lastName: p.varchar("lastName").notNull(),
+    phoneNumber: p.varchar("phoneNumber"),
     email: p.varchar("email"),
-    additionalInfo: p.text("additional_info"),
+    additionalInfo: p.text("additionalInfo"),
 });
 
-export const teacherGroups = p.pgTable("teacher_groups", {
+export const teacherGroups = p.pgTable("teacherGroups", {
     id: p.uuid("id").primaryKey().defaultRandom(),
-    groupId: p.uuid("group_id").references(() => groups.id).unique().notNull(),
-    teacherId: p.uuid("teacher_id").references(() => users.id).notNull(),
+    groupId: p.uuid("groupId").references(() => groups.id).notNull(),
+    teacherId: p.uuid("teacherId").references(() => users.id).notNull(),
 });
 
 
@@ -97,6 +115,7 @@ export const table = {
     reservationStudents,
     students,
     teacherGroups,
+    reservationCycles,
 } as const;
 
 export type table = typeof table;
@@ -117,14 +136,40 @@ export const relations = defineRelations({ ...table, user },
                 to: r.students.id.through(r.reservationStudents.studentId)
             }),
             classrooms: r.one.classrooms({
-                from: r.classroomReservations.classroomID,
+                from: r.classroomReservations.classroomId,
                 to: r.classrooms.id
+            }),
+            onlineClassrooms: r.one.onlineClassrooms({
+                from: r.classroomReservations.onlineClassroomId,
+                to: r.onlineClassrooms.id
             })
         },
+        reservationCycles: {
+            users: r.one.users({
+                from: r.reservationCycles.teacherId,
+                to: r.users.id,
+            }), 
+            classroomReservations: r.many.classroomReservations({
+                from: r.reservationCycles.id,
+                to: r.classroomReservations.cycleId
+            }),
+            onlineClassrooms: r.many.onlineClassrooms({
+                from: r.reservationCycles.id.through(r.classroomReservations.cycleId),
+                to: r.onlineClassrooms.id.through(r.classroomReservations.onlineClassroomId)
+            }),
+            classrooms: r.many.classrooms({
+                from: r.reservationCycles.id.through(r.classroomReservations.cycleId),
+                to: r.classrooms.id.through(r.classroomReservations.classroomId)
+            })
+        }, 
         classrooms: {
             classroomReservations: r.many.classroomReservations({
                 from: r.classrooms.id,
-                to: r.classroomReservations.classroomID
+                to: r.classroomReservations.classroomId
+            }),
+            reservationCycles: r.many.reservationCycles({
+                from: r.classrooms.id.through(r.classroomReservations.classroomId),
+                to: r.reservationCycles.id.through(r.classroomReservations.cycleId)
             })
         },
         users: {
@@ -178,9 +223,13 @@ export const relations = defineRelations({ ...table, user },
                 from: r.onlineClassrooms.id.through(r.reservationGroups.reservationId),
                 to: r.groups.id.through(r.reservationGroups.groupId)
             }),
-            reservations: r.many.classroomReservations({
+            classroomReservations: r.many.classroomReservations({
                 from: r.onlineClassrooms.id,
-                to: r.classroomReservations.onlineClassroomID,
+                to: r.classroomReservations.onlineClassroomId,
+            }),
+            reservationCycles: r.many.reservationCycles({
+                from: r.onlineClassrooms.id.through(r.classroomReservations.onlineClassroomId),
+                to: r.reservationCycles.id.through(r.classroomReservations.cycleId)
             })
         },
         reservationGroups: {

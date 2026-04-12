@@ -1,6 +1,6 @@
 import { Elysia, status } from "elysia";
 import { auth } from "./auth";
-import { usersController } from "../controllers/users";
+import { UsersService } from "../services/users";
 
 export const authGuard = new Elysia()
     .macro({
@@ -11,7 +11,7 @@ export const authGuard = new Elysia()
                 if (!session || !session.user) {
                     return status(401, "Unauthorized");
                 }
-                const userInfo = await usersController.getUserInfoAuthId(session.user.id);
+                const userInfo = await UsersService.getByAuthId(session.user.id);
                 return {
                     session: session.session,
                     user: {
@@ -27,8 +27,8 @@ export const authGuard = new Elysia()
                 if (!session || !session.user) {
                     return status(401, "Unauthorized");
                 }
-                const userInfo = await usersController.getUserInfoAuthId(session.user.id);
-                if (userInfo.role !== "admin") {
+                const userInfo = await UsersService.getByAuthId(session.user.id);
+                if (userInfo?.role !== "admin") {
                     return status(403, "Forbidden");
                 }
                 return {

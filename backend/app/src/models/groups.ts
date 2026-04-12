@@ -1,12 +1,19 @@
 import { t } from 'elysia';
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-typebox';
 import { table } from '../db/schema';
-import { selectSimpleStudentSchema } from './students';
-import { selectSimpleUserSchema } from './users';
+import { paginationQuerySchema, createPaginationResponseSchema } from './common';
 
 const _insertGroupsSchema = createInsertSchema(table.groups);
-const _selectGroupsSchema = createSelectSchema(table.groups);
+export const _selectGroupsSchema = createSelectSchema(table.groups);
 const _updateGroupsSchema = createUpdateSchema(table.groups);
+
+// Query Filters
+export const groupsQuerySchema = t.Composite([
+    paginationQuerySchema,
+    t.Object({
+        search: t.Optional(t.String()), // Fuzzy search on name
+    })
+]);
 
 // Inserts
 export const insertGroupSchema = t.Omit(_insertGroupsSchema, ['id']);
@@ -14,16 +21,7 @@ export const insertGroupSchema = t.Omit(_insertGroupsSchema, ['id']);
 // Selects
 export const selectSimpleGroupSchema = _selectGroupsSchema;
 
-export const selectCompositeGroupSchema = t.Composite([
-    t.Object(_selectGroupsSchema),
-    t.Object({
-        students: t.Array(selectSimpleStudentSchema),
-        teachers: t.Array(selectSimpleUserSchema)
-    })
-]);
-
 // Updates
-export const updateGroupSchema = _updateGroupsSchema;
+export const updateGroupSchema = t.Omit(_updateGroupsSchema, ['id']);
 
-// Deletes
-export const removeGroupSchema = t.Omit(_selectGroupsSchema, ['name', 'description']);
+export const patchGroupSchema = t.Partial(t.Omit(_updateGroupsSchema, ['id']));

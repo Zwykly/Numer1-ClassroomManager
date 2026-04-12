@@ -1,24 +1,37 @@
+import { selectCompositeOnlineClassroomSchema, paginatedOnlineClassroomsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { onlineClassroomsController } from "../controllers/online_classrooms";
-import { insertOnlineClassroomSchema, selectOnlineClassroomSchema, updateOnlineClassroomSchema, removeOnlineClassroomSchema } from "../models/online_classrooms"
+import { OnlineClassroomsController } from "../controllers/online_classrooms";
+import { insertOnlineClassroomSchema, updateOnlineClassroomSchema, patchOnlineClassroomSchema, onlineClassroomsQuerySchema } from "../models/online_classrooms";
+import { authGuard } from "../auth/authGuard";
 
 const onlineClassroomsRoutes = new Elysia({
     prefix: "/online-classrooms",
 })
-    .get("/", async () => await onlineClassroomsController.getAllOnlineClassrooms(), {
-        response: t.Array(selectOnlineClassroomSchema)
+    .use(authGuard)
+    .get("/", OnlineClassroomsController.getAll, {
+        query: onlineClassroomsQuerySchema,
+        response: paginatedOnlineClassroomsResponseSchema
     })
-    .post("/", async ({ body }) => await onlineClassroomsController.createOnlineClassroom(body), {
+    .get("/:id", OnlineClassroomsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectCompositeOnlineClassroomSchema
+    })
+    .post("/", OnlineClassroomsController.create, {
         body: insertOnlineClassroomSchema,
-        response: selectOnlineClassroomSchema
+        response: selectCompositeOnlineClassroomSchema
     })
-    .put("/", async ({ body }) => await onlineClassroomsController.updateOnlineClassroom(body), {
+    .put("/:id", OnlineClassroomsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateOnlineClassroomSchema,
-        response: selectOnlineClassroomSchema
+        response: selectCompositeOnlineClassroomSchema
     })
-    .delete("/", async ({ body }) => await onlineClassroomsController.removeOnlineClassroom(body), {
-        body: removeOnlineClassroomSchema,
-        response: selectOnlineClassroomSchema
+    .patch("/:id", OnlineClassroomsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchOnlineClassroomSchema,
+        response: selectCompositeOnlineClassroomSchema
+    })
+    .delete("/:id", OnlineClassroomsController.remove, {
+        params: t.Object({ id: t.String() }),
     });
 
 export default onlineClassroomsRoutes;

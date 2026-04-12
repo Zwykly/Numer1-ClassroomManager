@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { openapi } from '@elysiajs/openapi';
-import routes from "./routes";
+import apiRoutes from "./routes";
 import { auth } from "./auth/auth";
 export { db } from "./db/db";
 import { cors } from "@elysiajs/cors";
@@ -14,16 +14,7 @@ const app = new Elysia()
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"]
   }))
-  .use(routes.classroomReservationsRoutes)
-  .use(routes.classroomsRoutes)
-  .use(routes.usersRoutes)
-  .use(routes.groupsRoutes)
-  .use(routes.groupStudentsRoutes)
-  .use(routes.onlineClassroomsRoutes)
-  .use(routes.reservationGroupsRoutes)
-  .use(routes.reservationStudentsRoutes)
-  .use(routes.studentsRoutes)
-  .use(routes.teacherGroupsRoutes)
+  .use(apiRoutes)
   .get("/", () => "Hello Elysia")
   .listen(3000);
 

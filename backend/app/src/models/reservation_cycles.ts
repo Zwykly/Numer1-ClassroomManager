@@ -1,29 +1,27 @@
 import { t } from 'elysia';
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-typebox';
 import { table } from '../db/schema';
-import { selectSimpleUserSchema } from './users';
-import { selectSimpleClassroomReservationSchema } from './classroom_reservations';
+import { paginationQuerySchema, createPaginationResponseSchema, createFilterArraySchema } from './common';
 
-const _insertResevationCyclesSchema = createInsertSchema(table.reservationCycles);
-const _selectResevationCyclesSchema = createSelectSchema(table.reservationCycles);
-const _updateResevationCyclesSchema = createUpdateSchema(table.reservationCycles);
+const _insertReservationCyclesSchema = createInsertSchema(table.reservationCycles);
+export const _selectReservationCyclesSchema = createSelectSchema(table.reservationCycles);
+const _updateReservationCyclesSchema = createUpdateSchema(table.reservationCycles);
 
-// Inserts
-export const insertReservationCycleSchema = t.Omit(_insertResevationCyclesSchema, ['id']);
-
-// Selects
-export const selectSimpleReservationCycleSchema = _selectResevationCyclesSchema;
-
-export const selectCompositeReservationCycleSchema = t.Composite([
-    t.Object(_selectResevationCyclesSchema),
+// Query Filters
+export const reservationCyclesQuerySchema = t.Composite([
+    paginationQuerySchema,
     t.Object({
-        reservations: t.Array(selectSimpleClassroomReservationSchema),
-        teacher: selectSimpleUserSchema
+        status: createFilterArraySchema(),
     })
 ]);
 
-// Updates
-export const updateReservationCycleSchema = _updateResevationCyclesSchema;
+// Inserts
+export const insertReservationCycleSchema = t.Omit(_insertReservationCyclesSchema, ['id', 'createdOn']);
 
-// Deletes
-export const removeReservationCycleSchema = t.Omit(_selectResevationCyclesSchema, ['name', 'description']);
+// Selects
+export const selectSimpleReservationCycleSchema = _selectReservationCyclesSchema;
+
+// Updates
+export const updateReservationCycleSchema = t.Omit(_updateReservationCyclesSchema, ['id', 'createdOn']);
+
+export const patchReservationCycleSchema = t.Partial(t.Omit(_updateReservationCyclesSchema, ['id', 'createdOn']));

@@ -1,24 +1,37 @@
+import { paginatedReservationGroupsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { reservationGroupsController } from "../controllers/reservation_groups";
-import { insertReservationGroupSchema, selectReservationGroupSchema, updateReservationGroupSchema, removeReservationGroupSchema } from "../models/reservation_groups"
+import { ReservationGroupsController } from "../controllers/reservation_groups";
+import { insertReservationGroupSchema, selectSimpleReservationGroupSchema, updateReservationGroupSchema, patchReservationGroupSchema, reservationGroupsQuerySchema } from "../models/reservation_groups";
+import { authGuard } from "../auth/authGuard";
 
 const reservationGroupsRoutes = new Elysia({
     prefix: "/reservation-groups",
 })
-    .get("/", async () => await reservationGroupsController.getAllReservationGroups(), {
-        response: t.Array(selectReservationGroupSchema)
+    .use(authGuard)
+    .get("/", ReservationGroupsController.getAll, {
+        query: reservationGroupsQuerySchema,
+        response: paginatedReservationGroupsResponseSchema
     })
-    .post("/", async ({ body }) => await reservationGroupsController.createReservationGroup(body), {
+    .get("/:id", ReservationGroupsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectSimpleReservationGroupSchema
+    })
+    .post("/", ReservationGroupsController.create, {
         body: insertReservationGroupSchema,
-        response: selectReservationGroupSchema
+        response: selectSimpleReservationGroupSchema
     })
-    .put("/", async ({ body }) => await reservationGroupsController.updateReservationGroup(body), {
+    .put("/:id", ReservationGroupsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateReservationGroupSchema,
-        response: selectReservationGroupSchema
+        response: selectSimpleReservationGroupSchema
     })
-    .delete("/", async ({ body }) => await reservationGroupsController.removeReservationGroup(body), {
-        body: removeReservationGroupSchema,
-        response: selectReservationGroupSchema
+    .patch("/:id", ReservationGroupsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchReservationGroupSchema,
+        response: selectSimpleReservationGroupSchema
+    })
+    .delete("/:id", ReservationGroupsController.remove, {
+        params: t.Object({ id: t.String() }),
     });
 
 export default reservationGroupsRoutes;

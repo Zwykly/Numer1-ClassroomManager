@@ -177,7 +177,7 @@ export const relations = defineRelations({ ...table, user },
             classrooms: r.many.classrooms({
                 from: r.reservationCycles.id.through(r.classroomReservations.cycleId),
                 to: r.classrooms.id.through(r.classroomReservations.classroomId)
-            })
+            }),
         }, 
         classrooms: {
             classroomReservations: r.many.classroomReservations({
@@ -235,10 +235,6 @@ export const relations = defineRelations({ ...table, user },
             users: r.one.users({
                 from: r.onlineClassrooms.teacherId,
                 to: r.users.id
-            }),
-            groups: r.many.groups({
-                from: r.onlineClassrooms.id.through(r.reservationGroups.reservationId),
-                to: r.groups.id.through(r.reservationGroups.groupId)
             }),
             classroomReservations: r.many.classroomReservations({
                 from: r.onlineClassrooms.id,

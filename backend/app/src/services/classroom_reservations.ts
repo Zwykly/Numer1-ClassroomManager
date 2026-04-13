@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
 import { insertClassroomReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema } from "../models/classroom_reservations";
@@ -26,14 +26,18 @@ export const ClassroomReservationsService = {
             }
         });
 
-        const mapped = data.map(res => ({
-            ...res,
-            teacher: res.users,
-            groups: res.groups,
-            students: res.students,
-            classroom: res.classrooms,
-            onlineClassroom: res.onlineClassrooms,
-        }));
+        const mapped = data.map(res => {
+            const { users, classrooms, onlineClassrooms, ...base } = res;
+
+            return {
+                ...base,
+                teacher: users ?? undefined,
+                groups: res.groups,
+                students: res.students,
+                classroom: classrooms ?? undefined,
+                onlineClassroom: onlineClassrooms ?? undefined,
+            };
+        });
 
         return buildPaginationResponse(mapped, query.limit);
     },
@@ -52,13 +56,15 @@ export const ClassroomReservationsService = {
 
         if (!res) return null;
 
+        const { users, classrooms, onlineClassrooms, ...base } = res;
+
         return {
-            ...res,
-            teacher: res.users,
+            ...base,
+            teacher: users ?? undefined,
             groups: res.groups,
             students: res.students,
-            classroom: res.classrooms,
-            onlineClassroom: res.onlineClassrooms,
+            classroom: classrooms ?? undefined,
+            onlineClassroom: onlineClassrooms ?? undefined,
         };
     },
 

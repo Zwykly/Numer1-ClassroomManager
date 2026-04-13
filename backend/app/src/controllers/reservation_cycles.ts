@@ -4,10 +4,9 @@ import {
     insertReservationCycleSchema,
     updateReservationCycleSchema,
     patchReservationCycleSchema,
-    reservationCyclesQuerySchema,
-    selectCompositeReservationCycleSchema,
-    paginatedReservationCyclesResponseSchema,
+    reservationCyclesQuerySchema
 } from "../models/reservation_cycles";
+import { selectCompositeReservationCycleSchema, paginatedReservationCyclesResponseSchema } from "../models/composite";
 
 export const ReservationCyclesController = {
     async getAll({ query }: { query: typeof reservationCyclesQuerySchema.static }): Promise<typeof paginatedReservationCyclesResponseSchema.static> {

@@ -1,57 +1,39 @@
-import { db } from "../db/db";
-import { insertClassroomReservationSchema, updateClassroomReservationSchema, removeClassroomReservationSchema } from "../models/classroom_reservations";
-import { table } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { NotFoundError } from "elysia";
+import { ClassroomReservationsService } from "../services/classroom_reservations";
+import { insertClassroomReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema } from "../models/classroom_reservations";
 
-const createClassroomReservation = async (payload: typeof insertClassroomReservationSchema.static) => {
-    const [newClassroomReservation] = await db
-        .insert(table.classroomReservations)
-        .values({
-            ...payload,
-            startDate: new Date(payload.startDate),
-            endDate: new Date(payload.endDate),
-        })
-        .returning();
-    return newClassroomReservation;
-};
+export const ClassroomReservationsController = {
+    async getAll({ query }: { query: typeof classroomReservationsQuerySchema.static }) {
+        return await ClassroomReservationsService.getAll(query);
+    },
 
-const getAllClassroomReservations = async () => {
-    const classroomReservations = await db
-        .select()
-        .from(table.classroomReservations);
-    return classroomReservations;
-};
+    async getById({ params: { id } }: { params: { id: string } }) {
+        const res = await ClassroomReservationsService.getById(id);
+        if (!res) throw new NotFoundError( "Classroom Reservation not found");
+        return res;
+    },
 
-const updateClassroomReservation = async (payload: typeof updateClassroomReservationSchema.static) => {
-    if (!payload.id) throw new Error("ID is required");
+    async create({ body }: { body: typeof insertClassroomReservationSchema.static }) {
+        const created = await ClassroomReservationsService.create(body);
+        if (!created) throw new NotFoundError( "Classroom Reservation not found");
+        return created;
+    },
 
-    const [updatedClassroomReservation] = await db
-        .update(table.classroomReservations)
-        .set({
-            ...payload,
-            startDate: new Date(payload.startDate),
-            endDate: new Date(payload.endDate),
-            editedOn: new Date(),
-        })
-        .where(eq(table.classroomReservations.id, payload.id))
-        .returning();
-    return updatedClassroomReservation;
-};
+    async update({ params: { id }, body }: { params: { id: string }, body: typeof updateClassroomReservationSchema.static }) {
+        const updated = await ClassroomReservationsService.update(id, body);
+        if (!updated) throw new NotFoundError( "Classroom Reservation not found");
+        return updated;
+    },
 
-const removeClassroomReservation = async (payload: typeof removeClassroomReservationSchema.static) => {
-    const [removedClassroomReservation] = await db
-        .delete(table.classroomReservations)
-        .where(eq(table.classroomReservations.id, payload.id))
-        .returning();
-    return removedClassroomReservation;
-};
+    async patch({ params: { id }, body }: { params: { id: string }, body: typeof patchClassroomReservationSchema.static }) {
+        const patched = await ClassroomReservationsService.patch(id, body);
+        if (!patched) throw new NotFoundError( "Classroom Reservation not found");
+        return patched;
+    },
 
-
-export const classroomReservationsController = {
-    createClassroomReservation,
-    getAllClassroomReservations,
-    updateClassroomReservation,
-    removeClassroomReservation,
+    async remove({ params: { id } }: { params: { id: string } }) {
+        const removed = await ClassroomReservationsService.remove(id);
+        if (!removed) throw new NotFoundError( "Classroom Reservation not found");
+        return { success: true, reservation: removed };
+    }
 } as const;
-
-export type classroomReservationsController = typeof classroomReservationsController;

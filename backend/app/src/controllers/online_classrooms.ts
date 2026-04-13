@@ -1,47 +1,39 @@
-import { db } from "../db/db";
-import { insertOnlineClassroomSchema, updateOnlineClassroomSchema, removeOnlineClassroomSchema } from "../models/online_classrooms";
-import { table } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { NotFoundError } from "elysia";
+import { OnlineClassroomsService } from "../services/online_classrooms";
+import { insertOnlineClassroomSchema, updateOnlineClassroomSchema, patchOnlineClassroomSchema, onlineClassroomsQuerySchema } from "../models/online_classrooms";
 
-const createOnlineClassroom = async (payload: typeof insertOnlineClassroomSchema.static) => {
-    const [newOnlineClassroom] = await db
-        .insert(table.onlineClassrooms)
-        .values(payload)
-        .returning();
-    return newOnlineClassroom;
-};
+export const OnlineClassroomsController = {
+    async getAll({ query }: { query: typeof onlineClassroomsQuerySchema.static }) {
+        return await OnlineClassroomsService.getAll(query);
+    },
 
-const getAllOnlineClassrooms = async () => {
-    const onlineClassrooms = await db
-        .select()
-        .from(table.onlineClassrooms);
-    return onlineClassrooms;
-};
+    async getById({ params: { id } }: { params: { id: string } }) {
+        const classroom = await OnlineClassroomsService.getById(id);
+        if (!classroom) throw new NotFoundError( "Online Classroom not found");
+        return classroom;
+    },
 
-const updateOnlineClassroom = async (payload: typeof updateOnlineClassroomSchema.static) => {
-    if (!payload.id) throw new Error("ID is required");
+    async create({ body }: { body: typeof insertOnlineClassroomSchema.static }) {
+        const created = await OnlineClassroomsService.create(body);
+        if (!created) throw new NotFoundError( "Online Classroom not found");
+        return created;
+    },
 
-    const [updatedOnlineClassroom] = await db
-        .update(table.onlineClassrooms)
-        .set(payload)
-        .where(eq(table.onlineClassrooms.id, payload.id))
-        .returning();
-    return updatedOnlineClassroom;
-};
+    async update({ params: { id }, body }: { params: { id: string }, body: typeof updateOnlineClassroomSchema.static }) {
+        const updated = await OnlineClassroomsService.update(id, body);
+        if (!updated) throw new NotFoundError( "Online Classroom not found");
+        return updated;
+    },
 
-const removeOnlineClassroom = async (payload: typeof removeOnlineClassroomSchema.static) => {
-    const [removedOnlineClassroom] = await db
-        .delete(table.onlineClassrooms)
-        .where(eq(table.onlineClassrooms.id, payload.id))
-        .returning();
-    return removedOnlineClassroom;
-};
+    async patch({ params: { id }, body }: { params: { id: string }, body: typeof patchOnlineClassroomSchema.static }) {
+        const patched = await OnlineClassroomsService.patch(id, body);
+        if (!patched) throw new NotFoundError( "Online Classroom not found");
+        return patched;
+    },
 
-export const onlineClassroomsController = {
-    createOnlineClassroom,
-    getAllOnlineClassrooms,
-    updateOnlineClassroom,
-    removeOnlineClassroom,
+    async remove({ params: { id } }: { params: { id: string } }) {
+        const removed = await OnlineClassroomsService.remove(id);
+        if (!removed) throw new NotFoundError( "Online Classroom not found");
+        return { success: true, onlineClassroom: removed };
+    }
 } as const;
-
-export type onlineClassroomsController = typeof onlineClassroomsController;

@@ -1,24 +1,37 @@
+import { paginatedTeacherGroupsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { teacherGroupsController } from "../controllers/teacher_groups";
-import { insertTeacherGroupSchema, selectTeacherGroupSchema, updateTeacherGroupSchema, removeTeacherGroupSchema } from "../models/teacher_groups"
+import { TeacherGroupsController } from "../controllers/teacher_groups";
+import { insertTeacherGroupSchema, selectSimpleTeacherGroupSchema, updateTeacherGroupSchema, patchTeacherGroupSchema, teacherGroupsQuerySchema } from "../models/teacher_groups";
+import { authGuard } from "../auth/authGuard";
 
 const teacherGroupsRoutes = new Elysia({
     prefix: "/teacher-groups",
 })
-    .get("/", async () => await teacherGroupsController.getAllTeacherGroups(), {
-        response: t.Array(selectTeacherGroupSchema)
+    .use(authGuard)
+    .get("/", TeacherGroupsController.getAll, {
+        query: teacherGroupsQuerySchema,
+        response: paginatedTeacherGroupsResponseSchema
     })
-    .post("/", async ({ body }) => await teacherGroupsController.createTeacherGroup(body), {
+    .get("/:id", TeacherGroupsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectSimpleTeacherGroupSchema
+    })
+    .post("/", TeacherGroupsController.create, {
         body: insertTeacherGroupSchema,
-        response: selectTeacherGroupSchema
+        response: selectSimpleTeacherGroupSchema
     })
-    .put("/", async ({ body }) => await teacherGroupsController.updateTeacherGroup(body), {
+    .put("/:id", TeacherGroupsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateTeacherGroupSchema,
-        response: selectTeacherGroupSchema
+        response: selectSimpleTeacherGroupSchema
     })
-    .delete("/", async ({ body }) => await teacherGroupsController.removeTeacherGroup(body), {
-        body: removeTeacherGroupSchema,
-        response: selectTeacherGroupSchema
+    .patch("/:id", TeacherGroupsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchTeacherGroupSchema,
+        response: selectSimpleTeacherGroupSchema
+    })
+    .delete("/:id", TeacherGroupsController.remove, {
+        params: t.Object({ id: t.String() }),
     });
 
 export default teacherGroupsRoutes;

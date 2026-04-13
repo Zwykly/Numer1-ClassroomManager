@@ -1,24 +1,37 @@
+import { selectCompositeGroupSchema, paginatedGroupsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { groupsController } from "../controllers/groups";
-import { insertGroupSchema, selectGroupSchema, updateGroupSchema, removeGroupSchema } from "../models/groups"
+import { GroupsController } from "../controllers/groups";
+import { insertGroupSchema, updateGroupSchema, patchGroupSchema, groupsQuerySchema } from "../models/groups";
+import { authGuard } from "../auth/authGuard";
 
 const groupsRoutes = new Elysia({
     prefix: "/groups",
 })
-    .get("/", async () => await groupsController.getAllGroups(), {
-        response: t.Array(selectGroupSchema)
+    .use(authGuard)
+    .get("/", GroupsController.getAll, {
+        query: groupsQuerySchema,
+        response: paginatedGroupsResponseSchema
     })
-    .post("/", async ({ body }) => await groupsController.createGroup(body), {
+    .get("/:id", GroupsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectCompositeGroupSchema
+    })
+    .post("/", GroupsController.create, {
         body: insertGroupSchema,
-        response: selectGroupSchema
+        response: selectCompositeGroupSchema
     })
-    .put("/", async ({ body }) => await groupsController.updateGroup(body), {
+    .put("/:id", GroupsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateGroupSchema,
-        response: selectGroupSchema
+        response: selectCompositeGroupSchema
     })
-    .delete("/", async ({ body }) => await groupsController.removeGroup(body), {
-        body: removeGroupSchema,
-        response: selectGroupSchema
+    .patch("/:id", GroupsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchGroupSchema,
+        response: selectCompositeGroupSchema
+    })
+    .delete("/:id", GroupsController.remove, {
+        params: t.Object({ id: t.String() }),
     });
 
 export default groupsRoutes;

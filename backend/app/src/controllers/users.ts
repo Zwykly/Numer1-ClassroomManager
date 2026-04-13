@@ -1,67 +1,51 @@
-import { db } from "../db/db";
-import { insertUserSchema, updateUserSchema, removeUserSchema, loginRequestUsersSchema } from "../models/users";
-import { table, users } from "../db/schema";
-import { eq } from "drizzle-orm";
-import { auth } from "../auth/auth";
+import { NotFoundError } from "elysia";
+import { UsersService } from "../services/users";
+import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema } from "../models/users";
 
-const createUser = async (payload: typeof insertUserSchema.static) => {
-    const [newUser] = await db
-        .insert(table.users)
-        .values(payload)
-        .returning();
-    return newUser;
-};
+export const UsersController = {
+    async getAll({ query }: { query: typeof usersQuerySchema.static }) {
+        return await UsersService.getAll(query);
+    },
 
-const getUserInfoAuthId = async (authId: string) => {
-    console.log("authId");
-    const [user] = await db
-        .select()
-        .from(table.users)
-        .where(eq(table.users.authId, authId));
-    return user;
-};
+    async getById({ params: { id } }: { params: { id: string } }) {
+        const user = await UsersService.getById(id);
+        if (!user) throw new NotFoundError( "User not found");
+        return user;
+    },
+    
+    async getByAuthId({ params: { authId } }: { params: { authId: string } }) {
+        const user = await UsersService.getByAuthId(authId);
+        if (!user) throw new NotFoundError( "User not found");
+        return user;
+    },
 
-const getUserInfo = async (id: string) => {
-    const [user] = await db
-        .select()
-        .from(table.users)
-        .where(eq(table.users.id, id));
-    return user;
-};
+    async getCurrentUser({ user }: { user: any }) {
+        const userInfo = await UsersService.getById(user.userInfo.id);
+        if (!userInfo) throw new NotFoundError( "User not found");
+        return userInfo;
+    },
 
-const getAllUsers = async () => {
-    const users = await db
-        .select()
-        .from(table.users);
-    return users;
-};
+    async create({ body }: { body: typeof insertUserSchema.static }) {
+        const created = await UsersService.create(body);
+        if (!created) throw new NotFoundError( "User not found");
+        return created;
+    },
 
-const updateUser = async (payload: typeof updateUserSchema.static) => {
-    if (!payload.id) throw new Error("ID is required");
+    async update({ params: { id }, body }: { params: { id: string }, body: typeof updateUserSchema.static }) {
+        const updated = await UsersService.update(id, body);
+        if (!updated) throw new NotFoundError( "User not found");
+        return updated;
+    },
 
-    const [updatedUser] = await db
-        .update(table.users)
-        .set(payload)
-        .where(eq(table.users.id, payload.id))
-        .returning();
-    return updatedUser;
-};
+    async patch({ params: { id }, body }: { params: { id: string }, body: typeof patchUserSchema.static }) {
+        const patched = await UsersService.patch(id, body);
+        if (!patched) throw new NotFoundError( "User not found");
+        return patched;
+    },
 
-const removeUser = async (payload: typeof removeUserSchema.static) => {
-    const [removedUser] = await db
-        .delete(table.users)
-        .where(eq(table.users.id, payload.id))
-        .returning();
-    return removedUser;
-};
-
-export const usersController = {
-    createUser,
-    getAllUsers,
-    updateUser,
-    removeUser,
-    getUserInfo,
-    getUserInfoAuthId,
+    async remove({ params: { id } }: { params: { id: string } }) {
+        const removedUser = await UsersService.remove(id);
+        if (!removedUser) throw new NotFoundError( "User not found");
+        return { success: true, user: removedUser };
+    }
 } as const;
-
-export type usersController = typeof usersController;

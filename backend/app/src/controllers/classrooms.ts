@@ -1,47 +1,39 @@
-import { db } from "../db/db";
-import { insertClassroomSchema, updateClassroomSchema, removeClassroomSchema } from "../models/classrooms";
-import { table } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { NotFoundError } from "elysia";
+import { ClassroomsService } from "../services/classrooms";
+import { insertClassroomSchema, updateClassroomSchema, patchClassroomSchema, classroomsQuerySchema } from "../models/classrooms";
 
-const createClassroom = async (payload: typeof insertClassroomSchema.static) => {
-    const [newClassroom] = await db
-        .insert(table.classrooms)
-        .values(payload)
-        .returning();
-    return newClassroom;
-};
+export const ClassroomsController = {
+    async getAll({ query }: { query: typeof classroomsQuerySchema.static }) {
+        return await ClassroomsService.getAll(query);
+    },
 
-const getAllClassrooms = async () => {
-    const classrooms = await db
-        .select()
-        .from(table.classrooms);
-    return classrooms;
-};
+    async getById({ params: { id } }: { params: { id: string } }) {
+        const classroom = await ClassroomsService.getById(id);
+        if (!classroom) throw new NotFoundError( "Classroom not found");
+        return classroom;
+    },
 
-const updateClassroom = async (payload: typeof updateClassroomSchema.static) => {
-    if (!payload.id) throw new Error("ID is required");
+    async create({ body }: { body: typeof insertClassroomSchema.static }) {
+        const created = await ClassroomsService.create(body);
+        if (!created) throw new NotFoundError( "Classroom not found");
+        return created;
+    },
 
-    const [updatedClassroom] = await db
-        .update(table.classrooms)
-        .set(payload)
-        .where(eq(table.classrooms.id, payload.id))
-        .returning();
-    return updatedClassroom;
-};
+    async update({ params: { id }, body }: { params: { id: string }, body: typeof updateClassroomSchema.static }) {
+        const updated = await ClassroomsService.update(id, body);
+        if (!updated) throw new NotFoundError( "Classroom not found");
+        return updated;
+    },
 
-const removeClassroom = async (payload: typeof removeClassroomSchema.static) => {
-    const [removedClassroom] = await db
-        .delete(table.classrooms)
-        .where(eq(table.classrooms.id, payload.id))
-        .returning();
-    return removedClassroom;
-};
+    async patch({ params: { id }, body }: { params: { id: string }, body: typeof patchClassroomSchema.static }) {
+        const patched = await ClassroomsService.patch(id, body);
+        if (!patched) throw new NotFoundError( "Classroom not found");
+        return patched;
+    },
 
-export const classroomsController = {
-    createClassroom,
-    getAllClassrooms,
-    updateClassroom,
-    removeClassroom,
+    async remove({ params: { id } }: { params: { id: string } }) {
+        const removed = await ClassroomsService.remove(id);
+        if (!removed) throw new NotFoundError( "Classroom not found");
+        return { success: true, classroom: removed };
+    }
 } as const;
-
-export type classroomsController = typeof classroomsController;

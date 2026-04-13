@@ -1,24 +1,27 @@
 import { t } from 'elysia';
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-typebox';
 import { table } from '../db/schema';
+import { paginationQuerySchema, createPaginationResponseSchema, createFilterArraySchema } from './common';
 
-const _insertClassroomReservationSchema = createInsertSchema(table.classroomReservations, {
-    startDate: t.String({ format: 'date-time' }),
-    endDate: t.String({ format: 'date-time' }),
-    teacherId: t.String({ format: 'uuid', default: '' })
-});
+const _insertClassroomReservationsSchema = createInsertSchema(table.classroomReservations);
+export const _selectClassroomReservationsSchema = createSelectSchema(table.classroomReservations);
+const _updateClassroomReservationsSchema = createUpdateSchema(table.classroomReservations);
 
-const _selectClassroomReservationSchema = createSelectSchema(table.classroomReservations);
+// Query Filters
+export const classroomReservationsQuerySchema = t.Composite([
+    paginationQuerySchema,
+    t.Object({
+        status: createFilterArraySchema(),
+    })
+]);
 
-const _updateClassroomReservationSchema = createUpdateSchema(table.classroomReservations, {
-    startDate: t.String({ format: 'date-time' }),
-    endDate: t.String({ format: 'date-time' }),
-    teacherId: t.String({ format: 'uuid', default: '' })
-});
+// Inserts
+export const insertClassroomReservationSchema = t.Omit(_insertClassroomReservationsSchema, ['id', 'createdOn', 'editedOn']);
 
+// Selects
+export const selectSimpleClassroomReservationSchema = _selectClassroomReservationsSchema;
 
+// Updates
+export const updateClassroomReservationSchema = t.Omit(_updateClassroomReservationsSchema, ['id', 'createdOn', 'editedOn']);
 
-export const insertClassroomReservationSchema = t.Omit(_insertClassroomReservationSchema, ['id', 'createdOn', 'editedOn']);
-export const selectClassroomReservationSchema = _selectClassroomReservationSchema;
-export const updateClassroomReservationSchema = t.Omit(_updateClassroomReservationSchema, ['createdOn', 'editedOn']);
-export const removeClassroomReservationSchema = t.Omit(_selectClassroomReservationSchema, ['createdOn', 'editedOn', 'startDate', 'endDate', 'teacherId', 'additionalInfo']);
+export const patchClassroomReservationSchema = t.Partial(t.Omit(_updateClassroomReservationsSchema, ['id', 'createdOn', 'editedOn']));

@@ -1,24 +1,37 @@
+import { selectCompositeStudentSchema, paginatedStudentsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { studentsController } from "../controllers/students";
-import { insertStudentSchema, selectStudentSchema, updateStudentSchema, removeStudentSchema } from "../models/students"
+import { StudentsController } from "../controllers/students";
+import { insertStudentSchema, updateStudentSchema, patchStudentSchema, studentsQuerySchema } from "../models/students";
+import { authGuard } from "../auth/authGuard";
 
 const studentsRoutes = new Elysia({
     prefix: "/students",
 })
-    .get("/", async () => await studentsController.getAllStudents(), {
-        response: t.Array(selectStudentSchema)
+    .use(authGuard)
+    .get("/", StudentsController.getAll, {
+        query: studentsQuerySchema,
+        response: paginatedStudentsResponseSchema
     })
-    .post("/", async ({ body }) => await studentsController.createStudent(body), {
+    .get("/:id", StudentsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectCompositeStudentSchema
+    })
+    .post("/", StudentsController.create, {
         body: insertStudentSchema,
-        response: selectStudentSchema
+        response: selectCompositeStudentSchema
     })
-    .put("/", async ({ body }) => await studentsController.updateStudent(body), {
+    .put("/:id", StudentsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateStudentSchema,
-        response: selectStudentSchema
+        response: selectCompositeStudentSchema
     })
-    .delete("/", async ({ body }) => await studentsController.removeStudent(body), {
-        body: removeStudentSchema,
-        response: selectStudentSchema
+    .patch("/:id", StudentsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchStudentSchema,
+        response: selectCompositeStudentSchema
+    })
+    .delete("/:id", StudentsController.remove, {
+        params: t.Object({ id: t.String() }),
     });
 
 export default studentsRoutes;

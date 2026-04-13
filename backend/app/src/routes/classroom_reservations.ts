@@ -1,25 +1,37 @@
-import { Elysia , t} from "elysia";
-import { classroomReservationsController } from "../controllers/classroom_reservations";
-import { insertClassroomReservationSchema, selectClassroomReservationSchema, updateClassroomReservationSchema, removeClassroomReservationSchema} from "../models/classroom_reservations"
+import { selectCompositeClassroomReservationSchema, paginatedClassroomReservationsResponseSchema } from "../models/composite";
+import { Elysia, t } from "elysia";
+import { ClassroomReservationsController } from "../controllers/classroom_reservations";
+import { insertClassroomReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema } from "../models/classroom_reservations";
+import { authGuard } from "../auth/authGuard";
 
 const classroomReservationsRoutes = new Elysia({
     prefix: "/classroom-reservations",
+})
+    .use(authGuard)
+    .get("/", ClassroomReservationsController.getAll, {
+        query: classroomReservationsQuerySchema,
+        response: paginatedClassroomReservationsResponseSchema
     })
-    .get("/", async () => await classroomReservationsController.getAllClassroomReservations(), {
-        response: t.Array(selectClassroomReservationSchema)
+    .get("/:id", ClassroomReservationsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectCompositeClassroomReservationSchema
     })
-    .post("/", async ({ body }) => await classroomReservationsController.createClassroomReservation(body), {
+    .post("/", ClassroomReservationsController.create, {
         body: insertClassroomReservationSchema,
-        response: selectClassroomReservationSchema
+        response: selectCompositeClassroomReservationSchema
     })
-    .put("/", async ({ body }) => await classroomReservationsController.updateClassroomReservation(body), {
+    .put("/:id", ClassroomReservationsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateClassroomReservationSchema,
-        response: selectClassroomReservationSchema
+        response: selectCompositeClassroomReservationSchema
     })
-    .delete("/", async ({ body }) => await classroomReservationsController.removeClassroomReservation(body), {
-        body: removeClassroomReservationSchema,
-        response: selectClassroomReservationSchema
+    .patch("/:id", ClassroomReservationsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchClassroomReservationSchema,
+        response: selectCompositeClassroomReservationSchema
+    })
+    .delete("/:id", ClassroomReservationsController.remove, {
+        params: t.Object({ id: t.String() }),
     });
-
 
 export default classroomReservationsRoutes;

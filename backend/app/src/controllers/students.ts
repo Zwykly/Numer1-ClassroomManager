@@ -1,47 +1,39 @@
-import { db } from "../db/db";
-import { insertStudentSchema, updateStudentSchema, removeStudentSchema } from "../models/students";
-import { table } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { NotFoundError } from "elysia";
+import { StudentsService } from "../services/students";
+import { insertStudentSchema, updateStudentSchema, patchStudentSchema, studentsQuerySchema } from "../models/students";
 
-const createStudent = async (payload: typeof insertStudentSchema.static) => {
-    const [newStudent] = await db
-        .insert(table.students)
-        .values(payload)
-        .returning();
-    return newStudent;
-};
+export const StudentsController = {
+    async getAll({ query }: { query: typeof studentsQuerySchema.static }) {
+        return await StudentsService.getAll(query);
+    },
 
-const getAllStudents = async () => {
-    const students = await db
-        .select()
-        .from(table.students);
-    return students;
-};
+    async getById({ params: { id } }: { params: { id: string } }) {
+        const student = await StudentsService.getById(id);
+        if (!student) throw new NotFoundError( "Student not found");
+        return student;
+    },
 
-const updateStudent = async (payload: typeof updateStudentSchema.static) => {
-    if (!payload.id) throw new Error("ID is required");
+    async create({ body }: { body: typeof insertStudentSchema.static }) {
+        const created = await StudentsService.create(body);
+        if (!created) throw new NotFoundError( "Student not found");
+        return created;
+    },
 
-    const [updatedStudent] = await db
-        .update(table.students)
-        .set(payload)
-        .where(eq(table.students.id, payload.id))
-        .returning();
-    return updatedStudent;
-};
+    async update({ params: { id }, body }: { params: { id: string }, body: typeof updateStudentSchema.static }) {
+        const updated = await StudentsService.update(id, body);
+        if (!updated) throw new NotFoundError( "Student not found");
+        return updated;
+    },
 
-const removeStudent = async (payload: typeof removeStudentSchema.static) => {
-    const [removedStudent] = await db
-        .delete(table.students)
-        .where(eq(table.students.id, payload.id))
-        .returning();
-    return removedStudent;
-};
+    async patch({ params: { id }, body }: { params: { id: string }, body: typeof patchStudentSchema.static }) {
+        const patched = await StudentsService.patch(id, body);
+        if (!patched) throw new NotFoundError( "Student not found");
+        return patched;
+    },
 
-export const studentsController = {
-    createStudent,
-    getAllStudents,
-    updateStudent,
-    removeStudent,
+    async remove({ params: { id } }: { params: { id: string } }) {
+        const removedStudent = await StudentsService.remove(id);
+        if (!removedStudent) throw new NotFoundError( "Student not found");
+        return { success: true, student: removedStudent };
+    }
 } as const;
-
-export type studentsController = typeof studentsController;

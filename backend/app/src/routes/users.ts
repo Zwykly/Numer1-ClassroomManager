@@ -1,31 +1,41 @@
+import { selectCompositeUserSchema, paginatedUsersResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { usersController } from "../controllers/users";
-import { insertUserSchema, selectUserSchema, updateUserSchema, removeUserSchema, loginRequestUsersSchema, loginResponseUsersSchema } from "../models/users"
+import { UsersController } from "../controllers/users";
+import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema } from "../models/users";
 import { authGuard } from "../auth/authGuard";
 
 const usersRoutes = new Elysia({
     prefix: "/users",
 })
     .use(authGuard)
-    .get("/me", async ({ user }) => await usersController.getUserInfo(user.userInfo.id), {
-        response: selectUserSchema,
-        isAuth: true,
+    .get("/", UsersController.getAll, {
+        query: usersQuerySchema,
+        response: paginatedUsersResponseSchema
     })
-    
-    .get("/", async () => await usersController.getAllUsers(), {
-        response: t.Array(selectUserSchema)
+    .get("/:id", UsersController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectCompositeUserSchema
     })
-    .post("/", async ({ body }) => await usersController.createUser(body), {
+    .get("/auth/:authId", UsersController.getByAuthId, {
+        params: t.Object({ authId: t.String() }),
+        response: selectCompositeUserSchema
+    })
+    .post("/", UsersController.create, {
         body: insertUserSchema,
-        response: selectUserSchema
+        response: selectCompositeUserSchema
     })
-    .put("/", async ({ body }) => await usersController.updateUser(body), {
+    .put("/:id", UsersController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateUserSchema,
-        response: selectUserSchema
+        response: selectCompositeUserSchema
     })
-    .delete("/", async ({ body }) => await usersController.removeUser(body), {
-        body: removeUserSchema,
-        response: selectUserSchema
+    .patch("/:id", UsersController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchUserSchema,
+        response: selectCompositeUserSchema
+    })
+    .delete("/:id", UsersController.remove, {
+        params: t.Object({ id: t.String() }),
     });
 
 export default usersRoutes;

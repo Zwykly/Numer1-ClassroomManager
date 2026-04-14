@@ -1,8 +1,11 @@
 @theme {
-    --color-blue: #0D1282;
-    --color-white: #EEEDED;
-    --color-grey: #c7c7c7;
-    --color-yellow: #F0DE36;
-    --color-red: #D71313;
-    --font-display: 'Roboto', sans-serif;
+    --color-orange: hsl(19,97%,51%);
+    --color-white: hsl(0,0%,95%);
+    --color-light-grey: hsl(0,0%,90%);
+    --color-grey: hsl(0,0%,80%);
+    --color-dark-grey: hsl(0,0%,70%);
+    --color-darker-grey: hsl(0,0%,50%);
+    --color-light-black: hsl(0,0%,15%);
+    --color-black: hsl(0,0%,5%);
+    --font-display: 'Geist', sans-serif;
 }

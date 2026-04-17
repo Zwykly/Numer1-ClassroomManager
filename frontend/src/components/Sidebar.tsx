@@ -16,7 +16,7 @@ export function Sidebar() {
                     </div>
                     <Button variant="primary" className="w-full"> RESERVE A <br/> CLASSROOM </Button>
 
-                    <CalendarDatePicker selectedDate={startOfDay(new Date())} className="my-6"/>
+                    <CalendarDatePicker className="my-6"/>
 
                     <div className="w-full flex flex-row justify-between items-center">
                         <div className="w-1/5 h-0.75 bg-darker-grey"/>

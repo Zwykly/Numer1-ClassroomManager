@@ -12,19 +12,26 @@ import {
 } from 'date-fns';
 import { clsx as cn } from "clsx";
 import { se } from 'date-fns/locale';
+import { useSelectedDate, useSelectedDateActions } from '../stores/useSelectedDateStore';
 
 type CalendarDatePickerProps = {
-    selectedDate: Date;
     className?: string;
 }
-
 
 // Component that creates the calendar date picker.
 export function CalendarDatePicker(
     {
-        selectedDate,
         ...props
     }: CalendarDatePickerProps) {
+
+    const selectedDate = useSelectedDate();
+    const { setSelectedDate } = useSelectedDateActions();
+    
+    // Function that changes the selected day state in store.
+    const changeSelectedDay = (newSelectedDate: Date) => {
+        setSelectedDate(newSelectedDate);
+    }
+
     const month = selectedDate?.toLocaleString('default', { month: 'long' });
     const monthStart = startOfMonth(selectedDate);
     const monthEnd = endOfMonth(selectedDate);
@@ -38,6 +45,8 @@ export function CalendarDatePicker(
     for (let i = 0; i < calendarDays.length; i += 7) {
         weeks.push(calendarDays.slice(i, i + 7));
     }
+
+    let dayCounter = 0;
 
     return (
 
@@ -76,7 +85,7 @@ export function CalendarDatePicker(
                             }
 
                             return (
-                                <button className={className}>
+                                <button key={(dayCounter++).toString()} onClick={() => changeSelectedDay(day)} className={className}>
                                     {day.getDate()}
                                 </button>
                             );

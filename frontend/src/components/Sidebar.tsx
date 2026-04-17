@@ -1,6 +1,9 @@
 import { Navigate } from "react-router-dom";
 import logo from "../logo.png";
 import { Button } from "./common/Button";
+import { Calendar } from "lucide-react";
+import { CalendarDatePicker } from "./CalendarDatePicker";
+import { startOfDay, formatISO } from "date-fns";
 
 export function Sidebar() {
     return (
@@ -12,6 +15,8 @@ export function Sidebar() {
                         <a className="text-black text-2xl leading-none font-bold"> CLASSROOM <br /> MANAGER</a>
                     </div>
                     <Button variant="primary" className="w-full"> RESERVE A <br/> CLASSROOM </Button>
+
+                    <CalendarDatePicker selectedDate={startOfDay(new Date())} className="my-6"/>
 
                     <div className="w-full flex flex-row justify-between items-center">
                         <div className="w-1/5 h-0.75 bg-darker-grey"/>

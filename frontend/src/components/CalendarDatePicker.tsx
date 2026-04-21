@@ -13,6 +13,8 @@ import {
 import { clsx as cn } from "clsx";
 import { se } from 'date-fns/locale';
 import { useSelectedDate, useSelectedDateActions } from '../stores/useSelectedDateStore';
+import { MonthPicker } from './common/MonthPicker';
+import { MonthPickerPopover } from './common/MonthPickerPopover';
 
 type CalendarDatePickerProps = {
     className?: string;
@@ -52,7 +54,7 @@ export function CalendarDatePicker(
 
         <div className={cn("w-full h-auto bg-gray-200 flex flex-col items-center justify-between", props.className)}>
             <div className='w-full h-full flex flex-row items-start justify-between'>
-                <h1>{month} {selectedDate?.getFullYear()}</h1>
+                <MonthPickerPopover />
             </div>
             <div className='w-full h-full flex flex-col items-start justify-between'>
                 <div className='grid grid-cols-7 gap-1 w-full h-auto text-center text-darker-grey font-bold px-2 py-0.5'>

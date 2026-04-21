@@ -23,7 +23,7 @@ export function Button (
         return (
             <button
                 className={cn
-                    ('mt-2 py-2 px-6 rounded-lg inline-flex leading-tight text-center justify-center items-center shadow-lg duration-300',
+                    ('py-2 px-6 rounded-lg inline-flex leading-tight text-center justify-center items-center shadow-lg duration-300',
                     ButtonStyles[variant],
                     className)}>
                     {children}

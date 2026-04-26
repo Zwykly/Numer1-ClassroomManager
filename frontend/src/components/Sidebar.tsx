@@ -23,10 +23,10 @@ export function Sidebar() {
                         <a className="text-lg text-darker-grey font-medium"> Other actions</a>
                         <div className="w-1/5 h-0.75 bg-darker-grey"/>
                     </div>
-                    <Button variant="secondary" className="w-full"> Manage students </Button>
-                    <Button variant="secondary" className="w-full"> Manage groups </Button>
-                    <Button variant="secondary" className="w-full"> Manage reservations </Button>
-                    <Button variant="secondary" className="w-full"> View your calendar </Button>
+                    <Button variant="secondary" className="w-full mt-2"> Manage students </Button>
+                    <Button variant="secondary" className="w-full mt-2"> Manage groups </Button>
+                    <Button variant="secondary" className="w-full mt-2"> Manage reservations </Button>
+                    <Button variant="secondary" className="w-full mt-2hw"> View your calendar </Button>
                 </div>
                 <div className="bottomPart w-full flex flex-col items-center">
                     <Button variant="primary" className="w-full">

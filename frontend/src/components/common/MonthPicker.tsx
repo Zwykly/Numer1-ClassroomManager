@@ -2,6 +2,7 @@ import { useSelectedDate, useSelectedDateActions } from '@/stores/useSelectedDat
 import { Button } from './Button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { se } from 'date-fns/locale';
+import { isSameYear } from 'date-fns';
 
 
 
@@ -10,6 +11,8 @@ export function MonthPicker () {
     const selectedDate = useSelectedDate();
     const { setSelectedDate } = useSelectedDateActions();
     
+    const today = new Date();
+
     // Function that changes the selected day state in store.
     const changeMonth = (newSelectedDate: Date) => {
         setSelectedDate(newSelectedDate);
@@ -23,7 +26,6 @@ export function MonthPicker () {
         const newDate = new Date(selectedDate.getFullYear() + 1, selectedDate.getMonth(), selectedDate.getDate());
         setSelectedDate(newDate);
     }
-
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
@@ -39,10 +41,13 @@ export function MonthPicker () {
                 <div className='grid grid-cols-3 grid-rows-4 gap-3 w-full h-auto text-center text-darker-grey font-bold px-2 py-0.5'>
                     {months.map((month, index) => 
                         {
-                            let className = `rounded-sm px-2 py-1`;
-                            if (index === selectedDate.getMonth()) {
-                                className += ` bg-orange text-white`;
-                            }
+                            const isSelectedMonth = index === selectedDate.getMonth();
+                            const isCurrentMonth = isSameYear(selectedDate, today) && today.getMonth() ===  index;
+
+                            let className = [`rounded-sm px-2 py-1`,
+                                isSelectedMonth && 'bg-orange text-white',
+                                isCurrentMonth && 'ring-2 ring-orange'
+                            ].filter(Boolean).join(' ');        
                         
                             return (
                                 <button className={className} onClick={() => changeMonth(new Date(selectedDate!.getFullYear(), index, 1))}>{month}</button>

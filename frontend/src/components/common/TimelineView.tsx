@@ -32,7 +32,7 @@ export function TimelineView () {
             displayedDays = eachDayOfInterval({start: displayStart, end: displayEnd})
         }
     return (
-        <div className="flex flex-col h-full bg-white w-full">
+        <div className="flex flex-col h-full pt-8 bg-white w-full">
             {/*Header with day labels*/}
             <div className="flex flex-row shrink-0 my-2">
                 <div className="w-16 flex shrink-0"></div>

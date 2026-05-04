@@ -2,6 +2,7 @@ import { DayTimeline } from "@/components/common/DayTimeline";
 import { useSelectedDate, useSelectedDateRange } from "../../stores/useSelectedDateStore";
 import { useCurrentTimeTicker } from "../../utils/CurrentTime";
 import { startOfWeek, endOfWeek, eachDayOfInterval, isToday, format } from "date-fns";
+import { useRef, useEffect } from "react";
 
 function CurrentTimeLine () {
     const now = useCurrentTimeTicker(60000);
@@ -17,6 +18,8 @@ export function TimelineView () {
         const numberOfDisplayedDays = useSelectedDateRange();
         const selectedDate = useSelectedDate();
         const hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+        const scrollContainerRef = useRef<HTMLDivElement>(null);
+        const now = useCurrentTimeTicker(60000);
 
         const daysOfTheWeek = ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -31,6 +34,15 @@ export function TimelineView () {
             const displayEnd = selectedDate.getDate()+(numberOfDisplayedDays-2);
             displayedDays = eachDayOfInterval({start: displayStart, end: displayEnd})
         }
+
+        // Scroll to current time on mount
+        useEffect(() => {
+            if (scrollContainerRef.current) {
+                const top = now.getHours() * 64 + (now.getMinutes() / 60) * 64;
+                // Scroll with some offset to center the current time better
+                scrollContainerRef.current.scrollTop = top - 100;
+            }
+        }, []);
     return (
         <div className="flex flex-col h-full pt-8 bg-white w-full">
             {/*Header with day labels*/}
@@ -52,7 +64,7 @@ export function TimelineView () {
                 </div>
             </div>
             {/*Body where the timeline resides*/}
-            <div className="flex-1 overflow-y-auto flex min-h-0 relative">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto flex min-h-0 relative">
                 <div className="flex w-full absolute z-0">
                     <div className="w-16 text-end font-semibold text-grey">
                         {hours.map(hour => {

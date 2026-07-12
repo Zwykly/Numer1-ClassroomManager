@@ -9,6 +9,7 @@
     "build": "bun run build.ts"
   },
   "dependencies": {
+    "@elysiajs/eden": "^1.4.9",
     "better-auth": "^1.5.5",
     "bun-plugin-tailwind": "^0.1.2",
     "clsx": "^2.1.1",

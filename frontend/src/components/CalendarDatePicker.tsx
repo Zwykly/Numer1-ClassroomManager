@@ -73,7 +73,7 @@ export function CalendarDatePicker(
                     ] .filter(Boolean).join(' ');
                     
                     return (
-                        <div className={cn(className)}>
+                        <div key={week[0].toISOString()} className={cn(className)}>
                         {week.map((day) => {
                             let className = ['duration-300 hover:bg-orange/30 rounded-sm',
                                 !isSameMonth(day, selectedDate) && 'text-darker-grey font-light duration-300 hover:bg-orange/30 rounded-sm',

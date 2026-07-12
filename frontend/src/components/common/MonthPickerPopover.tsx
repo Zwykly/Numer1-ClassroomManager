@@ -8,8 +8,10 @@ export function MonthPickerPopover () {
 
     return (
         <Popover.Root >
-            <Popover.Trigger className="w-full flex justify-start text-black font-bold">
-                <button>{selectedDate.toLocaleString("en-US", {month: "long"})} {selectedDate.getFullYear()}</button>
+            <Popover.Trigger asChild>
+                <button className="w-full flex justify-start text-black font-bold">
+                    {selectedDate.toLocaleString("en-US", {month: "long"})} {selectedDate.getFullYear()}
+                </button>
             </Popover.Trigger>
             <Popover.Content className="w-full flex flex-col bg-white shadow-lg rounded p-4">
                 <MonthPicker />

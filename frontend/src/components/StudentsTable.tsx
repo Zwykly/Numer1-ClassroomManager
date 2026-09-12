@@ -12,7 +12,14 @@ type StudentsTableProps = {
     onDelete: (student: Student) => void;
 };
 
-const actionButtonStyles = "rounded-lg p-2 text-darker-grey transition hover:bg-orange/10 hover:text-orange";
+const actionButtonStyles = "rounded-lg p-2 transition";
+
+const actionColors = {
+    class: "text-blue-600 hover:bg-blue-500/10 hover:text-blue-700",
+    group: "text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700",
+    modify: "text-amber-600 hover:bg-amber-500/10 hover:text-amber-700",
+    delete: "text-red-600 hover:bg-red-500/10 hover:text-red-700",
+};
 
 export function StudentsTable({
     students,
@@ -62,28 +69,28 @@ export function StudentsTable({
                                     <div className="flex flex-row justify-end gap-1">
                                         <button
                                             title="Add to class"
-                                            className={cn(actionButtonStyles)}
+                                            className={cn(actionButtonStyles, actionColors.class)}
                                             onClick={() => onAddToClass(student)}
                                         >
                                             <School size={18} />
                                         </button>
                                         <button
                                             title="Add to group"
-                                            className={cn(actionButtonStyles)}
+                                            className={cn(actionButtonStyles, actionColors.group)}
                                             onClick={() => onAddToGroup(student)}
                                         >
                                             <UsersRound size={18} />
                                         </button>
                                         <button
                                             title="Modify"
-                                            className={cn(actionButtonStyles)}
+                                            className={cn(actionButtonStyles, actionColors.modify)}
                                             onClick={() => onModify(student)}
                                         >
                                             <Pencil size={18} />
                                         </button>
                                         <button
                                             title="Delete"
-                                            className={cn(actionButtonStyles, "hover:bg-orange/10 hover:text-orange")}
+                                            className={cn(actionButtonStyles, actionColors.delete)}
                                             onClick={() => onDelete(student)}
                                         >
                                             <Trash2 size={18} />

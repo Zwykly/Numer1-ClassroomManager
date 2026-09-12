@@ -13,11 +13,14 @@ import {
     useStudentsActions,
     type Student,
 } from "@/stores/useStudentsStore";
+import { useAuth } from "@/utils/AuthProvider";
 
 export function ManageStudents() {
     const students = useStudents();
     const isLoading = useStudentsLoading();
     const { fetchStudents, createStudents, patchStudent, deleteStudent } = useStudentsActions();
+    const { UserData } = useAuth();
+    const isAdmin = UserData?.user?.userInfo?.role === "admin";
 
     const [search, setSearch] = useState("");
     const [formOpen, setFormOpen] = useState(false);
@@ -72,10 +75,12 @@ export function ManageStudents() {
                 <div className="pt-15 px-8 flex flex-col h-full overflow-hidden">
                     <div className="flex flex-row items-center justify-between">
                         <h1 className="text-black font-bold text-4xl">Students</h1>
-                        <Button variant="primary" className="gap-2" onClick={openAdd}>
-                            <Plus size={20} />
-                            Add a student
-                        </Button>
+                        {isAdmin && (
+                            <Button variant="primary" className="gap-2" onClick={openAdd}>
+                                <Plus size={20} />
+                                Add a student
+                            </Button>
+                        )}
                     </div>
 
                     <input
@@ -89,6 +94,7 @@ export function ManageStudents() {
                         <StudentsTable
                             students={students}
                             isLoading={isLoading}
+                            canManage={isAdmin}
                             onAddToClass={openClass}
                             onAddToGroup={openGroup}
                             onModify={openModify}

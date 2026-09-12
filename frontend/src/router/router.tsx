@@ -1,8 +1,7 @@
 import { createBrowserRouter, type RouteObject } from "react-router";
 import { publicRoutes } from "./publicRoutes";
 import { privateRoutes } from "./privateRoutes";
-import { adminRoutes } from "./adminRoutes";
-import { ProtectedRoutes, OpenRoutes, AdminRoutes } from "../utils/RouteTypes";
+import { ProtectedRoutes, OpenRoutes } from "../utils/RouteTypes";
 
 const routes: RouteObject[] = [
   {
@@ -14,19 +13,10 @@ const routes: RouteObject[] = [
   },
   {
     element: <ProtectedRoutes />,
-    children: [
-      {
-        element: <AdminRoutes />,
-        children: adminRoutes.map((route) => ({
-          path: route.path,
-          element: <route.element />,
-        })),
-      },
-      ...privateRoutes.map((route) => ({
-        path: route.path,
-        element: <route.element />,
-      })),
-    ],
+    children: privateRoutes.map((route) => ({
+      path: route.path,
+      element: <route.element />,
+    })),
   },
 ];
 

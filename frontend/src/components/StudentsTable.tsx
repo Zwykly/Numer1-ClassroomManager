@@ -1,6 +1,7 @@
 import { School, UsersRound, Pencil, Trash2 } from "lucide-react";
 import { clsx as cn } from "clsx";
 import type { Student } from "@/stores/useStudentsStore";
+import { actionButtonStyles, actionColors } from "@/utils/actionColors";
 
 type StudentsTableProps = {
     students: Student[];
@@ -10,15 +11,6 @@ type StudentsTableProps = {
     onAddToGroup: (student: Student) => void;
     onModify: (student: Student) => void;
     onDelete: (student: Student) => void;
-};
-
-const actionButtonStyles = "rounded-lg p-2 transition";
-
-const actionColors = {
-    class: "text-blue-600 hover:bg-blue-500/10 hover:text-blue-700",
-    group: "text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700",
-    modify: "text-amber-600 hover:bg-amber-500/10 hover:text-amber-700",
-    delete: "text-red-600 hover:bg-red-500/10 hover:text-red-700",
 };
 
 export function StudentsTable({
@@ -56,16 +48,16 @@ export function StudentsTable({
                             key={student.id}
                             className="border-b border-light-grey/70 transition last:border-0 hover:bg-light-grey/40"
                         >
-                            <td className="px-4 py-3 font-bold text-black">
+                            <td className="px-4 py-4 font-bold text-black">
                                 {student.firstName} {student.lastName}
                             </td>
-                            <td className="px-4 py-3 text-darker-grey">{student.phoneNumber || "-"}</td>
-                            <td className="px-4 py-3 text-darker-grey">{student.email || "-"}</td>
-                            <td className="max-w-[16rem] truncate px-4 py-3 text-darker-grey" title={student.additionalInfo ?? undefined}>
+                            <td className="px-4 py-4 text-darker-grey">{student.phoneNumber || "-"}</td>
+                            <td className="px-4 py-4 text-darker-grey">{student.email || "-"}</td>
+                            <td className="max-w-[16rem] truncate px-4 py-4 text-darker-grey" title={student.additionalInfo ?? undefined}>
                                 {student.additionalInfo || "-"}
                             </td>
                             {canManage && (
-                                <td className="px-4 py-3">
+                                <td className="px-4 py-4">
                                     <div className="flex flex-row justify-end gap-1">
                                         <button
                                             title="Add to class"

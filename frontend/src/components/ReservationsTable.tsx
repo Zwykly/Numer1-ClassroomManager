@@ -3,6 +3,7 @@ import { Calendar, ChevronDown, ChevronRight, Clock, Pencil, Repeat, Trash2, Use
 import { clsx as cn } from "clsx";
 import { format } from "date-fns";
 import { teacherColor } from "@/utils/teacherColors";
+import { actionButtonStyles, actionColors } from "@/utils/actionColors";
 import type { Reservation } from "@/stores/useReservationsStore";
 
 type ReservationsTableProps = {
@@ -13,14 +14,6 @@ type ReservationsTableProps = {
     groupRecurring?: boolean;
     onModify: (reservation: Reservation) => void;
     onDelete: (reservation: Reservation) => void;
-};
-
-const actionButtonStyles = "rounded-lg p-2 transition disabled:cursor-not-allowed disabled:opacity-30";
-
-const actionColors = {
-    expand: "text-darker-grey hover:bg-orange/10 hover:text-orange",
-    modify: "text-amber-600 hover:bg-amber-500/10 hover:text-amber-700",
-    delete: "text-red-600 hover:bg-red-500/10 hover:text-red-700",
 };
 
 export function isEditable(reservation: Reservation, isAdmin: boolean, currentUserId?: string) {
@@ -178,20 +171,21 @@ export function ReservationsTable({
     const entries = buildEntries(reservations, groupRecurring);
 
     return (
-        <table className="w-full border-collapse text-left text-sm">
-            <thead>
-                <tr className="border-y border-light-grey bg-light-grey/50 text-xs uppercase tracking-wide text-darker-grey">
-                    <th className="w-10 py-3 pl-2 pr-2 font-bold" />
-                    <th className="px-4 py-3 font-bold">Name</th>
-                    <th className="px-4 py-3 font-bold">Teacher</th>
-                    <th className="px-4 py-3 font-bold">Time</th>
-                    <th className="px-4 py-3 font-bold">Ends</th>
-                    <th className="px-4 py-3 font-bold">Recurring</th>
-                    <th className="px-4 py-3 font-bold">People</th>
-                    <th className="py-3 pl-4 text-right font-bold">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div className="overflow-hidden rounded-2xl border border-light-grey bg-white">
+            <table className="w-full border-collapse text-left text-sm">
+                <thead>
+                    <tr className="border-b border-light-grey bg-light-grey/50 text-xs uppercase tracking-wide text-darker-grey">
+                        <th className="w-10 px-2 py-3 font-bold" />
+                        <th className="px-4 py-3 font-bold">Name</th>
+                        <th className="px-4 py-3 font-bold">Teacher</th>
+                        <th className="px-4 py-3 font-bold">Time</th>
+                        <th className="px-4 py-3 font-bold">Ends</th>
+                        <th className="px-4 py-3 font-bold">Recurring</th>
+                        <th className="px-4 py-3 font-bold">People</th>
+                        <th className="px-4 py-3 text-right font-bold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
                 {entries.map((entry) => {
                     const isExpanded = expandedId === entry.key;
 
@@ -201,11 +195,11 @@ export function ReservationsTable({
                             <Fragment key={entry.key}>
                                 <tr
                                     className={cn(
-                                        "border-b border-light-grey/70 transition hover:bg-light-grey/30",
+                                        "border-b border-light-grey/70 transition hover:bg-light-grey/40",
                                         isExpanded && "bg-light-grey/30",
                                     )}
                                 >
-                                    <td className="py-4 pl-2 pr-2">
+                                    <td className="px-2 py-4">
                                         <button
                                             title={isExpanded ? "Collapse" : "Expand"}
                                             onClick={() => setExpandedId(isExpanded ? null : entry.key)}
@@ -251,17 +245,17 @@ export function ReservationsTable({
                                             {group.attendeeCount}
                                         </span>
                                     </td>
-                                    <td className="py-4 pl-4" />
+                                    <td className="px-4 py-4" />
                                 </tr>
 
                                 {isExpanded && (
-                                    <tr className="border-b border-light-grey/70 bg-light-grey/20">
+                                    <tr className="border-b border-light-grey/70 bg-light-grey/30">
                                         <td />
                                         <td colSpan={7} className="px-4 pb-6 pt-2">
                                             <div className="overflow-hidden rounded-xl border border-light-grey bg-white">
                                                 <table className="w-full border-collapse text-left text-sm">
                                                     <thead>
-                                                        <tr className="border-b border-light-grey text-xs uppercase tracking-wide text-darker-grey">
+                                                        <tr className="border-b border-light-grey bg-light-grey/50 text-xs uppercase tracking-wide text-darker-grey">
                                                             <th className="px-4 py-2 font-bold">Date & time</th>
                                                             <th className="px-4 py-2 font-bold">Ends</th>
                                                             <th className="px-4 py-2 font-bold">Status</th>
@@ -274,7 +268,7 @@ export function ReservationsTable({
                                                             const canEdit = isEditable(occurrence, isAdmin, currentUserId);
                                                             const people = reservationAttendees(occurrence).length;
                                                             return (
-                                                                <tr key={occurrence.id} className="border-b border-light-grey/60 last:border-0">
+                                                                <tr key={occurrence.id} className="border-b border-light-grey/70 transition last:border-0 hover:bg-light-grey/40">
                                                                     <td className="px-4 py-3 font-medium text-black">
                                                                         <span className="inline-flex items-center gap-1.5">
                                                                             <Clock size={14} className="text-darker-grey" />
@@ -331,11 +325,11 @@ export function ReservationsTable({
                         <Fragment key={entry.key}>
                             <tr
                                 className={cn(
-                                    "border-b border-light-grey/70 transition hover:bg-light-grey/30",
+                                    "border-b border-light-grey/70 transition hover:bg-light-grey/40",
                                     isExpanded && "bg-light-grey/30",
                                 )}
                             >
-                                <td className="py-4 pl-2 pr-2">
+                                <td className="px-2 py-4">
                                     <button
                                         title={isExpanded ? "Collapse" : "Expand"}
                                         onClick={() => setExpandedId(isExpanded ? null : entry.key)}
@@ -390,7 +384,7 @@ export function ReservationsTable({
                                         {attendees.length}
                                     </span>
                                 </td>
-                                <td className="py-4 pl-4">
+                                <td className="px-4 py-4">
                                     <div className="flex flex-row justify-end gap-1">
                                         <button
                                             title={canEdit ? "Modify" : "This class can no longer be edited"}
@@ -413,7 +407,7 @@ export function ReservationsTable({
                             </tr>
 
                             {isExpanded && (
-                                <tr className="border-b border-light-grey/70 bg-light-grey/20">
+                                <tr className="border-b border-light-grey/70 bg-light-grey/30">
                                     <td />
                                     <td colSpan={7} className="px-4 pb-6 pt-2">
                                         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -470,6 +464,7 @@ export function ReservationsTable({
                     );
                 })}
             </tbody>
-        </table>
+            </table>
+        </div>
     );
 }

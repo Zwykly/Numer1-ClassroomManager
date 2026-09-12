@@ -4,6 +4,7 @@ import { clsx as cn } from "clsx";
 import { format } from "date-fns";
 import type { Group } from "@/stores/useGroupsStore";
 import { buildGroupClasses, countGroupClasses, type GroupClassEntry } from "@/utils/groupClasses";
+import { actionButtonStyles, actionColors } from "@/utils/actionColors";
 
 type GroupsTableProps = {
     groups: Group[];
@@ -11,14 +12,6 @@ type GroupsTableProps = {
     canDelete: boolean;
     onEdit: (group: Group) => void;
     onDelete: (group: Group) => void;
-};
-
-const actionButtonStyles = "rounded-lg p-2 transition";
-
-const actionColors = {
-    expand: "text-darker-grey hover:bg-orange/10 hover:text-orange",
-    edit: "text-amber-600 hover:bg-amber-500/10 hover:text-amber-700",
-    delete: "text-red-600 hover:bg-red-500/10 hover:text-red-700",
 };
 
 const classStatusStyles: Record<string, string> = {
@@ -47,93 +40,94 @@ export function GroupsTable({ groups, isLoading, canDelete, onEdit, onDelete }: 
     }
 
     return (
-        <table className="w-full border-collapse text-left text-sm">
-            <thead>
-                <tr className="border-y border-light-grey bg-light-grey/50 text-xs uppercase tracking-wide text-darker-grey">
-                    <th className="w-10 py-3 pl-2 pr-2 font-bold" />
-                    <th className="px-4 py-3 font-bold">Name</th>
-                    <th className="px-4 py-3 font-bold">Description</th>
-                    <th className="px-4 py-3 font-bold">People</th>
-                    <th className="px-4 py-3 font-bold">Classes</th>
-                    <th className="py-3 pl-4 text-right font-bold">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {groups.map((group) => {
-                    const isExpanded = expandedId === group.id;
-                    const people = group.students?.length ?? 0;
-                    const classes = buildGroupClasses(group.reservations);
-                    const classCount = countGroupClasses(group.reservations);
-                    const teachers = group.users ?? [];
+        <div className="overflow-hidden rounded-2xl border border-light-grey bg-white">
+            <table className="w-full border-collapse text-left text-sm">
+                <thead>
+                    <tr className="border-b border-light-grey bg-light-grey/50 text-xs uppercase tracking-wide text-darker-grey">
+                        <th className="w-10 px-2 py-3 font-bold" />
+                        <th className="px-4 py-3 font-bold">Name</th>
+                        <th className="px-4 py-3 font-bold">Description</th>
+                        <th className="px-4 py-3 font-bold">People</th>
+                        <th className="px-4 py-3 font-bold">Classes</th>
+                        <th className="px-4 py-3 text-right font-bold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {groups.map((group) => {
+                        const isExpanded = expandedId === group.id;
+                        const people = group.students?.length ?? 0;
+                        const classes = buildGroupClasses(group.reservations);
+                        const classCount = countGroupClasses(group.reservations);
+                        const teachers = group.users ?? [];
 
-                    return (
-                        <Fragment key={group.id}>
-                            <tr
-                                onClick={() => setExpandedId(isExpanded ? null : group.id)}
-                                className={cn(
-                                    "cursor-pointer border-b border-light-grey/70 transition hover:bg-light-grey/30",
-                                    isExpanded && "bg-light-grey/30",
-                                )}
-                            >
-                                <td className="py-4 pl-2 pr-2">
-                                    <span
-                                        title={isExpanded ? "Collapse" : "Expand"}
-                                        className={cn(actionButtonStyles, "inline-flex p-1.5", actionColors.expand)}
-                                    >
-                                        {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-4 font-bold text-black">{group.name}</td>
-                                <td
-                                    className="max-w-[22rem] truncate px-4 py-4 text-darker-grey"
-                                    title={group.description ?? undefined}
+                        return (
+                            <Fragment key={group.id}>
+                                <tr
+                                    onClick={() => setExpandedId(isExpanded ? null : group.id)}
+                                    className={cn(
+                                        "cursor-pointer border-b border-light-grey/70 transition hover:bg-light-grey/40",
+                                        isExpanded && "bg-light-grey/30",
+                                    )}
                                 >
-                                    {group.description || "-"}
-                                </td>
-                                <td className="px-4 py-4 text-darker-grey">
-                                    <span className="inline-flex items-center gap-1.5">
-                                        <Users size={15} className="text-darker-grey" />
-                                        {people}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-4 text-darker-grey">
-                                    <span className="inline-flex items-center gap-1.5">
-                                        <School size={15} className="text-darker-grey" />
-                                        {classCount}
-                                    </span>
-                                </td>
-                                <td className="py-4 pl-4">
-                                    <div className="flex flex-row justify-end gap-1">
-                                        <button
-                                            title="Edit group"
-                                            className={cn(actionButtonStyles, actionColors.edit)}
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                onEdit(group);
-                                            }}
+                                    <td className="px-2 py-4">
+                                        <span
+                                            title={isExpanded ? "Collapse" : "Expand"}
+                                            className={cn(actionButtonStyles, "inline-flex p-1.5", actionColors.expand)}
                                         >
-                                            <Pencil size={18} />
-                                        </button>
-                                        {canDelete && (
+                                            {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4 font-bold text-black">{group.name}</td>
+                                    <td
+                                        className="max-w-[22rem] truncate px-4 py-4 text-darker-grey"
+                                        title={group.description ?? undefined}
+                                    >
+                                        {group.description || "-"}
+                                    </td>
+                                    <td className="px-4 py-4 text-darker-grey">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <Users size={15} className="text-darker-grey" />
+                                            {people}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4 text-darker-grey">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <School size={15} className="text-darker-grey" />
+                                            {classCount}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        <div className="flex flex-row justify-end gap-1">
                                             <button
-                                                title="Delete group"
-                                                className={cn(actionButtonStyles, actionColors.delete)}
+                                                title="Edit group"
+                                                className={cn(actionButtonStyles, actionColors.modify)}
                                                 onClick={(event) => {
                                                     event.stopPropagation();
-                                                    onDelete(group);
+                                                    onEdit(group);
                                                 }}
                                             >
-                                                <Trash2 size={18} />
+                                                <Pencil size={18} />
                                             </button>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
+                                            {canDelete && (
+                                                <button
+                                                    title="Delete group"
+                                                    className={cn(actionButtonStyles, actionColors.delete)}
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        onDelete(group);
+                                                    }}
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
 
-                            {isExpanded && (
-                                <tr className="border-b border-light-grey/70 bg-light-grey/20">
-                                    <td />
-                                    <td colSpan={5} className="px-4 pb-6 pt-2">
+                                {isExpanded && (
+                                    <tr className="border-b border-light-grey/70 bg-light-grey/30">
+                                        <td />
+                                        <td colSpan={5} className="px-4 pb-6 pt-2">
                                         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                                             <div className="md:col-span-2 flex flex-col gap-5">
                                                 <div>
@@ -243,6 +237,7 @@ export function GroupsTable({ groups, isLoading, canDelete, onEdit, onDelete }: 
                     );
                 })}
             </tbody>
-        </table>
+            </table>
+        </div>
     );
 }

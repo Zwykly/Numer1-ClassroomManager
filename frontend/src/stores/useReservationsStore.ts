@@ -4,6 +4,8 @@ import type {
     createClassroomReservationSchema,
     createRecurringReservationSchema,
     patchClassroomReservationSchema,
+    checkConflictsSchema,
+    conflictResultSchema,
 } from "../../../backend/app/src/models/classroom_reservations";
 import eden from "@/lib/eden";
 
@@ -11,6 +13,8 @@ export type Reservation = typeof selectCompositeClassroomReservationSchema.stati
 export type NewReservation = typeof createClassroomReservationSchema.static;
 export type NewRecurringReservation = typeof createRecurringReservationSchema.static;
 export type ReservationPatch = typeof patchClassroomReservationSchema.static;
+export type ConflictCheck = typeof checkConflictsSchema.static;
+export type ConflictResult = typeof conflictResultSchema.static;
 
 export type ReservationView = "all" | "recurring" | "upcoming" | "archived";
 
@@ -25,6 +29,7 @@ type ReservationsState = {
         createRecurringReservation: (data: NewRecurringReservation) => Promise<void>;
         patchReservation: (id: string, data: ReservationPatch) => Promise<void>;
         deleteReservation: (id: string) => Promise<void>;
+        checkConflicts: (input: ConflictCheck) => Promise<ConflictResult>;
     };
 };
 
@@ -91,6 +96,14 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
             const response = await eden["classroom-reservations"]({ id }).delete();
             throwIfError(response.error, "Failed to delete reservation");
             await get().actions.fetchReservations(get().view, get().search || undefined);
+        },
+        checkConflicts: async (input: ConflictCheck) => {
+            const response = await eden["classroom-reservations"].conflicts.post(input);
+            if (response.error || !response.data) {
+                const value = (response.error as { value?: unknown })?.value;
+                throw new Error(typeof value === "string" && value.length > 0 ? value : "Failed to check conflicts");
+            }
+            return response.data;
         },
     },
 }));

@@ -1,6 +1,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { clsx as cn } from "clsx";
 import type { User } from "@/stores/useUsersStore";
+import { teacherColor } from "@/utils/teacherColors";
 
 type UsersTableProps = {
     users: User[];
@@ -10,10 +11,6 @@ type UsersTableProps = {
 };
 
 const actionButtonStyles = "rounded-lg p-2 text-darker-grey transition hover:bg-orange/10 hover:text-orange";
-
-function initials(user: User) {
-    return `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
-}
 
 function roleStyles(role: string) {
     return role === "admin"
@@ -53,9 +50,10 @@ export function UsersTable({
                     >
                         <td className="py-4 pr-4">
                             <div className="flex flex-row items-center gap-3">
-                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange/10 text-sm font-bold text-orange">
-                                    {initials(user)}
-                                </span>
+                                <span
+                                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                    style={{ backgroundColor: teacherColor(user.id) }}
+                                />
                                 <div className="flex flex-col">
                                     <span className="font-bold text-black">
                                         {user.firstName} {user.lastName}

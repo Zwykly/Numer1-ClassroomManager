@@ -58,7 +58,7 @@ export function CalendarDatePicker(
     let dayCounter = 0;
 
     return (
-        <div className={cn("w-full h-auto bg-gray-200 flex flex-col items-center justify-between", props.className)}>
+        <div className={cn("w-full h-auto flex flex-col items-center justify-between", props.className)}>
             <div className='w-full h-full flex flex-row items-start justify-between'>
                 <MonthPickerPopover />
             </div>

@@ -2,7 +2,7 @@ import { authClient } from "@/lib/auth-client";
 import { useAuth } from "@/utils/AuthProvider";
 import type React from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 type LoginFormData = {
     username: string;

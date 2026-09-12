@@ -2,15 +2,16 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
 import { insertClassroomReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema } from "../models/classroom_reservations";
-import { getLimit, getCursorWhere, getInArrayWhere, buildPaginationResponse } from "../utils/drizzle";
+import { getLimit, getCursorWhere, getInArrayWhere, getDateRangeWhere, buildPaginationResponse } from "../utils/drizzle";
 
 export const ClassroomReservationsService = {
     async getAll(query: typeof classroomReservationsQuerySchema.static) {
         const limit = getLimit(query.limit);
         const cursorWhere = getCursorWhere(query.cursor);
         const statusWhere = getInArrayWhere("status", query.status);
+        const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
 
-        const conditions = [cursorWhere, statusWhere].filter(Boolean);
+        const conditions = [cursorWhere, statusWhere, dateWhere].filter(Boolean);
         const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const data = await db.query.classroomReservations.findMany({

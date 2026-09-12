@@ -12,6 +12,8 @@ export const classroomReservationsQuerySchema = t.Composite([
     paginationQuerySchema,
     t.Object({
         status: createFilterArraySchema(),
+        from: t.Optional(t.String({ format: 'date-time' })),
+        to: t.Optional(t.String({ format: 'date-time' })),
     })
 ]);
 

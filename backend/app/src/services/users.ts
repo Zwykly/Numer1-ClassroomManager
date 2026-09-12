@@ -1,16 +1,18 @@
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
+import { user as authUser } from "../../auth-schema";
 import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema } from "../models/users";
-import { getLimit, getCursorWhere, getInArrayWhere, buildPaginationResponse } from "../utils/drizzle";
+import { getLimit, getCursorWhere, getInArrayWhere, getFuzzySearchWhere, buildPaginationResponse } from "../utils/drizzle";
 
 export const UsersService = {
     async getAll(query: typeof usersQuerySchema.static) {
         const limit = getLimit(query.limit);
         const cursorWhere = getCursorWhere(query.cursor);
         const roleWhere = getInArrayWhere("role", query.role);
+        const searchWhere = getFuzzySearchWhere(["firstName", "lastName", "email"], query.search);
 
-        const conditions = [cursorWhere, roleWhere].filter(Boolean);
+        const conditions = [cursorWhere, roleWhere, searchWhere].filter(Boolean);
         const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const usersData = await db.query.users.findMany({
@@ -89,6 +91,7 @@ export const UsersService = {
             .where(eq(table.users.id, id))
             .returning();
         if (!updatedUser) return null;
+        await this.syncAuthUser(updatedUser);
         return this.getById(id);
     },
 
@@ -99,7 +102,21 @@ export const UsersService = {
             .where(eq(table.users.id, id))
             .returning();
         if (!patchedUser) return null;
+        await this.syncAuthUser(patchedUser);
         return this.getById(id);
+    },
+
+    async syncAuthUser(user: { authId: string | null; firstName: string; lastName: string; email: string }) {
+        if (!user.authId) return;
+        await db
+            .update(authUser)
+            .set({
+                name: `${user.firstName} ${user.lastName}`.trim(),
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+            })
+            .where(eq(authUser.id, user.authId));
     },
 
     async remove(id: string) {
@@ -107,6 +124,9 @@ export const UsersService = {
             .delete(table.users)
             .where(eq(table.users.id, id))
             .returning();
+        if (removedUser?.authId) {
+            await db.delete(authUser).where(eq(authUser.id, removedUser.authId));
+        }
         return removedUser;
     }
 };

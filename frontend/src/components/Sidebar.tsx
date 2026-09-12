@@ -1,11 +1,16 @@
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import logo from "../logo.png";
 import { Button } from "./common/Button";
 import { Calendar } from "lucide-react";
 import { CalendarDatePicker } from "./CalendarDatePicker";
 import { startOfDay, formatISO } from "date-fns";
+import { useAuth } from "@/utils/AuthProvider";
 
 export function Sidebar() {
+    const navigate = useNavigate();
+    const { UserData } = useAuth();
+    const isAdmin = UserData?.user?.userInfo?.role === "admin";
+
     return (
         <div className="w-2/9 h-full bg-gray-200 flex flex-col items-center">
             <div className="w-3/4 h-full py-4 flex flex-col items-center justify-between"> 
@@ -23,9 +28,12 @@ export function Sidebar() {
                         <a className="text-lg text-darker-grey font-medium"> Other actions</a>
                         <div className="w-1/5 h-0.75 bg-darker-grey"/>
                     </div>
-                    <Button variant="secondary" className="w-full mt-2"> Manage students </Button>
+                    <Button variant="secondary" className="w-full mt-2" onClick={() => navigate("/manage-students")}> Manage students </Button>
                     <Button variant="secondary" className="w-full mt-2"> Manage groups </Button>
                     <Button variant="secondary" className="w-full mt-2"> Manage reservations </Button>
+                    {isAdmin && (
+                        <Button variant="secondary" className="w-full mt-2" onClick={() => navigate("/manage-users")}> Manage users </Button>
+                    )}
                     <Button variant="secondary" className="w-full mt-2hw"> View your calendar </Button>
                 </div>
                 <div className="bottomPart w-full flex flex-col items-center">

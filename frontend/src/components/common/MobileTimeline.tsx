@@ -33,9 +33,9 @@ export function MobileTimeline({
     }, []);
 
     return (
-        <div ref={scrollContainerRef} className="relative min-h-0 flex-1 overflow-auto bg-canvas">
-            <div className="sticky top-0 z-30 flex w-max min-w-full flex-row bg-canvas pb-2">
-                <div className="sticky left-0 z-40 w-16 shrink-0 bg-canvas" />
+        <div ref={scrollContainerRef} className="relative min-h-0 flex-1 overflow-auto overscroll-contain bg-canvas">
+            <div className="sticky top-0 z-40 flex w-max min-w-full flex-row bg-canvas pb-2">
+                <div className="sticky left-0 z-50 w-16 shrink-0 bg-canvas" />
                 {days.map((day) => {
                     const dayTextClassName = [
                         isToday(day) && "rounded-xl px-2 py-1 bg-orange text-white font-bold",
@@ -57,7 +57,7 @@ export function MobileTimeline({
             </div>
 
             <div className="relative flex w-max min-w-full">
-                <div className="sticky left-0 z-20 w-16 shrink-0 bg-canvas text-end font-semibold text-darker-grey">
+                <div className="sticky left-0 z-30 w-16 shrink-0 bg-canvas text-end font-semibold text-darker-grey">
                     {TIMELINE_HOURS.map((hour) => (
                         <div key={hour} className="h-16 border-t border-grid text-sm">
                             <span className="mr-1">{hour + ":00"}</span>

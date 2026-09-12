@@ -9,7 +9,7 @@ export function AppLayout() {
     const [navOpen, setNavOpen] = useState(false);
 
     return (
-        <div className="flex h-dvh w-full flex-row overflow-hidden">
+        <div className="flex h-dvh w-full flex-row overflow-hidden bg-canvas">
             <Sidebar className="hidden lg:flex lg:w-[280px]" />
 
             <Drawer open={navOpen} onOpenChange={setNavOpen}>

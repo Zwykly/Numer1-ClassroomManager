@@ -4,7 +4,7 @@
 @import "./utilities.css";
 @layer base {
   :root {
-    @apply text-[rgba(255,255,255,0.87)] bg-[#242424];
+    @apply text-black bg-canvas;
   }
 
   html,
@@ -13,6 +13,6 @@
   }
 
   body {
-    @apply grid place-items-center min-w-[320px] min-h-screen relative m-0 font-display overflow-x-hidden;
+    @apply block min-w-[320px] min-h-screen relative m-0 font-display overflow-x-hidden bg-canvas;
   }
 }

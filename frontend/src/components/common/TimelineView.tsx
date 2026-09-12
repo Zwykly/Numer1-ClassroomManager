@@ -1,8 +1,10 @@
 import { DayTimeline } from "@/components/common/DayTimeline";
+import { MonthView } from "@/components/common/MonthView";
+import { DayClassesModal } from "@/components/common/DayClassesModal";
 import { useSelectedDate, useSelectedView } from "../../stores/useSelectedDateStore";
 import { useCurrentTimeTicker } from "../../utils/CurrentTime";
 import { isToday, format, isSameDay } from "date-fns";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useAuth } from "@/utils/AuthProvider";
 import { getDisplayedDays, getFetchRange, HOUR_HEIGHT } from "../../utils/calendarRange";
 import { useClassroomReservations, useClassroomReservationsActions } from "../../stores/useClassroomReservationsStore";
@@ -29,6 +31,8 @@ export function TimelineView () {
         const currentUserId = UserData?.user?.userInfo?.id;
         const selectedClassroom = useSelectedClassroom();
         const classFilter = useSelectedClassFilter();
+        const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+        const [dayModalOpen, setDayModalOpen] = useState(false);
 
         const daysOfTheWeek = ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -54,6 +58,31 @@ export function TimelineView () {
                 scrollContainerRef.current.scrollTop = top - 100;
             }
         }, []);
+
+        const openDay = (day: Date) => {
+            setSelectedDay(day);
+            setDayModalOpen(true);
+        };
+
+        const dayReservations = selectedDay
+            ? visibleReservations.filter((reservation) => isSameDay(reservation.reservationTime, selectedDay))
+            : [];
+
+        if (view === "month") {
+            return (
+                <div className="flex h-full w-full flex-col overflow-y-auto bg-white px-6 pt-6">
+                    <MonthView selectedDate={selectedDate} reservations={visibleReservations} onSelectDay={openDay} />
+                    <DayClassesModal
+                        open={dayModalOpen}
+                        onOpenChange={setDayModalOpen}
+                        day={selectedDay}
+                        reservations={dayReservations}
+                        currentUserId={currentUserId}
+                    />
+                </div>
+            );
+        }
+
     return (
         <div className="flex flex-col h-full pt-8 bg-white w-full">
             {/*Header with day labels*/}

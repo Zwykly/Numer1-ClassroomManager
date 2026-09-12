@@ -27,17 +27,17 @@ export function SidebarAction({
             className={cn(
                 "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition",
                 active
-                    ? "bg-orange/10 text-orange"
-                    : "text-darker-grey hover:bg-light-grey/70 hover:text-black",
-                disabled && "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-darker-grey",
+                    ? "bg-orange text-white shadow-sm"
+                    : "text-orange hover:bg-orange/10",
+                disabled && "cursor-not-allowed text-darker-grey opacity-60 hover:bg-transparent",
             )}
         >
             <Icon
                 size={18}
                 className={cn(
                     "shrink-0",
-                    active ? "text-orange" : "text-dark-grey group-hover:text-black",
-                    disabled && "group-hover:text-dark-grey",
+                    active ? "text-white" : "text-orange group-hover:text-orange",
+                    disabled && "text-dark-grey group-hover:text-dark-grey",
                 )}
             />
             <span className="flex-1 truncate">{label}</span>

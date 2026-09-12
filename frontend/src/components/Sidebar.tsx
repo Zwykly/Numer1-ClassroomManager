@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router";
-import { LogOut, Plus, UsersRound } from "lucide-react";
+import { LogOut, Plus } from "lucide-react";
 import logo from "../logo.png";
 import { Button } from "./common/Button";
 import { SidebarAction } from "./common/SidebarAction";
@@ -8,7 +8,12 @@ import { useAuth } from "@/utils/AuthProvider";
 import { authClient } from "@/lib/auth-client";
 import { useActionModalActions } from "@/stores/useActionModalStore";
 import { useSelectedDateActions } from "@/stores/useSelectedDateStore";
-import { SIDEBAR_PAGES, type SidebarActionDescriptor } from "@/router/sidebarConfig";
+import {
+    SIDEBAR_NAVIGATION,
+    SIDEBAR_PAGES,
+    type SidebarNavDescriptor,
+    type SidebarPageActionDescriptor,
+} from "@/router/sidebarConfig";
 
 export function Sidebar() {
     const navigate = useNavigate();
@@ -23,34 +28,27 @@ export function Sidebar() {
         ? `${userInfo.firstName} ${userInfo.lastName}`.trim()
         : UserData?.user?.name ?? "User";
     const role = userInfo?.role ?? "teacher";
-    const initials = fullName
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() ?? "")
-        .join("") || "U";
 
     const pageConfig = SIDEBAR_PAGES[pathname];
     const pageActions = (pageConfig?.actions ?? []).filter(
         (action) => !("adminOnly" in action && action.adminOnly) || isAdmin,
     );
+    const navigationActions = SIDEBAR_NAVIGATION.filter(
+        (action) => !("adminOnly" in action && action.adminOnly) || isAdmin,
+    );
 
-    const handleAction = (action: SidebarActionDescriptor) => {
-        switch (action.kind) {
-            case "navigate":
-                navigate(action.to);
-                break;
-            case "modal":
-                if (action.target === "reservation") openReservation();
-                if (action.target === "student") openStudent();
-                if (action.target === "user") openUser();
-                break;
-            case "today":
-                setDateToToday();
-                break;
-            case "placeholder":
-                break;
+    const handleNavigate = (action: Extract<SidebarNavDescriptor, { kind: "navigate" }>) => {
+        navigate(action.to);
+    };
+
+    const handlePageAction = (action: SidebarPageActionDescriptor) => {
+        if (action.kind === "today") {
+            setDateToToday();
+            return;
         }
+        if (action.target === "reservation") openReservation();
+        if (action.target === "student") openStudent();
+        if (action.target === "user") openUser();
     };
 
     const handleSignOut = async () => {
@@ -84,10 +82,10 @@ export function Sidebar() {
                 )}
 
                 <p className="px-3 pb-1 pt-3 text-[11px] font-bold uppercase tracking-[0.15em] text-darker-grey">
-                    {pageConfig?.label ?? "Actions"}
+                    Navigate
                 </p>
                 <div className="flex flex-col gap-1">
-                    {pageActions.map((action) => (
+                    {navigationActions.map((action) => (
                         <SidebarAction
                             key={action.id}
                             icon={action.icon}
@@ -95,18 +93,36 @@ export function Sidebar() {
                             hint={action.kind === "placeholder" ? action.hint : undefined}
                             disabled={action.kind === "placeholder"}
                             active={action.kind === "navigate" ? pathname === action.to : false}
-                            onClick={action.kind === "placeholder" ? undefined : () => handleAction(action)}
+                            onClick={
+                                action.kind === "navigate"
+                                    ? () => handleNavigate(action)
+                                    : undefined
+                            }
                         />
                     ))}
-                    <SidebarAction icon={UsersRound} label="Manage groups" hint="Soon" disabled />
                 </div>
+
+                {pageActions.length > 0 && (
+                    <>
+                        <p className="px-3 pb-1 pt-5 text-[11px] font-bold uppercase tracking-[0.15em] text-darker-grey">
+                            {pageConfig?.label ?? "This page"}
+                        </p>
+                        <div className="flex flex-col gap-1">
+                            {pageActions.map((action) => (
+                                <SidebarAction
+                                    key={action.id}
+                                    icon={action.icon}
+                                    label={action.label}
+                                    onClick={() => handlePageAction(action)}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
 
             <div className="border-t border-light-grey p-4">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange/10 text-sm font-bold text-orange">
-                        {initials}
-                    </div>
                     <div className="flex min-w-0 flex-1 flex-col">
                         <span className="truncate text-sm font-bold text-black">{fullName}</span>
                         <span className="truncate text-xs capitalize text-darker-grey">{role}</span>
@@ -115,7 +131,7 @@ export function Sidebar() {
                         type="button"
                         onClick={handleSignOut}
                         title="Sign out"
-                        className="rounded-lg p-1.5 text-darker-grey transition hover:bg-light-grey hover:text-black"
+                        className="rounded-lg p-1.5 text-darker-grey transition hover:bg-orange/10 hover:text-orange"
                     >
                         <LogOut size={18} />
                     </button>

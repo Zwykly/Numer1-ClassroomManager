@@ -69,8 +69,8 @@ export function MonthView({ selectedDate, reservations, onSelectDay }: MonthView
                                 disabled={!inMonth}
                                 className={cn(
                                     "relative flex min-h-[7rem] flex-col items-start gap-2 border-r border-light-grey p-3 text-left transition last:border-r-0",
-                                    inMonth && "hover:bg-light-grey/40",
-                                    !inMonth && "cursor-default bg-light-grey/20",
+                                    inMonth && "hover:bg-light-grey/60",
+                                    !inMonth && "cursor-default bg-light-grey/40",
                                 )}
                             >
                                 <span

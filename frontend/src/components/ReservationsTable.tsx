@@ -180,7 +180,7 @@ export function ReservationsTable({
     return (
         <table className="w-full border-collapse text-left text-sm">
             <thead>
-                <tr className="border-y border-light-grey text-xs uppercase tracking-wide text-darker-grey">
+                <tr className="border-y border-light-grey bg-light-grey/50 text-xs uppercase tracking-wide text-darker-grey">
                     <th className="w-10 py-3 pl-2 pr-2 font-bold" />
                     <th className="px-4 py-3 font-bold">Name</th>
                     <th className="px-4 py-3 font-bold">Teacher</th>
@@ -227,25 +227,25 @@ export function ReservationsTable({
                                             <span className="text-xs text-darker-grey">{group.roomName}</span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-4 text-black/70">
+                                    <td className="px-4 py-4 text-darker-grey">
                                         {group.teacher
                                             ? `${group.teacher.firstName} ${group.teacher.lastName}`
                                             : "-"}
                                     </td>
-                                    <td className="px-4 py-4 text-black/70">
+                                    <td className="px-4 py-4 text-darker-grey">
                                         <span className="inline-flex items-center gap-1.5">
                                             <Calendar size={15} className="text-darker-grey" />
                                             {format(group.firstTime, "dd MMM yyyy")} – {format(group.lastTime, "dd MMM yyyy")}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-4 text-black/70">-</td>
+                                    <td className="px-4 py-4 text-darker-grey">-</td>
                                     <td className="px-4 py-4">
                                         <span className="inline-flex items-center gap-1.5 rounded-full bg-orange/10 px-3 py-1 text-xs font-bold text-orange">
                                             <Repeat size={13} />
                                             Recurring
                                         </span>
                                     </td>
-                                    <td className="px-4 py-4 text-black/70">
+                                    <td className="px-4 py-4 text-darker-grey">
                                         <span className="inline-flex items-center gap-1.5">
                                             <Users size={15} className="text-darker-grey" />
                                             {group.attendeeCount}
@@ -281,7 +281,7 @@ export function ReservationsTable({
                                                                             {formatTime(occurrence.reservationTime)}
                                                                         </span>
                                                                     </td>
-                                                                    <td className="px-4 py-3 text-black/70">
+                                                                    <td className="px-4 py-3 text-darker-grey">
                                                                         {formatEnd(occurrence.reservationTime, occurrence.durationMinutes)}
                                                                     </td>
                                                                     <td className="px-4 py-3">
@@ -289,7 +289,7 @@ export function ReservationsTable({
                                                                             {occurrence.status}
                                                                         </span>
                                                                     </td>
-                                                                    <td className="px-4 py-3 text-black/70">{people}</td>
+                                                                    <td className="px-4 py-3 text-darker-grey">{people}</td>
                                                                     <td className="px-4 py-3">
                                                                         <div className="flex flex-row justify-end gap-1">
                                                                             <button
@@ -361,15 +361,15 @@ export function ReservationsTable({
                                         </span>
                                     </div>
                                 </td>
-                                <td className="px-4 py-4 text-black/70">
+                                <td className="px-4 py-4 text-darker-grey">
                                     {reservation.teacher
                                         ? `${reservation.teacher.firstName} ${reservation.teacher.lastName}`
                                         : "-"}
                                 </td>
-                                <td className="px-4 py-4 text-black/70">
+                                <td className="px-4 py-4 text-darker-grey">
                                     {formatTime(reservation.reservationTime)}
                                 </td>
-                                <td className="px-4 py-4 text-black/70">
+                                <td className="px-4 py-4 text-darker-grey">
                                     {formatEnd(reservation.reservationTime, reservation.durationMinutes)}
                                 </td>
                                 <td className="px-4 py-4">
@@ -384,7 +384,7 @@ export function ReservationsTable({
                                         </span>
                                     )}
                                 </td>
-                                <td className="px-4 py-4 text-black/70">
+                                <td className="px-4 py-4 text-darker-grey">
                                     <span className="inline-flex items-center gap-1.5">
                                         <Users size={15} className="text-darker-grey" />
                                         {attendees.length}
@@ -445,11 +445,11 @@ export function ReservationsTable({
                                                 <span className={cn("w-fit rounded-full px-3 py-1 text-xs font-bold capitalize", statusStyles[reservation.status] ?? "bg-light-grey text-darker-grey")}>
                                                     {reservation.status}
                                                 </span>
-                                                <span className="inline-flex items-center gap-1.5 text-sm text-black/70">
+                                                <span className="inline-flex items-center gap-1.5 text-sm text-darker-grey">
                                                     <Clock size={15} className="text-darker-grey" />
                                                     {formatTime(reservation.reservationTime)}
                                                 </span>
-                                                <span className="inline-flex items-center gap-1.5 text-sm text-black/70">
+                                                <span className="inline-flex items-center gap-1.5 text-sm text-darker-grey">
                                                     <Calendar size={15} className="text-darker-grey" />
                                                     Created {formatTime(reservation.createdOn)}
                                                 </span>
@@ -457,7 +457,7 @@ export function ReservationsTable({
                                                     <span className="text-xs font-bold uppercase tracking-wide text-darker-grey">
                                                         Additional info
                                                     </span>
-                                                    <p className="mt-1 text-sm text-black/70">
+                                                    <p className="mt-1 text-sm text-darker-grey">
                                                         {reservation.additionalInfo || "No additional information."}
                                                     </p>
                                                 </div>

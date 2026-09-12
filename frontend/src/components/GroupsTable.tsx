@@ -49,7 +49,7 @@ export function GroupsTable({ groups, isLoading, canDelete, onEdit, onDelete }: 
     return (
         <table className="w-full border-collapse text-left text-sm">
             <thead>
-                <tr className="border-y border-light-grey text-xs uppercase tracking-wide text-darker-grey">
+                <tr className="border-y border-light-grey bg-light-grey/50 text-xs uppercase tracking-wide text-darker-grey">
                     <th className="w-10 py-3 pl-2 pr-2 font-bold" />
                     <th className="px-4 py-3 font-bold">Name</th>
                     <th className="px-4 py-3 font-bold">Description</th>
@@ -85,18 +85,18 @@ export function GroupsTable({ groups, isLoading, canDelete, onEdit, onDelete }: 
                                 </td>
                                 <td className="px-4 py-4 font-bold text-black">{group.name}</td>
                                 <td
-                                    className="max-w-[22rem] truncate px-4 py-4 text-black/70"
+                                    className="max-w-[22rem] truncate px-4 py-4 text-darker-grey"
                                     title={group.description ?? undefined}
                                 >
                                     {group.description || "-"}
                                 </td>
-                                <td className="px-4 py-4 text-black/70">
+                                <td className="px-4 py-4 text-darker-grey">
                                     <span className="inline-flex items-center gap-1.5">
                                         <Users size={15} className="text-darker-grey" />
                                         {people}
                                     </span>
                                 </td>
-                                <td className="px-4 py-4 text-black/70">
+                                <td className="px-4 py-4 text-darker-grey">
                                     <span className="inline-flex items-center gap-1.5">
                                         <School size={15} className="text-darker-grey" />
                                         {classCount}
@@ -230,7 +230,7 @@ export function GroupsTable({ groups, isLoading, canDelete, onEdit, onDelete }: 
                                                     <span className="text-xs font-bold uppercase tracking-wide text-darker-grey">
                                                         Description
                                                     </span>
-                                                    <p className="mt-1 text-sm text-black/70">
+                                                    <p className="mt-1 text-sm text-darker-grey">
                                                         {group.description || "No description provided."}
                                                     </p>
                                                 </div>

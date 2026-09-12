@@ -171,7 +171,7 @@ export function TimelineView () {
             {/*Body where the timeline resides*/}
             <div ref={scrollContainerRef} className="flex-1 overflow-y-auto flex min-h-0 relative">
                 <div className="flex w-full absolute z-0">
-                    <div className="w-16 text-end font-semibold text-grey">
+                    <div className="w-16 text-end font-semibold text-darker-grey">
                         {hours.map(hour => {
                             return (
                                 <div key={hour} className="h-16 border-t border-grey text-sm">

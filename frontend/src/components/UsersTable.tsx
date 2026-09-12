@@ -35,7 +35,7 @@ export function UsersTable({
     return (
         <table className="w-full border-collapse text-left text-sm">
             <thead>
-                <tr className="border-y border-light-grey text-xs uppercase tracking-wide text-darker-grey">
+                <tr className="border-y border-light-grey bg-light-grey/50 text-xs uppercase tracking-wide text-darker-grey">
                     <th className="py-3 pr-4 font-bold">User</th>
                     <th className="px-4 py-3 font-bold">Role</th>
                     <th className="px-4 py-3 font-bold">Additional info</th>
@@ -67,7 +67,7 @@ export function UsersTable({
                                 {user.role ?? "teacher"}
                             </span>
                         </td>
-                        <td className="max-w-[18rem] truncate px-4 py-4 text-black/70" title={user.additionalInfo ?? undefined}>
+                        <td className="max-w-[18rem] truncate px-4 py-4 text-darker-grey" title={user.additionalInfo ?? undefined}>
                             {user.additionalInfo || "-"}
                         </td>
                         <td className="py-4 pl-4">

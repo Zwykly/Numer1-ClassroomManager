@@ -39,10 +39,10 @@ export function StudentsTable({
     }
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-light-grey">
+        <div className="overflow-hidden rounded-2xl border border-light-grey bg-white">
             <table className="w-full border-collapse text-left text-sm">
                 <thead>
-                    <tr className="border-b border-light-grey text-xs uppercase tracking-wide text-darker-grey">
+                    <tr className="border-b border-light-grey bg-light-grey/50 text-xs uppercase tracking-wide text-darker-grey">
                         <th className="px-4 py-3 font-bold">Name</th>
                         <th className="px-4 py-3 font-bold">Phone</th>
                         <th className="px-4 py-3 font-bold">Email</th>
@@ -59,9 +59,9 @@ export function StudentsTable({
                             <td className="px-4 py-3 font-bold text-black">
                                 {student.firstName} {student.lastName}
                             </td>
-                            <td className="px-4 py-3 text-black/70">{student.phoneNumber || "-"}</td>
-                            <td className="px-4 py-3 text-black/70">{student.email || "-"}</td>
-                            <td className="max-w-[16rem] truncate px-4 py-3 text-black/70" title={student.additionalInfo ?? undefined}>
+                            <td className="px-4 py-3 text-darker-grey">{student.phoneNumber || "-"}</td>
+                            <td className="px-4 py-3 text-darker-grey">{student.email || "-"}</td>
+                            <td className="max-w-[16rem] truncate px-4 py-3 text-darker-grey" title={student.additionalInfo ?? undefined}>
                                 {student.additionalInfo || "-"}
                             </td>
                             {canManage && (

@@ -2,34 +2,26 @@ import { DayTimeline } from "@/components/common/DayTimeline";
 import { MonthView } from "@/components/common/MonthView";
 import { DayClassesModal } from "@/components/common/DayClassesModal";
 import { ClassDetailsModal } from "@/components/common/ClassDetailsModal";
+import { MobileTimeline } from "@/components/common/MobileTimeline";
+import { CurrentTimeLine } from "@/components/common/CurrentTimeLine";
 import { ReservationFormModal } from "@/components/ReservationFormModal";
 import { useSelectedDate, useSelectedView } from "../../stores/useSelectedDateStore";
 import { useCurrentTimeTicker } from "../../utils/CurrentTime";
-import { isToday, format, isSameDay } from "date-fns";
+import { isToday, isSameDay } from "date-fns";
 import { useRef, useEffect, useState } from "react";
 import { useAuth } from "@/utils/AuthProvider";
 import { getDisplayedDays, getFetchRange, HOUR_HEIGHT, TIMELINE_HOURS, minutesFromTimelineStart } from "../../utils/calendarRange";
+import { useIsMobile } from "@/utils/useMediaQuery";
 import { useClassroomReservations, useClassroomReservationsActions, type ClassroomReservation } from "../../stores/useClassroomReservationsStore";
 import { useSelectedClassFilter, useSelectedClassroom } from "../../stores/useSelectedTimelineStore";
 import { useReservationsActions, type Reservation, type ReservationPatch } from "../../stores/useReservationsStore";
 import eden from "@/lib/eden";
 
-function CurrentTimeLine () {
-    const now = useCurrentTimeTicker(60000);
-    const minutesFromStart = minutesFromTimelineStart(now);
-    if (minutesFromStart < 0) return null;
-    const top = (minutesFromStart / 60) * HOUR_HEIGHT;
-    return(
-        <div className="z-20 w-full border-t-3 border-orange absolute" style={{ top: `${top}px` }}>
-            <div className="w-16 text-end pr-1 font-semibold text-orange">{format(now, "HH:mm")}</div>
-        </div>
-    );
-}
-
 
 export function TimelineView () {
         const view = useSelectedView();
         const selectedDate = useSelectedDate();
+        const isMobile = useIsMobile();
         const hours = TIMELINE_HOURS;
         const scrollContainerRef = useRef<HTMLDivElement>(null);
         const now = useCurrentTimeTicker(60000);
@@ -135,7 +127,7 @@ export function TimelineView () {
 
         if (view === "month") {
             return (
-                <div className="flex h-full w-full flex-col overflow-y-auto bg-canvas px-6 pt-6">
+                <div className="flex h-full w-full flex-col overflow-y-auto bg-canvas px-4 pt-4 sm:px-6 sm:pt-6">
                     <MonthView selectedDate={selectedDate} reservations={visibleReservations} onSelectDay={openDay} />
                     <DayClassesModal
                         open={dayModalOpen}
@@ -150,8 +142,27 @@ export function TimelineView () {
             );
         }
 
+        if (isMobile) {
+            return (
+                <div className="flex min-h-0 flex-1 flex-col bg-canvas w-full">
+                    <MobileTimeline
+                        days={displayedDays}
+                        reservations={visibleReservations}
+                        currentUserId={currentUserId}
+                        onSelectReservation={openDetails}
+                        columnWidth={
+                            view === "day"
+                                ? "calc(100vw - 4rem)"
+                                : "calc((100vw - 4rem) / 3)"
+                        }
+                    />
+                    {modals}
+                </div>
+            );
+        }
+
     return (
-        <div className="flex flex-col h-full pt-8 bg-canvas w-full">
+        <div className="flex min-h-0 flex-1 flex-col pt-8 bg-canvas w-full">
             {/*Body where the timeline resides*/}
             <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 relative">
                 {/*Header with day labels - inside the scroll container so it shares the grid width*/}

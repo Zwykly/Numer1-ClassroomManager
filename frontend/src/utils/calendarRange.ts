@@ -10,7 +10,7 @@ import {
     startOfWeek,
 } from "date-fns";
 
-export type CalendarView = "month" | "week" | "fiveDays";
+export type CalendarView = "day" | "threeDays" | "month" | "week" | "fiveDays";
 
 export const HOUR_HEIGHT = 64;
 
@@ -32,6 +32,16 @@ export const CALENDAR_VIEWS: { value: CalendarView; label: string }[] = [
     { value: "fiveDays", label: "5 days" },
 ];
 
+export const MOBILE_CALENDAR_VIEWS: { value: CalendarView; label: string }[] = [
+    { value: "day", label: "1 day" },
+    { value: "threeDays", label: "3 days" },
+    { value: "month", label: "Month" },
+];
+
+// Number of days a mobile timeline column window renders. The visible column
+// count is controlled by the column width in the view.
+export const MOBILE_TIMELINE_DAY_COUNT = 7;
+
 export function dayKey(date: Date): string {
     return format(date, "yyyy-MM-dd");
 }
@@ -39,6 +49,13 @@ export function dayKey(date: Date): string {
 export function getDisplayedDays(selectedDate: Date, view: CalendarView): Date[] {
     if (view === "month") {
         return eachDayOfInterval({ start: startOfMonth(selectedDate), end: endOfMonth(selectedDate) });
+    }
+
+    if (view === "day" || view === "threeDays") {
+        return eachDayOfInterval({
+            start: startOfDay(selectedDate),
+            end: addDays(startOfDay(selectedDate), MOBILE_TIMELINE_DAY_COUNT - 1),
+        });
     }
 
     if (view === "week") {

@@ -38,8 +38,9 @@ export function TimelineView () {
         const classFilter = useSelectedClassFilter();
         const [selectedDay, setSelectedDay] = useState<Date | null>(null);
         const [dayModalOpen, setDayModalOpen] = useState(false);
-        const [selectedReservation, setSelectedReservation] = useState<ClassroomReservation | null>(null);
+        const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
         const [detailsOpen, setDetailsOpen] = useState(false);
+        const [detailsLoading, setDetailsLoading] = useState(false);
         const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
         const [editOpen, setEditOpen] = useState(false);
 
@@ -74,22 +75,27 @@ export function TimelineView () {
             setDayModalOpen(true);
         };
 
-        const openDetails = (reservation: ClassroomReservation) => {
-            setSelectedReservation(reservation);
+        const openDetails = async (reservation: ClassroomReservation) => {
             setDayModalOpen(false);
+            setSelectedReservation(null);
             setDetailsOpen(true);
-        };
-
-        const handleEdit = async (reservation: ClassroomReservation) => {
+            setDetailsLoading(true);
             try {
                 const response = await eden["classroom-reservations"]({ id: reservation.id }).get();
-                if (response.error || !response.data) return;
-                setEditingReservation(response.data as unknown as Reservation);
-                setDetailsOpen(false);
-                setEditOpen(true);
+                if (!response.error && response.data) {
+                    setSelectedReservation(response.data as unknown as Reservation);
+                }
             } catch (error) {
                 console.error("Failed to load class:", error);
+            } finally {
+                setDetailsLoading(false);
             }
+        };
+
+        const handleEdit = (reservation: Reservation) => {
+            setEditingReservation(reservation);
+            setDetailsOpen(false);
+            setEditOpen(true);
         };
 
         const handleUpdate = async (id: string, data: ReservationPatch) => {
@@ -107,6 +113,7 @@ export function TimelineView () {
                     open={detailsOpen}
                     onOpenChange={setDetailsOpen}
                     reservation={selectedReservation}
+                    isLoading={detailsLoading}
                     currentUserId={currentUserId}
                     isAdmin={isAdmin}
                     onEdit={handleEdit}

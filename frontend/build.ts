@@ -131,7 +131,7 @@ const result = await Bun.build({
   sourcemap: "linked",
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
-    "process.env.BUN_PUBLIC_BETTER_AUTH_URL": JSON.stringify(Bun.env.BUN_PUBLIC_BETTER_AUTH_URL ?? "http://localhost:3000"),
+    "process.env.BUN_PUBLIC_API_URL": JSON.stringify(Bun.env.BUN_PUBLIC_API_URL ?? ""),
   },
   ...cliConfig,
 });

@@ -1,8 +1,9 @@
 import { createAuthClient } from "better-auth/react";
 import { usernameClient } from "better-auth/client/plugins";
+import { API_URL } from "./api-url";
 
 export const authClient = createAuthClient({
-    baseURL: import.meta.env?.BUN_PUBLIC_BETTER_AUTH_URL ?? "http://localhost:3000",
+    baseURL: API_URL,
     plugins: [
         usernameClient(),
     ]

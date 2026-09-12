@@ -54,7 +54,7 @@ export function ClassTile({ reservation, isOwn, className, onClick }: ClassTileP
             type="button"
             onClick={onClick}
             className={cn(
-                "relative flex h-full w-full flex-col justify-center overflow-hidden rounded-xl border border-black/5 px-3 py-1.5 text-left transition hover:brightness-[0.97]",
+                "relative flex h-full w-full flex-col justify-start overflow-hidden rounded-xl border border-black/5 px-3 py-1.5 text-left transition hover:brightness-[0.97]",
                 onClick && "cursor-pointer",
                 isCanceled && "opacity-80",
                 isOngoing && "ring-2 ring-emerald-500/70",

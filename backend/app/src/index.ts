@@ -4,6 +4,7 @@ import apiRoutes from "./routes";
 import { auth } from "./auth/auth";
 export { db } from "./db/db";
 import { cors } from "@elysiajs/cors";
+import { startReservationStatusJob } from "./jobs/reservation_status";
 
 const app = new Elysia()
   .mount(auth.handler)
@@ -17,6 +18,8 @@ const app = new Elysia()
   .use(apiRoutes)
   .get("/", () => "Hello Elysia")
   .listen(3000);
+
+startReservationStatusJob();
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`

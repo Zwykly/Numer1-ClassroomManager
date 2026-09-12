@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
 import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema } from "../models/classroom_reservations";
@@ -206,6 +206,32 @@ export const ClassroomReservationsService = {
         if (!patched) return null;
         await this.setAttendees(id, studentIds, groupIds);
         return this.getById(id);
+    },
+
+    async startDueReservations() {
+        const now = new Date();
+        const started = await db
+            .update(table.classroomReservations)
+            .set({ status: "ongoing", editedOn: now })
+            .where(and(
+                inArray(table.classroomReservations.status, ["scheduled", "cyclical"]),
+                lte(table.classroomReservations.reservationTime, now),
+            ))
+            .returning({ id: table.classroomReservations.id });
+        return started.length;
+    },
+
+    async completeFinishedReservations() {
+        const completed = await db
+            .update(table.classroomReservations)
+            .set({ status: "completed", editedOn: new Date() })
+            .where(and(
+                eq(table.classroomReservations.status, "ongoing"),
+                isNotNull(table.classroomReservations.durationMinutes),
+                sql`${table.classroomReservations.reservationTime} + (${table.classroomReservations.durationMinutes} * interval '1 minute') <= now()`,
+            ))
+            .returning({ id: table.classroomReservations.id });
+        return completed.length;
     },
 
     async remove(id: string) {

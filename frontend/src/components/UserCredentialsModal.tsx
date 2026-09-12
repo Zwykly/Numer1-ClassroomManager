@@ -66,8 +66,8 @@ export function UserCredentialsModal({
                         </div>
                     </div>
 
-                    <div className="flex justify-end">
-                        <Button variant="primary" onClick={() => onOpenChange(false)}>Done</Button>
+                    <div className="flex justify-stretch sm:justify-end">
+                        <Button variant="primary" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>Done</Button>
                     </div>
                 </div>
             )}

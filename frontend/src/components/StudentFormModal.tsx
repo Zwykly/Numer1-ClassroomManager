@@ -159,10 +159,11 @@ export function StudentFormModal({
                 <div className="flex flex-col gap-3">
                     <div className="h-1 w-full rounded-full" style={{ backgroundColor: STUDENT_COLORS[0] }} />
                     <StudentFields value={editForm} onChange={(field, value) => setEditForm((current) => ({ ...current, [field]: value }))} />
-                    <div className="mt-3 flex justify-end gap-2">
-                        <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>Cancel</Button>
                         <Button
                             variant="primary"
+                            className="w-full sm:w-auto"
                             onClick={handleSubmit}
                             disabled={!editForm.firstName.trim() || !editForm.lastName.trim() || isSubmitting}
                         >
@@ -171,7 +172,7 @@ export function StudentFormModal({
                     </div>
                 </div>
             ) : (
-                <div className="flex flex-row gap-5">
+                <div className="flex flex-col gap-5 sm:flex-row">
                     <div className="flex flex-1 flex-col">
                         <div className="h-1 w-full rounded-full" style={{ backgroundColor: activeColor }} />
                         <div className="mt-3">
@@ -182,15 +183,15 @@ export function StudentFormModal({
                                 />
                             )}
                         </div>
-                        <div className="mt-auto flex justify-end gap-2 pt-6">
-                            <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>Cancel</Button>
-                            <Button variant="primary" onClick={handleSubmit} disabled={!canSubmitAdd}>
+                        <div className="mt-auto flex flex-col-reverse gap-2 pt-6 sm:flex-row sm:justify-end">
+                            <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>Cancel</Button>
+                            <Button variant="primary" className="w-full sm:w-auto" onClick={handleSubmit} disabled={!canSubmitAdd}>
                                 {isSubmitting ? "Adding..." : `Add ${drafts.length > 1 ? `${drafts.length} students` : "student"}`}
                             </Button>
                         </div>
                     </div>
 
-                    <div className="flex w-64 flex-col rounded-xl bg-light-black p-3">
+                    <div className="flex w-full flex-col rounded-xl bg-light-black p-3 sm:w-64">
                         <span className="px-1 text-xs font-bold uppercase tracking-wide text-white/60">
                             Students ({drafts.length})
                         </span>
@@ -250,7 +251,7 @@ type StudentFieldsProps = {
 function StudentFields({ value, onChange }: StudentFieldsProps) {
     return (
         <div className="flex flex-col gap-3">
-            <div className="flex flex-row gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
                 <Field
                     label="First name"
                     value={value.firstName}

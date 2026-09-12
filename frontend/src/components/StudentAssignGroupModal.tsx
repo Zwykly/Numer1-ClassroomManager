@@ -83,9 +83,9 @@ export function StudentAssignGroupModal({
                     );
                 })}
             </div>
-            <div className="mt-5 flex justify-end gap-2">
-                <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>Cancel</Button>
-                <Button variant="primary" onClick={handleAssign} disabled={!selectedId || isSubmitting}>
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>Cancel</Button>
+                <Button variant="primary" className="w-full sm:w-auto" onClick={handleAssign} disabled={!selectedId || isSubmitting}>
                     {isSubmitting ? "Adding..." : "Add to group"}
                 </Button>
             </div>

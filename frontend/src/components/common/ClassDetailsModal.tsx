@@ -151,12 +151,12 @@ export function ClassDetailsModal({
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-2 border-t border-light-grey pt-4">
-                        <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>
+                    <div className="flex flex-col-reverse gap-2 border-t border-light-grey pt-4 sm:flex-row sm:justify-end">
+                        <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>
                             Close
                         </Button>
                         {canEdit && (
-                            <Button variant="primary" className="gap-2" onClick={() => onEdit(reservation)}>
+                            <Button variant="primary" className="w-full gap-2 sm:w-auto" onClick={() => onEdit(reservation)}>
                                 <Pencil size={16} />
                                 Edit class
                             </Button>

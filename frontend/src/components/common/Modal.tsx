@@ -26,13 +26,13 @@ export function Modal({
                 <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
                 <Dialog.Content
                     className={cn(
-                        "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-light-grey bg-white p-6 shadow-2xl focus:outline-none",
+                        "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-light-grey bg-white p-4 shadow-2xl focus:outline-none sm:p-6",
                         className,
                     )}
                 >
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <Dialog.Title className="text-2xl font-bold text-black">{title}</Dialog.Title>
+                            <Dialog.Title className="text-xl font-bold text-black sm:text-2xl">{title}</Dialog.Title>
                             {description && (
                                 <Dialog.Description className="mt-1 text-sm text-darker-grey">
                                     {description}

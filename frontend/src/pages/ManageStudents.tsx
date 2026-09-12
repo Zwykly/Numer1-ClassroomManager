@@ -3,7 +3,6 @@ import { Plus } from "lucide-react";
 import { Button } from "../components/common/Button";
 import { ConfirmModal } from "../components/common/ConfirmModal";
 import { StudentsTable } from "../components/StudentsTable";
-import { StudentFormModal } from "../components/StudentFormModal";
 import { StudentAssignGroupModal } from "../components/StudentAssignGroupModal";
 import { StudentClassModal } from "../components/StudentClassModal";
 import {
@@ -12,18 +11,18 @@ import {
     useStudentsActions,
     type Student,
 } from "@/stores/useStudentsStore";
+import { useActionModalActions } from "@/stores/useActionModalStore";
 import { useAuth } from "@/utils/AuthProvider";
 
 export function ManageStudents() {
     const students = useStudents();
     const isLoading = useStudentsLoading();
-    const { fetchStudents, createStudents, patchStudent, deleteStudent } = useStudentsActions();
+    const { fetchStudents, deleteStudent } = useStudentsActions();
+    const { openStudent } = useActionModalActions();
     const { UserData } = useAuth();
     const isAdmin = UserData?.user?.userInfo?.role === "admin";
 
     const [search, setSearch] = useState("");
-    const [formOpen, setFormOpen] = useState(false);
-    const [editingStudent, setEditingStudent] = useState<Student | null>(null);
     const [groupOpen, setGroupOpen] = useState(false);
     const [classOpen, setClassOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
@@ -37,13 +36,11 @@ export function ManageStudents() {
     }, [search]);
 
     const openAdd = () => {
-        setEditingStudent(null);
-        setFormOpen(true);
+        openStudent();
     };
 
     const openModify = (student: Student) => {
-        setEditingStudent(student);
-        setFormOpen(true);
+        openStudent(student);
     };
 
     const openGroup = (student: Student) => {
@@ -99,14 +96,6 @@ export function ManageStudents() {
                         />
                     </div>
                 </div>
-
-            <StudentFormModal
-                open={formOpen}
-                onOpenChange={setFormOpen}
-                student={editingStudent}
-                onSubmitBatch={createStudents}
-                onSubmitEdit={patchStudent}
-            />
 
             <StudentAssignGroupModal
                 open={groupOpen}

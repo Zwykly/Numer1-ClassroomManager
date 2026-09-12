@@ -6,11 +6,13 @@ import { SidebarAction } from "./common/SidebarAction";
 import { CalendarDatePicker } from "./CalendarDatePicker";
 import { useAuth } from "@/utils/AuthProvider";
 import { authClient } from "@/lib/auth-client";
+import { useActionModalActions } from "@/stores/useActionModalStore";
 
 export function Sidebar() {
     const navigate = useNavigate();
     const { pathname } = useLocation();
     const { UserData, refetch } = useAuth();
+    const { openReservation } = useActionModalActions();
 
     const userInfo = UserData?.user?.userInfo;
     const isAdmin = userInfo?.role === "admin";
@@ -42,7 +44,7 @@ export function Sidebar() {
             </div>
 
             <div className="px-4">
-                <Button variant="primary" className="w-full gap-2">
+                <Button variant="primary" className="w-full gap-2" onClick={() => openReservation()}>
                     <Plus size={18} />
                     Reserve a classroom
                 </Button>

@@ -4,7 +4,6 @@ import { clsx as cn } from "clsx";
 import { Button } from "../components/common/Button";
 import { ConfirmModal } from "../components/common/ConfirmModal";
 import { ReservationsTable } from "../components/ReservationsTable";
-import { ReservationFormModal } from "../components/ReservationFormModal";
 import {
     useReservations,
     useReservationsLoading,
@@ -12,6 +11,7 @@ import {
     type Reservation,
     type ReservationView,
 } from "@/stores/useReservationsStore";
+import { useActionModalActions } from "@/stores/useActionModalStore";
 import { useAuth } from "@/utils/AuthProvider";
 
 const FILTERS: { value: ReservationView; label: string }[] = [
@@ -24,16 +24,14 @@ const FILTERS: { value: ReservationView; label: string }[] = [
 export function ManageReservations() {
     const reservations = useReservations();
     const isLoading = useReservationsLoading();
-    const { fetchReservations, createReservation, createRecurringReservation, patchReservation, deleteReservation } =
-        useReservationsActions();
+    const { fetchReservations, deleteReservation } = useReservationsActions();
+    const { openReservation } = useActionModalActions();
     const { UserData } = useAuth();
     const currentUserId = UserData?.user?.userInfo?.id;
     const isAdmin = UserData?.user?.userInfo?.role === "admin";
 
     const [view, setView] = useState<ReservationView>("all");
     const [search, setSearch] = useState("");
-    const [formOpen, setFormOpen] = useState(false);
-    const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
 
@@ -50,13 +48,11 @@ export function ManageReservations() {
     const upcomingCount = reservations.filter((reservation) => reservation.status === "scheduled").length;
 
     const openAdd = () => {
-        setEditingReservation(null);
-        setFormOpen(true);
+        openReservation();
     };
 
     const openModify = (reservation: Reservation) => {
-        setEditingReservation(reservation);
-        setFormOpen(true);
+        openReservation(reservation);
     };
 
     const openDelete = (reservation: Reservation) => {
@@ -138,17 +134,6 @@ export function ManageReservations() {
                         />
                     </div>
                 </div>
-
-            <ReservationFormModal
-                open={formOpen}
-                onOpenChange={setFormOpen}
-                reservation={editingReservation}
-                currentUserId={currentUserId}
-                isAdmin={isAdmin}
-                onCreate={createReservation}
-                onCreateRecurring={createRecurringReservation}
-                onUpdate={patchReservation}
-            />
 
             <ConfirmModal
                 open={deleteOpen}

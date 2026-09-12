@@ -3,35 +3,23 @@ import { Plus } from "lucide-react";
 import { Button } from "../components/common/Button";
 import { ConfirmModal } from "../components/common/ConfirmModal";
 import { UsersTable } from "../components/UsersTable";
-import { UserFormModal } from "../components/UserFormModal";
-import { UserCredentialsModal } from "../components/UserCredentialsModal";
 import {
     useUsers,
     useUsersLoading,
     useUsersActions,
     type User,
-    type NewUserAccount,
 } from "@/stores/useUsersStore";
-
-type CreatedCredentials = {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-};
+import { useActionModalActions } from "@/stores/useActionModalStore";
 
 export function ManageUsers() {
     const users = useUsers();
     const isLoading = useUsersLoading();
-    const { fetchUsers, createUser, patchUser, deleteUser } = useUsersActions();
+    const { fetchUsers, deleteUser } = useUsersActions();
+    const { openUser } = useActionModalActions();
 
     const [search, setSearch] = useState("");
-    const [formOpen, setFormOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [credentialsOpen, setCredentialsOpen] = useState(false);
-    const [credentials, setCredentials] = useState<CreatedCredentials | null>(null);
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -44,32 +32,16 @@ export function ManageUsers() {
     const teacherCount = users.filter((user) => user.role !== "admin").length;
 
     const openAdd = () => {
-        setEditingUser(null);
-        setFormOpen(true);
+        openUser();
     };
 
     const openModify = (user: User) => {
-        setEditingUser(user);
-        setFormOpen(true);
+        openUser(user);
     };
 
     const openDelete = (user: User) => {
         setSelectedUser(user);
         setDeleteOpen(true);
-    };
-
-    const handleCreate = async (data: NewUserAccount) => {
-        const password = await createUser(data);
-        if (password) {
-            setCredentials({
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email,
-                password,
-            });
-            setCredentialsOpen(true);
-        }
-        return password;
     };
 
     const confirmDelete = async () => {
@@ -122,20 +94,6 @@ export function ManageUsers() {
                         />
                     </div>
                 </div>
-
-            <UserFormModal
-                open={formOpen}
-                onOpenChange={setFormOpen}
-                user={editingUser}
-                onCreate={handleCreate}
-                onUpdate={patchUser}
-            />
-
-            <UserCredentialsModal
-                open={credentialsOpen}
-                onOpenChange={setCredentialsOpen}
-                credentials={credentials}
-            />
 
             <ConfirmModal
                 open={deleteOpen}

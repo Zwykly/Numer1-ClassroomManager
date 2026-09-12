@@ -1,5 +1,6 @@
 import { Outlet } from "react-router";
 import { Sidebar } from "./Sidebar";
+import { ActionModalsHost } from "./ActionModalsHost";
 
 export function AppLayout() {
     return (
@@ -8,6 +9,7 @@ export function AppLayout() {
             <main className="flex h-screen w-full flex-col overflow-hidden">
                 <Outlet />
             </main>
+            <ActionModalsHost />
         </div>
     );
 }

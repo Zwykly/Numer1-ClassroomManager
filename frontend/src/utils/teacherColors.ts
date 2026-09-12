@@ -8,13 +8,24 @@ function hashString(value: string): number {
     return hash;
 }
 
+function teacherHue(teacherId: string): number {
+    return Math.round((hashString(teacherId) * GOLDEN_ANGLE) % 360);
+}
+
 export function teacherColor(teacherId?: string | null): string {
     if (!teacherId) return "hsl(0,0%,70%)";
 
     const hash = hashString(teacherId);
-    const hue = Math.round((hash * GOLDEN_ANGLE) % 360);
+    const hue = teacherHue(teacherId);
     const saturation = 58 + (hash % 3) * 7;
     const lightness = 44 + (hash % 4) * 4;
 
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+export function teacherTint(teacherId?: string | null): string {
+    if (!teacherId) return "hsl(0,0%,94%)";
+
+    const hue = teacherHue(teacherId);
+    return `hsl(${hue}, 62%, 94%)`;
 }

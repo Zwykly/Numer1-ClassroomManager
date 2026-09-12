@@ -12,6 +12,8 @@ import {
 
 export type CalendarView = "month" | "week" | "fiveDays";
 
+export const HOUR_HEIGHT = 64;
+
 export const CALENDAR_VIEWS: { value: CalendarView; label: string }[] = [
     { value: "month", label: "Month" },
     { value: "week", label: "7 days" },

@@ -4,11 +4,9 @@ import { useCurrentTimeTicker } from "../../utils/CurrentTime";
 import { isToday, format, isSameDay } from "date-fns";
 import { useRef, useEffect } from "react";
 import { useAuth } from "@/utils/AuthProvider";
-import { getDisplayedDays, getFetchRange } from "../../utils/calendarRange";
+import { getDisplayedDays, getFetchRange, HOUR_HEIGHT } from "../../utils/calendarRange";
 import { useClassroomReservations, useClassroomReservationsActions } from "../../stores/useClassroomReservationsStore";
 import { useSelectedClassFilter, useSelectedClassroom } from "../../stores/useSelectedTimelineStore";
-
-const HOUR_HEIGHT = 64;
 
 function CurrentTimeLine () {
     const now = useCurrentTimeTicker(60000);
@@ -97,7 +95,7 @@ export function TimelineView () {
                                 const reservations = visibleReservations.filter(reservation => isSameDay(reservation.reservationTime, day))
                                 return (
 
-                                    <DayTimeline key={day.toISOString()} day={day} reservations={reservations} />
+                                    <DayTimeline key={day.toISOString()} day={day} reservations={reservations} currentUserId={currentUserId} />
                                 );
                             })}
                     </div>

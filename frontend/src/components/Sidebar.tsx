@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router";
-import { CalendarDays, GraduationCap, LogOut, Plus, Users, UsersRound } from "lucide-react";
+import { LogOut, Plus, UsersRound } from "lucide-react";
 import logo from "../logo.png";
 import { Button } from "./common/Button";
 import { SidebarAction } from "./common/SidebarAction";
@@ -7,12 +7,15 @@ import { CalendarDatePicker } from "./CalendarDatePicker";
 import { useAuth } from "@/utils/AuthProvider";
 import { authClient } from "@/lib/auth-client";
 import { useActionModalActions } from "@/stores/useActionModalStore";
+import { useSelectedDateActions } from "@/stores/useSelectedDateStore";
+import { SIDEBAR_PAGES, type SidebarActionDescriptor } from "@/router/sidebarConfig";
 
 export function Sidebar() {
     const navigate = useNavigate();
     const { pathname } = useLocation();
     const { UserData, refetch } = useAuth();
-    const { openReservation } = useActionModalActions();
+    const { openReservation, openStudent, openUser } = useActionModalActions();
+    const { setDateToToday } = useSelectedDateActions();
 
     const userInfo = UserData?.user?.userInfo;
     const isAdmin = userInfo?.role === "admin";
@@ -26,6 +29,29 @@ export function Sidebar() {
         .slice(0, 2)
         .map((part) => part[0]?.toUpperCase() ?? "")
         .join("") || "U";
+
+    const pageConfig = SIDEBAR_PAGES[pathname];
+    const pageActions = (pageConfig?.actions ?? []).filter(
+        (action) => !("adminOnly" in action && action.adminOnly) || isAdmin,
+    );
+
+    const handleAction = (action: SidebarActionDescriptor) => {
+        switch (action.kind) {
+            case "navigate":
+                navigate(action.to);
+                break;
+            case "modal":
+                if (action.target === "reservation") openReservation();
+                if (action.target === "student") openStudent();
+                if (action.target === "user") openUser();
+                break;
+            case "today":
+                setDateToToday();
+                break;
+            case "placeholder":
+                break;
+        }
+    };
 
     const handleSignOut = async () => {
         await authClient.signOut();
@@ -58,30 +84,21 @@ export function Sidebar() {
                 )}
 
                 <p className="px-3 pb-1 pt-3 text-[11px] font-bold uppercase tracking-[0.15em] text-darker-grey">
-                    Actions
+                    {pageConfig?.label ?? "Actions"}
                 </p>
                 <div className="flex flex-col gap-1">
-                    <SidebarAction
-                        icon={GraduationCap}
-                        label="Manage students"
-                        active={pathname === "/manage-students"}
-                        onClick={() => navigate("/manage-students")}
-                    />
-                    <SidebarAction icon={UsersRound} label="Manage groups" hint="Soon" disabled />
-                    <SidebarAction
-                        icon={CalendarDays}
-                        label="Manage reservations"
-                        active={pathname === "/manage-reservations"}
-                        onClick={() => navigate("/manage-reservations")}
-                    />
-                    {isAdmin && (
+                    {pageActions.map((action) => (
                         <SidebarAction
-                            icon={Users}
-                            label="Manage users"
-                            active={pathname === "/manage-users"}
-                            onClick={() => navigate("/manage-users")}
+                            key={action.id}
+                            icon={action.icon}
+                            label={action.label}
+                            hint={action.kind === "placeholder" ? action.hint : undefined}
+                            disabled={action.kind === "placeholder"}
+                            active={action.kind === "navigate" ? pathname === action.to : false}
+                            onClick={action.kind === "placeholder" ? undefined : () => handleAction(action)}
                         />
-                    )}
+                    ))}
+                    <SidebarAction icon={UsersRound} label="Manage groups" hint="Soon" disabled />
                 </div>
             </div>
 

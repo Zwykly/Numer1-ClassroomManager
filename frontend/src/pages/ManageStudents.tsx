@@ -71,11 +71,11 @@ export function ManageStudents() {
 
     return (
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-canvas">
-            <div className="pt-15 px-8 flex flex-col h-full overflow-hidden">
-                    <div className="flex flex-row items-center justify-between">
-                        <h1 className="text-black font-bold text-4xl">Students</h1>
+            <div className="flex flex-col h-full overflow-hidden px-4 pt-8 sm:px-6 lg:px-8 lg:pt-15">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <h1 className="text-black font-bold text-3xl sm:text-4xl">Students</h1>
                         {isAdmin && (
-                            <Button variant="primary" className="gap-2" onClick={openAdd}>
+                            <Button variant="primary" className="w-full gap-2 sm:w-auto" onClick={openAdd}>
                                 <Plus size={20} />
                                 Add a student
                             </Button>

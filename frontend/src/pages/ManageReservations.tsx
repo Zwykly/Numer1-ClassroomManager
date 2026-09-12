@@ -72,25 +72,25 @@ export function ManageReservations() {
 
     return (
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-canvas">
-            <div className="pt-15 px-8 flex flex-col h-full overflow-hidden">
-                    <div className="flex flex-row items-end justify-between gap-6">
+            <div className="flex flex-col h-full overflow-hidden px-4 pt-8 sm:px-6 lg:px-8 lg:pt-15">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <span className="text-xs font-bold uppercase tracking-[0.2em] text-orange">
                                 Scheduling
                             </span>
-                            <h1 className="mt-1 text-black font-bold text-4xl">Classes</h1>
+                            <h1 className="mt-1 text-black font-bold text-3xl sm:text-4xl">Classes</h1>
                             <p className="mt-2 max-w-xl text-sm text-darker-grey">
                                 Reserve classrooms, schedule recurring classes and keep track of who is attending.
                             </p>
                         </div>
-                        <Button variant="primary" className="gap-2" onClick={openAdd}>
+                        <Button variant="primary" className="w-full gap-2 sm:w-auto" onClick={openAdd}>
                             <Plus size={20} />
                             Reserve a class
                         </Button>
                     </div>
 
-                    <div className="mt-8 flex flex-row flex-wrap items-end justify-between gap-6">
-                        <div className="flex flex-row items-center gap-2">
+                    <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+                        <div className="flex flex-row flex-wrap items-center gap-2">
                             {FILTERS.map((filter) => (
                                 <button
                                     key={filter.value}

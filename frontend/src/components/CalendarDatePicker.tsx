@@ -94,7 +94,7 @@ export function CalendarDatePicker(
                             {band && (
                                 <div
                                     className={cn(
-                                        "pointer-events-none absolute bg-grey",
+                                        "pointer-events-none absolute bg-light-grey",
                                         radius,
                                         connectsAbove ? "top-0" : "top-0.5",
                                         connectsBelow ? "bottom-0" : "bottom-0.5",

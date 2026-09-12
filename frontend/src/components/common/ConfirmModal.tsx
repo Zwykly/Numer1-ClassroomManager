@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
 
@@ -9,6 +10,7 @@ type ConfirmModalProps = {
     confirmLabel?: string;
     isDestructive?: boolean;
     onConfirm: () => void | Promise<void>;
+    children?: ReactNode;
 };
 
 export function ConfirmModal({
@@ -19,10 +21,12 @@ export function ConfirmModal({
     confirmLabel = "Confirm",
     isDestructive = false,
     onConfirm,
+    children,
 }: ConfirmModalProps) {
     return (
         <Modal open={open} onOpenChange={onOpenChange} title={title} className="max-w-md">
             <p className="text-black/70">{message}</p>
+            {children}
             <div className="mt-6 flex justify-end gap-2">
                 <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>Cancel</Button>
                 <Button

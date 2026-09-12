@@ -12,7 +12,7 @@ const disableRing = '!border-0 !outline-none !ring-0 !shadow-none focus:!outline
 export function TimelineSelector() {
 
     return(
-        <div className="flex pt-15 px-6 bg-white flex-col w-full">
+        <div className="flex pt-15 px-6 bg-canvas flex-col w-full">
             <div className="flex flex-row items-center justify-between gap-4">
                 <ClassroomSelector />
                 <ViewSelector />

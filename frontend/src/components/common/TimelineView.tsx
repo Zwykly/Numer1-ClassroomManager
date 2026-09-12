@@ -8,7 +8,7 @@ import { useCurrentTimeTicker } from "../../utils/CurrentTime";
 import { isToday, format, isSameDay } from "date-fns";
 import { useRef, useEffect, useState } from "react";
 import { useAuth } from "@/utils/AuthProvider";
-import { getDisplayedDays, getFetchRange, HOUR_HEIGHT } from "../../utils/calendarRange";
+import { getDisplayedDays, getFetchRange, HOUR_HEIGHT, TIMELINE_HOURS, minutesFromTimelineStart } from "../../utils/calendarRange";
 import { useClassroomReservations, useClassroomReservationsActions, type ClassroomReservation } from "../../stores/useClassroomReservationsStore";
 import { useSelectedClassFilter, useSelectedClassroom } from "../../stores/useSelectedTimelineStore";
 import { useReservationsActions, type Reservation, type ReservationPatch } from "../../stores/useReservationsStore";
@@ -16,7 +16,9 @@ import eden from "@/lib/eden";
 
 function CurrentTimeLine () {
     const now = useCurrentTimeTicker(60000);
-    const top = now.getHours() * HOUR_HEIGHT + (now.getMinutes() / 60) * HOUR_HEIGHT;
+    const minutesFromStart = minutesFromTimelineStart(now);
+    if (minutesFromStart < 0) return null;
+    const top = (minutesFromStart / 60) * HOUR_HEIGHT;
     return(
         <div className="z-20 w-full border-t-3 border-orange absolute" style={{ top: `${top}px` }}>
             <div className="w-16 text-end pr-1 font-semibold text-orange">{format(now, "HH:mm")}</div>
@@ -28,7 +30,7 @@ function CurrentTimeLine () {
 export function TimelineView () {
         const view = useSelectedView();
         const selectedDate = useSelectedDate();
-        const hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+        const hours = TIMELINE_HOURS;
         const scrollContainerRef = useRef<HTMLDivElement>(null);
         const now = useCurrentTimeTicker(60000);
         const { UserData } = useAuth();
@@ -64,7 +66,7 @@ export function TimelineView () {
         // Scroll to current time on mount
         useEffect(() => {
             if (scrollContainerRef.current) {
-                const top = now.getHours() * HOUR_HEIGHT + (now.getMinutes() / 60) * HOUR_HEIGHT;
+                const top = (minutesFromTimelineStart(now) / 60) * HOUR_HEIGHT;
                 // Scroll with some offset to center the current time better
                 scrollContainerRef.current.scrollTop = top - 100;
             }
@@ -133,7 +135,7 @@ export function TimelineView () {
 
         if (view === "month") {
             return (
-                <div className="flex h-full w-full flex-col overflow-y-auto bg-white px-6 pt-6">
+                <div className="flex h-full w-full flex-col overflow-y-auto bg-canvas px-6 pt-6">
                     <MonthView selectedDate={selectedDate} reservations={visibleReservations} onSelectDay={openDay} />
                     <DayClassesModal
                         open={dayModalOpen}
@@ -149,32 +151,33 @@ export function TimelineView () {
         }
 
     return (
-        <div className="flex flex-col h-full pt-8 bg-white w-full">
-            {/*Header with day labels*/}
-            <div className="flex flex-row shrink-0 my-2">
-                <div className="w-16 flex shrink-0"></div>
-                <div className="w-full h-full grid" style={{ gridTemplateColumns: `repeat(${displayedDays.length}, 1fr)` }}>
-                    {
-                        displayedDays.map((day) => {
-                                const dayTextClassName = [ 
-                                    isToday(day) && "rounded-xl px-2 py-1 bg-orange text-white font-bold",
-                                    !isToday(day) && "font-semibold text-darker-grey"
-                                    ].filter(Boolean).join('');
-                            return(
-                                <div key={day.toISOString()} className="text-center">
-                                    <span className={dayTextClassName}>{daysOfTheWeek[day.getDay()]} {day.getDate()}</span>
-                                </div>
-                            )
-                        })}
-                </div>
-            </div>
+        <div className="flex flex-col h-full pt-8 bg-canvas w-full">
             {/*Body where the timeline resides*/}
-            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto flex min-h-0 relative">
-                <div className="flex w-full absolute z-0">
-                    <div className="w-16 text-end font-semibold text-grey">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 relative">
+                {/*Header with day labels - inside the scroll container so it shares the grid width*/}
+                <div className="sticky top-0 z-30 flex flex-row bg-canvas pb-2">
+                    <div className="w-16 flex shrink-0"></div>
+                    <div className="w-full grid" style={{ gridTemplateColumns: `repeat(${displayedDays.length}, 1fr)` }}>
+                        {
+                            displayedDays.map((day) => {
+                                    const dayTextClassName = [ 
+                                        isToday(day) && "rounded-xl px-2 py-1 bg-orange text-white font-bold",
+                                        !isToday(day) && "font-semibold text-darker-grey"
+                                        ].filter(Boolean).join('');
+                                return(
+                                    <div key={day.toISOString()} className="py-1 text-center">
+                                        <span className={dayTextClassName}>{daysOfTheWeek[day.getDay()]} {day.getDate()}</span>
+                                    </div>
+                                )
+                            })}
+                    </div>
+                </div>
+                {/*Timeline grid*/}
+                <div className="relative flex w-full">
+                    <div className="w-16 text-end font-semibold text-darker-grey">
                         {hours.map(hour => {
                             return (
-                                <div key={hour} className="h-16 border-t border-grey text-sm">
+                                <div key={hour} className="h-16 border-t border-grid text-sm">
                                     <span className="mr-1">{hour+":00"}</span>
                                 </div>
                             )
@@ -199,9 +202,9 @@ export function TimelineView () {
                                 );
                             })}
                     </div>
+                    {/* Linia aktualnego czasu*/}
+                    <CurrentTimeLine />
                 </div>
-                {/* Linia aktualnego czasu*/}
-                <CurrentTimeLine />
             </div>
             {modals}
         </div>

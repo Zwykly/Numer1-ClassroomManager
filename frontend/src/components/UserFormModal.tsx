@@ -180,7 +180,7 @@ export function UserFormModal({
                         onChange={(event) => setField("additionalInfo", event.target.value)}
                         placeholder="Notes, department, etc."
                         rows={2}
-                        className="mt-1 w-full resize-none rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey/60 focus:border-orange focus:outline-none"
+                        className="mt-1 w-full resize-none rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30"
                     />
                 </div>
 
@@ -210,7 +210,7 @@ function Field({ label, value, onChange, placeholder }: FieldProps) {
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
-                className="mt-1 w-full rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey/60 focus:border-orange focus:outline-none"
+                className="mt-1 w-full rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30"
             />
         </label>
     );

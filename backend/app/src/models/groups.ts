@@ -18,10 +18,20 @@ export const groupsQuerySchema = t.Composite([
 // Inserts
 export const insertGroupSchema = t.Omit(_insertGroupsSchema, ['id']);
 
+// Attending students that can be written together with a group
+const studentFields = t.Object({
+    studentIds: t.Optional(t.Array(t.String({ format: 'uuid' }))),
+});
+
+export const createGroupSchema = t.Composite([insertGroupSchema, studentFields]);
+
 // Selects
 export const selectSimpleGroupSchema = _selectGroupsSchema;
 
 // Updates
-export const updateGroupSchema = t.Omit(_updateGroupsSchema, ['id']);
+export const updateGroupSchema = t.Composite([t.Omit(_updateGroupsSchema, ['id']), studentFields]);
 
-export const patchGroupSchema = t.Partial(t.Omit(_updateGroupsSchema, ['id']));
+export const patchGroupSchema = t.Composite([
+    t.Partial(t.Omit(_updateGroupsSchema, ['id'])),
+    studentFields,
+]);

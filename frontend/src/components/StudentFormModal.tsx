@@ -283,7 +283,7 @@ function StudentFields({ value, onChange }: StudentFieldsProps) {
                     onChange={(event) => onChange("additionalInfo", event.target.value)}
                     placeholder="Notes, accessibility needs, etc."
                     rows={2}
-                    className="mt-1 w-full resize-none rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey/60 focus:border-orange focus:outline-none"
+                    className="mt-1 w-full resize-none rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30"
                 />
             </div>
         </div>
@@ -305,7 +305,7 @@ function Field({ label, value, onChange, placeholder }: FieldProps) {
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
-                className="mt-1 w-full rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey/60 focus:border-orange focus:outline-none"
+                className="mt-1 w-full rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30"
             />
         </label>
     );

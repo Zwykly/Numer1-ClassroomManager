@@ -90,6 +90,9 @@ export const StudentsService = {
     },
 
     async remove(id: string) {
+        await db.delete(table.groupStudents).where(eq(table.groupStudents.studentId, id));
+        await db.delete(table.reservationStudents).where(eq(table.reservationStudents.studentId, id));
+
         const [removedStudent] = await db
             .delete(table.students)
             .where(eq(table.students.id, id))

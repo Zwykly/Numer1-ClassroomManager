@@ -3,9 +3,7 @@ import { db } from "../db/db";
 import { table } from "../db/schema";
 import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema } from "../models/classroom_reservations";
 import { getLimit, getCursorWhere, getInArrayWhere, getDateRangeWhere, getFuzzySearchWhere, buildPaginationResponse } from "../utils/drizzle";
-
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const MAX_GENERATED_OCCURRENCES = 200;
+import { buildOccurrenceDates } from "../utils/schedule";
 
 const reservationRelations = {
     users: true,
@@ -120,22 +118,13 @@ export const ClassroomReservationsService = {
     },
 
     buildOccurrences(payload: typeof createRecurringReservationSchema.static) {
-        const anchor = new Date(payload.anchorDate);
-        const end = payload.cycleEndDate ? new Date(payload.cycleEndDate) : null;
-        const frequency = Math.max(payload.frequency, 1);
-        const max = payload.numberOfOccurrences
-            ? Math.min(payload.numberOfOccurrences, MAX_GENERATED_OCCURRENCES)
-            : MAX_GENERATED_OCCURRENCES;
-
-        const dates: Date[] = [];
-        let current = new Date(anchor);
-        while (dates.length < max) {
-            if (end && current > end) break;
-            dates.push(new Date(current));
-            current = new Date(current.getTime() + frequency * MS_PER_DAY);
-        }
-
-        return dates;
+        return buildOccurrenceDates({
+            anchorDate: payload.anchorDate,
+            frequency: payload.frequency,
+            cycleEndDate: payload.cycleEndDate,
+            numberOfOccurrences: payload.numberOfOccurrences,
+            overrides: payload.occurrenceOverrides,
+        });
     },
 
     async create(payload: typeof createClassroomReservationSchema.static) {

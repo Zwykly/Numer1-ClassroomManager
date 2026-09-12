@@ -1,7 +1,7 @@
 import { selectCompositeClassroomReservationSchema, paginatedClassroomReservationsResponseSchema, recurringClassroomReservationsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
 import { ClassroomReservationsController } from "../controllers/classroom_reservations";
-import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema } from "../models/classroom_reservations";
+import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, checkConflictsSchema, conflictResultSchema } from "../models/classroom_reservations";
 import { authGuard } from "../auth/authGuard";
 
 const classroomReservationsRoutes = new Elysia({
@@ -21,6 +21,11 @@ const classroomReservationsRoutes = new Elysia({
     .post("/", ClassroomReservationsController.create, {
         body: createClassroomReservationSchema,
         response: selectCompositeClassroomReservationSchema,
+        isAuth: true
+    })
+    .post("/conflicts", ClassroomReservationsController.checkConflicts, {
+        body: checkConflictsSchema,
+        response: conflictResultSchema,
         isAuth: true
     })
     .post("/recurring", ClassroomReservationsController.createRecurring, {

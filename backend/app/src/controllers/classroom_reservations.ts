@@ -1,6 +1,7 @@
 import { NotFoundError, status } from "elysia";
 import { ClassroomReservationsService } from "../services/classroom_reservations";
-import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema } from "../models/classroom_reservations";
+import { ConflictsService } from "../services/conflicts";
+import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, checkConflictsSchema } from "../models/classroom_reservations";
 
 type AuthUser = {
     userInfo?: { id: string; role?: string | null } | null;
@@ -15,6 +16,13 @@ function isAdmin(user: AuthUser) {
 function requireUserId(user: AuthUser) {
     if (!user?.userInfo?.id) throw status(403, "No user profile linked to this session");
     return user.userInfo.id;
+}
+
+async function assertNoConflicts(input: Parameters<typeof ConflictsService.check>[0]) {
+    const result = await ConflictsService.check(input);
+    if (result.conflicts.length > 0) {
+        throw status(409, result);
+    }
 }
 
 async function assertCanEdit(id: string, user: AuthUser) {
@@ -43,8 +51,20 @@ export const ClassroomReservationsController = {
         return res;
     },
 
+    async checkConflicts({ body, user }: { body: typeof checkConflictsSchema.static; user: AuthUser }) {
+        const teacherId = isAdmin(user) ? (body.teacherId ?? requireUserId(user)) : requireUserId(user);
+        return await ConflictsService.check({ ...body, teacherId });
+    },
+
     async create({ body, user }: { body: typeof createClassroomReservationSchema.static; user: AuthUser }) {
         const teacherId = isAdmin(user) ? (body.teacherId ?? requireUserId(user)) : requireUserId(user);
+        await assertNoConflicts({
+            teacherId,
+            classroomId: body.classroomId ?? null,
+            onlineClassroomId: body.onlineClassroomId ?? null,
+            durationMinutes: body.durationMinutes ?? null,
+            reservationTime: new Date(body.reservationTime as unknown as string).toISOString(),
+        });
         const created = await ClassroomReservationsService.create({ ...body, teacherId });
         if (!created) throw new NotFoundError("Classroom Reservation not found");
         return created;
@@ -52,18 +72,47 @@ export const ClassroomReservationsController = {
 
     async createRecurring({ body, user }: { body: typeof createRecurringReservationSchema.static; user: AuthUser }) {
         const teacherId = isAdmin(user) ? (body.teacherId ?? requireUserId(user)) : requireUserId(user);
+        await assertNoConflicts({
+            teacherId,
+            classroomId: body.classroomId ?? null,
+            onlineClassroomId: body.onlineClassroomId ?? null,
+            durationMinutes: body.durationMinutes ?? null,
+            recurrence: {
+                anchorDate: body.anchorDate,
+                frequency: body.frequency,
+                cycleEndDate: body.cycleEndDate,
+                numberOfOccurrences: body.numberOfOccurrences,
+                overrides: body.occurrenceOverrides,
+            },
+        });
         return await ClassroomReservationsService.createRecurring({ ...body, teacherId }, teacherId);
     },
 
     async update({ params: { id }, body, user }: { params: { id: string }; body: typeof updateClassroomReservationSchema.static; user: AuthUser }) {
-        await assertCanEdit(id, user);
+        const existing = await assertCanEdit(id, user);
+        await assertNoConflicts({
+            teacherId: body.teacherId ?? existing.teacherId,
+            classroomId: body.classroomId !== undefined ? body.classroomId : existing.classroomId,
+            onlineClassroomId: body.onlineClassroomId !== undefined ? body.onlineClassroomId : existing.onlineClassroomId,
+            durationMinutes: body.durationMinutes !== undefined ? body.durationMinutes : existing.durationMinutes,
+            reservationTime: new Date((body.reservationTime ?? existing.reservationTime) as unknown as string).toISOString(),
+            excludeId: id,
+        });
         const updated = await ClassroomReservationsService.update(id, body);
         if (!updated) throw new NotFoundError("Classroom Reservation not found");
         return updated;
     },
 
     async patch({ params: { id }, body, user }: { params: { id: string }; body: typeof patchClassroomReservationSchema.static; user: AuthUser }) {
-        await assertCanEdit(id, user);
+        const existing = await assertCanEdit(id, user);
+        await assertNoConflicts({
+            teacherId: body.teacherId ?? existing.teacherId,
+            classroomId: body.classroomId !== undefined ? body.classroomId : existing.classroomId,
+            onlineClassroomId: body.onlineClassroomId !== undefined ? body.onlineClassroomId : existing.onlineClassroomId,
+            durationMinutes: body.durationMinutes !== undefined ? body.durationMinutes : existing.durationMinutes,
+            reservationTime: new Date((body.reservationTime ?? existing.reservationTime) as unknown as string).toISOString(),
+            excludeId: id,
+        });
         const patched = await ClassroomReservationsService.patch(id, body);
         if (!patched) throw new NotFoundError("Classroom Reservation not found");
         return patched;

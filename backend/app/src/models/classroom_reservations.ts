@@ -50,9 +50,57 @@ export const createRecurringReservationSchema = t.Object({
     frequency: t.Integer({ minimum: 1 }),
     cycleEndDate: t.Optional(t.String({ format: 'date-time' })),
     numberOfOccurrences: t.Optional(t.Integer({ minimum: 1 })),
+    occurrenceOverrides: t.Optional(t.Array(t.Object({
+        index: t.Integer({ minimum: 0 }),
+        reservationTime: t.String({ format: 'date-time' }),
+    }))),
     studentIds: t.Optional(t.Array(t.String({ format: 'uuid' }))),
     groupIds: t.Optional(t.Array(t.String({ format: 'uuid' }))),
 });
+
+// Conflict detection
+const recurrenceInputSchema = t.Object({
+    anchorDate: t.String({ format: 'date-time' }),
+    frequency: t.Integer({ minimum: 1 }),
+    cycleEndDate: t.Optional(t.String({ format: 'date-time' })),
+    numberOfOccurrences: t.Optional(t.Integer({ minimum: 1 })),
+    overrides: t.Optional(t.Array(t.Object({
+        index: t.Integer({ minimum: 0 }),
+        reservationTime: t.String({ format: 'date-time' }),
+    }))),
+});
+
+export const checkConflictsSchema = t.Object({
+    teacherId: t.Optional(t.String({ format: 'uuid' })),
+    classroomId: t.Optional(t.Union([t.String({ format: 'uuid' }), t.Null()])),
+    onlineClassroomId: t.Optional(t.Union([t.String({ format: 'uuid' }), t.Null()])),
+    durationMinutes: t.Optional(t.Union([t.Integer({ minimum: 1 }), t.Null()])),
+    reservationTime: t.Optional(t.String({ format: 'date-time' })),
+    recurrence: t.Optional(recurrenceInputSchema),
+    excludeId: t.Optional(t.String({ format: 'uuid' })),
+});
+
+const conflictItemSchema = t.Object({
+    type: t.Union([t.Literal('room'), t.Literal('teacher')]),
+    reservationId: t.String(),
+    name: t.Union([t.String(), t.Null()]),
+    reservationTime: t.String({ format: 'date-time' }),
+    durationMinutes: t.Union([t.Integer(), t.Null()]),
+    teacherName: t.Union([t.String(), t.Null()]),
+    roomName: t.Union([t.String(), t.Null()]),
+});
+
+export const conflictResultSchema = t.Object({
+    conflicts: t.Array(t.Object({
+        index: t.Integer(),
+        reservationTime: t.String({ format: 'date-time' }),
+        items: t.Array(conflictItemSchema),
+        suggestion: t.Optional(t.String({ format: 'date-time' })),
+    })),
+    allConflicted: t.Optional(t.Boolean()),
+    suggestedAnchor: t.Optional(t.String({ format: 'date-time' })),
+});
+
 
 // Selects
 export const selectSimpleClassroomReservationSchema = _selectClassroomReservationsSchema;

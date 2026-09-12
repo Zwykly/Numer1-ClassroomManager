@@ -8,6 +8,7 @@ export const reservationStatusEnum = p.pgEnum("reservationStatus", ["scheduled",
 //Relacje: users, classrooms, onlineClassrooms
 export const classroomReservations = p.pgTable("classroomReservations", {
     id: p.uuid("id").primaryKey().defaultRandom(),
+    name: p.varchar("name"),
     classroomId: p.uuid("classroomId").references(() => classrooms.id),
     onlineClassroomId: p.uuid("onlineClassroomId").references(() => onlineClassrooms.id),
     reservationTime: p.timestamp("reservationTime").notNull(),

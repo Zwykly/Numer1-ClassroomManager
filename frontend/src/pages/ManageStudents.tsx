@@ -86,7 +86,7 @@ export function ManageStudents() {
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
                         placeholder="Search by first or last name..."
-                        className="mt-5 w-full max-w-sm rounded-xl border border-light-grey bg-white px-4 py-2 text-black placeholder:text-darker-grey/60 focus:border-orange focus:outline-none"
+                        className="mt-5 w-full max-w-sm rounded-xl border border-grey bg-white px-4 py-2 text-black placeholder:text-darker-grey focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30"
                     />
 
                     <div className="mt-5 flex-1 overflow-y-auto pb-10">

@@ -52,7 +52,7 @@ type Form = {
 };
 
 const inputClass =
-    "mt-1 w-full rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey/60 focus:border-orange focus:outline-none";
+    "mt-1 w-full rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30";
 
 const STATUS_OPTIONS = ["scheduled", "ongoing", "cyclical", "completed", "canceled"] as const;
 
@@ -641,7 +641,7 @@ export function ReservationFormModal({
                                                         if (!event.target.value) return;
                                                         applyOverride(entry.index, new Date(event.target.value).toISOString());
                                                     }}
-                                                    className="rounded-lg border border-grey bg-white px-2 py-1 text-xs text-black focus:border-orange focus:outline-none"
+                                                    className="rounded-lg border border-grey bg-white px-2 py-1 text-xs text-black focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30"
                                                 />
                                             </div>
                                         </div>
@@ -735,7 +735,7 @@ function MultiSelect({ label, placeholder, items, selected, onToggle }: MultiSel
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder={placeholder}
-                    className="w-full bg-transparent text-black placeholder:text-darker-grey/60 focus:outline-none"
+                    className="w-full bg-transparent text-black placeholder:text-darker-grey focus:outline-none"
                 />
             </div>
             <div className="mt-2 flex max-h-40 flex-col gap-1.5 overflow-y-auto rounded-xl border border-light-grey p-2">

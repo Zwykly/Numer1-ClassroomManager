@@ -21,7 +21,7 @@ type Member = {
 };
 
 const inputClass =
-    "mt-1 w-full rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey/60 focus:border-orange focus:outline-none";
+    "mt-1 w-full rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30";
 
 export function GroupFormModal({ open, onOpenChange, group, onCreate, onUpdate }: GroupFormModalProps) {
     const isEdit = Boolean(group);
@@ -198,7 +198,7 @@ export function GroupFormModal({ open, onOpenChange, group, onCreate, onUpdate }
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder="Search students by name..."
-                                className="w-full bg-transparent text-black placeholder:text-darker-grey/60 focus:outline-none"
+                                className="w-full bg-transparent text-black placeholder:text-darker-grey focus:outline-none"
                             />
                         </div>
 

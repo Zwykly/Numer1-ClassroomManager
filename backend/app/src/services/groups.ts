@@ -100,6 +100,10 @@ export const GroupsService = {
     },
 
     async remove(id: string) {
+        await db.delete(table.groupStudents).where(eq(table.groupStudents.groupId, id));
+        await db.delete(table.teacherGroups).where(eq(table.teacherGroups.groupId, id));
+        await db.delete(table.reservationGroups).where(eq(table.reservationGroups.groupId, id));
+
         const [removedGroup] = await db
             .delete(table.groups)
             .where(eq(table.groups.id, id))

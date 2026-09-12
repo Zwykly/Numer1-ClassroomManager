@@ -8,7 +8,7 @@ import { useCurrentTimeTicker } from "../../utils/CurrentTime";
 import { isToday, format, isSameDay } from "date-fns";
 import { useRef, useEffect, useState } from "react";
 import { useAuth } from "@/utils/AuthProvider";
-import { getDisplayedDays, getFetchRange, HOUR_HEIGHT } from "../../utils/calendarRange";
+import { getDisplayedDays, getFetchRange, HOUR_HEIGHT, TIMELINE_HOURS, minutesFromTimelineStart } from "../../utils/calendarRange";
 import { useClassroomReservations, useClassroomReservationsActions, type ClassroomReservation } from "../../stores/useClassroomReservationsStore";
 import { useSelectedClassFilter, useSelectedClassroom } from "../../stores/useSelectedTimelineStore";
 import { useReservationsActions, type Reservation, type ReservationPatch } from "../../stores/useReservationsStore";
@@ -16,7 +16,9 @@ import eden from "@/lib/eden";
 
 function CurrentTimeLine () {
     const now = useCurrentTimeTicker(60000);
-    const top = now.getHours() * HOUR_HEIGHT + (now.getMinutes() / 60) * HOUR_HEIGHT;
+    const minutesFromStart = minutesFromTimelineStart(now);
+    if (minutesFromStart < 0) return null;
+    const top = (minutesFromStart / 60) * HOUR_HEIGHT;
     return(
         <div className="z-20 w-full border-t-3 border-orange absolute" style={{ top: `${top}px` }}>
             <div className="w-16 text-end pr-1 font-semibold text-orange">{format(now, "HH:mm")}</div>
@@ -28,7 +30,7 @@ function CurrentTimeLine () {
 export function TimelineView () {
         const view = useSelectedView();
         const selectedDate = useSelectedDate();
-        const hours = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+        const hours = TIMELINE_HOURS;
         const scrollContainerRef = useRef<HTMLDivElement>(null);
         const now = useCurrentTimeTicker(60000);
         const { UserData } = useAuth();
@@ -64,7 +66,7 @@ export function TimelineView () {
         // Scroll to current time on mount
         useEffect(() => {
             if (scrollContainerRef.current) {
-                const top = now.getHours() * HOUR_HEIGHT + (now.getMinutes() / 60) * HOUR_HEIGHT;
+                const top = (minutesFromTimelineStart(now) / 60) * HOUR_HEIGHT;
                 // Scroll with some offset to center the current time better
                 scrollContainerRef.current.scrollTop = top - 100;
             }

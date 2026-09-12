@@ -1,6 +1,6 @@
 import type { ClassroomReservation } from "@/stores/useClassroomReservationsStore";
 import { clsx as cn } from "clsx";
-import { HOUR_HEIGHT } from "@/utils/calendarRange";
+import { HOUR_HEIGHT, TIMELINE_HOURS, minutesFromTimelineStart } from "@/utils/calendarRange";
 import { ClassTile } from "./ClassTile";
 
 type DayTimelineData = {
@@ -11,7 +11,7 @@ type DayTimelineData = {
     onSelectReservation?: (reservation: ClassroomReservation) => void;
 }
 
-const HOURS = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+const HOURS = TIMELINE_HOURS;
 
 type Positioned = {
     reservation: ClassroomReservation;
@@ -84,16 +84,15 @@ export function DayTimeline (
     const positioned = layoutReservations(reservations);
 
     return (
-        <div className={cn("relative flex flex-col border-l border-grid", className)}>
+        <div className={cn("relative flex flex-col overflow-hidden border-l border-grid", className)}>
             {HOURS.map(hour => {
                 return (
                     <div key={hour} className="h-16 border-t border-grid" />
                 )
             })}
             {positioned.map(({ reservation, left, width }) => {
-                const minutes = reservation.reservationTime.getHours() * 60 + reservation.reservationTime.getMinutes();
                 const duration = reservation.durationMinutes && reservation.durationMinutes > 0 ? reservation.durationMinutes : 60;
-                const top = (minutes / 60) * HOUR_HEIGHT;
+                const top = (minutesFromTimelineStart(reservation.reservationTime) / 60) * HOUR_HEIGHT;
                 const height = Math.max((duration / 60) * HOUR_HEIGHT, 26);
 
                 return (

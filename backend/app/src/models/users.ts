@@ -20,14 +20,18 @@ export const usersQuerySchema = t.Composite([
 export const insertUserSchema = t.Omit(_insertUsersSchema, ['id']);
 
 // Account creation (creates the auth account together with the business user)
-export const createUserAccountSchema = t.Object({
-    firstName: t.String({ minLength: 1 }),
-    lastName: t.String({ minLength: 1 }),
-    email: t.String({ format: 'email' }),
-    role: t.Union([t.Literal('admin'), t.Literal('teacher')]),
-    additionalInfo: t.Optional(t.Nullable(t.String())),
-    password: t.Optional(t.String({ minLength: 8 })),
-});
+// Derived from the users insert shape: drop the DB-managed id and the authId
+// (owned by better-auth), require role and tighten name/email validation.
+export const createUserAccountSchema = t.Composite([
+    t.Omit(_insertUsersSchema, ['id', 'authId']),
+    t.Object({
+        firstName: t.String({ minLength: 1 }),
+        lastName: t.String({ minLength: 1 }),
+        email: t.String({ format: 'email' }),
+        role: t.Union([t.Literal('admin'), t.Literal('teacher')]),
+        password: t.Optional(t.String({ minLength: 8 })),
+    })
+]);
 
 // Selects
 export const selectSimpleUserSchema = t.Omit(_selectUsersSchema,

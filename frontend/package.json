@@ -9,14 +9,21 @@
     "build": "bun run build.ts"
   },
   "dependencies": {
+    "@elysiajs/eden": "^1.4.9",
     "better-auth": "^1.5.5",
     "bun-plugin-tailwind": "^0.1.2",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "install": "^0.13.0",
     "lucide-react": "^0.577.0",
+    "radix-ui": "^1.4.3",
     "react": "^19",
     "react-dom": "^19",
     "react-hook-form": "^7.71.2",
     "react-router-dom": "^7.13.1",
-    "tailwindcss": "^4.1.11"
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.1.11",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@types/react": "^19",

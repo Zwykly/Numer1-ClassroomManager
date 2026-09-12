@@ -1,106 +1,265 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
-import { insertClassroomReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema } from "../models/classroom_reservations";
-import { getLimit, getCursorWhere, getInArrayWhere, buildPaginationResponse } from "../utils/drizzle";
+import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema } from "../models/classroom_reservations";
+import { getLimit, getCursorWhere, getInArrayWhere, getDateRangeWhere, getFuzzySearchWhere, buildPaginationResponse } from "../utils/drizzle";
+import { buildOccurrenceDates } from "../utils/schedule";
+
+const reservationRelations = {
+    users: true,
+    groups: { with: { students: true } },
+    students: true,
+    classrooms: true,
+    onlineClassrooms: true,
+} as const;
+
+const calendarRelations = {
+    users: true,
+    groups: true,
+    classrooms: true,
+    onlineClassrooms: true,
+} as const;
+
+function mapReservation(res: any) {
+    const { users, classrooms, onlineClassrooms, ...base } = res;
+
+    return {
+        ...base,
+        teacher: users ?? undefined,
+        groups: res.groups,
+        students: res.students,
+        classroom: classrooms ?? undefined,
+        onlineClassroom: onlineClassrooms ?? undefined,
+    };
+}
 
 export const ClassroomReservationsService = {
+    buildViewWhere(view?: typeof classroomReservationsQuerySchema.static.view): Record<string, any> | undefined {
+        if (!view) return undefined;
+
+        if (view === "all") {
+            return {
+                status: { notIn: ["canceled", "completed"] },
+                OR: [
+                    { status: "ongoing" },
+                    { reservationTime: { gte: new Date() } },
+                ],
+            };
+        }
+
+        if (view === "recurring") {
+            return {
+                OR: [
+                    { status: "cyclical" },
+                    { cycleId: { isNotNull: true } },
+                ],
+            };
+        }
+
+        if (view === "upcoming") {
+            return {
+                status: "scheduled",
+                reservationTime: { gte: new Date() },
+            };
+        }
+
+        if (view === "archived") {
+            return {
+                status: { in: ["canceled", "completed"] },
+            };
+        }
+
+        return undefined;
+    },
+
     async getAll(query: typeof classroomReservationsQuerySchema.static) {
         const limit = getLimit(query.limit);
         const cursorWhere = getCursorWhere(query.cursor);
         const statusWhere = getInArrayWhere("status", query.status);
+        const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
+        const searchWhere = getFuzzySearchWhere(["name"], query.search);
+        const viewWhere = this.buildViewWhere(query.view);
 
-        const conditions = [cursorWhere, statusWhere].filter(Boolean);
+        const conditions = [cursorWhere, statusWhere, dateWhere, searchWhere, viewWhere].filter(Boolean);
         const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const data = await db.query.classroomReservations.findMany({
             where: whereClause,
             limit,
-            orderBy: (res, { asc }) => [asc(res.id)],
-            with: {
-                users: true,
-                groups: true,
-                students: true,
-                classrooms: true,
-                onlineClassrooms: true,
-            }
+            orderBy: (res, { asc }) => [asc(res.reservationTime)],
+            with: reservationRelations,
         });
 
-        const mapped = data.map(res => {
-            const { users, classrooms, onlineClassrooms, ...base } = res;
-
-            return {
-                ...base,
-                teacher: users ?? undefined,
-                groups: res.groups,
-                students: res.students,
-                classroom: classrooms ?? undefined,
-                onlineClassroom: onlineClassrooms ?? undefined,
-            };
-        });
-
-        return buildPaginationResponse(mapped, query.limit);
+        return buildPaginationResponse(data.map(mapReservation), query.limit);
     },
 
     async getById(id: string) {
         const res = await db.query.classroomReservations.findFirst({
             where: { id },
-            with: {
-                users: true,
-                groups: true,
-                students: true,
-                classrooms: true,
-                onlineClassrooms: true,
-            }
+            with: reservationRelations,
         });
 
         if (!res) return null;
-
-        const { users, classrooms, onlineClassrooms, ...base } = res;
-
-        return {
-            ...base,
-            teacher: users ?? undefined,
-            groups: res.groups,
-            students: res.students,
-            classroom: classrooms ?? undefined,
-            onlineClassroom: onlineClassrooms ?? undefined,
-        };
+        return mapReservation(res);
     },
 
-    async create(payload: typeof insertClassroomReservationSchema.static) {
+    async getCalendar(query: typeof calendarReservationsQuerySchema.static) {
+        const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
+        const classroomWhere = query.classroomId ? { classroomId: query.classroomId } : undefined;
+
+        const conditions = [dateWhere, classroomWhere].filter(Boolean);
+        const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
+
+        const data = await db.query.classroomReservations.findMany({
+            where: whereClause,
+            orderBy: (res, { asc }) => [asc(res.reservationTime)],
+            with: calendarRelations,
+        });
+
+        return data.map(mapReservation);
+    },
+
+    async setAttendees(reservationId: string, studentIds?: string[], groupIds?: string[]) {
+        if (studentIds) {
+            await db.delete(table.reservationStudents).where(eq(table.reservationStudents.reservationId, reservationId));
+            if (studentIds.length > 0) {
+                await db.insert(table.reservationStudents).values(
+                    studentIds.map((studentId) => ({ reservationId, studentId })),
+                );
+            }
+        }
+
+        if (groupIds) {
+            await db.delete(table.reservationGroups).where(eq(table.reservationGroups.reservationId, reservationId));
+            if (groupIds.length > 0) {
+                await db.insert(table.reservationGroups).values(
+                    groupIds.map((groupId) => ({ reservationId, groupId })),
+                );
+            }
+        }
+    },
+
+    buildOccurrences(payload: typeof createRecurringReservationSchema.static) {
+        return buildOccurrenceDates({
+            anchorDate: payload.anchorDate,
+            frequency: payload.frequency,
+            cycleEndDate: payload.cycleEndDate,
+            numberOfOccurrences: payload.numberOfOccurrences,
+            overrides: payload.occurrenceOverrides,
+        });
+    },
+
+    async create(payload: typeof createClassroomReservationSchema.static) {
+        const { studentIds, groupIds, ...reservation } = payload;
         const [inserted] = await db
             .insert(table.classroomReservations)
-            .values(payload)
+            .values(reservation)
             .returning();
+        await this.setAttendees(inserted.id, studentIds, groupIds);
         return this.getById(inserted.id);
     },
 
-    async update(id: string, payload: typeof updateClassroomReservationSchema.static) {
+    async createRecurring(payload: typeof createRecurringReservationSchema.static, teacherId?: string) {
+        const occurrences = this.buildOccurrences(payload);
+        const ownerId = payload.teacherId ?? teacherId;
+
+        if (!ownerId) return [];
+        if (occurrences.length === 0) return [];
+
+        const [cycle] = await db
+            .insert(table.reservationCycles)
+            .values({
+                teacherId: ownerId,
+                additionalInfo: payload.additionalInfo ?? null,
+                anchorDate: new Date(payload.anchorDate),
+                cycleEndDate: payload.cycleEndDate ? new Date(payload.cycleEndDate) : null,
+                numberOfOccurrences: payload.numberOfOccurrences ?? occurrences.length,
+                frequency: payload.frequency,
+                status: "active",
+            })
+            .returning();
+
+        const createdIds: string[] = [];
+        for (const date of occurrences) {
+            const [inserted] = await db
+                .insert(table.classroomReservations)
+                .values({
+                    name: payload.name,
+                    classroomId: payload.classroomId ?? null,
+                    onlineClassroomId: payload.onlineClassroomId ?? null,
+                    reservationTime: date,
+                    durationMinutes: payload.durationMinutes ?? null,
+                    teacherId: ownerId,
+                    additionalInfo: payload.additionalInfo ?? null,
+                    status: "cyclical",
+                    cycleId: cycle.id,
+                })
+                .returning();
+            await this.setAttendees(inserted.id, payload.studentIds, payload.groupIds);
+            createdIds.push(inserted.id);
+        }
+
+        const created = await Promise.all(createdIds.map((id) => this.getById(id)));
+        return created.filter(Boolean);
+    },
+
+    async update(id: string, payload: typeof updateClassroomReservationSchema.static & { studentIds?: string[]; groupIds?: string[] }) {
+        const { studentIds, groupIds, ...reservation } = payload;
         const [updated] = await db
             .update(table.classroomReservations)
-            .set({ ...payload, editedOn: new Date() })
+            .set({ ...reservation, editedOn: new Date() })
             .where(eq(table.classroomReservations.id, id))
             .returning();
         if (!updated) return null;
+        await this.setAttendees(id, studentIds, groupIds);
         return this.getById(id);
     },
 
     async patch(id: string, payload: typeof patchClassroomReservationSchema.static) {
+        const { studentIds, groupIds, ...reservation } = payload;
         const [patched] = await db
             .update(table.classroomReservations)
-            .set({ ...payload, editedOn: new Date() })
+            .set({ ...reservation, editedOn: new Date() })
             .where(eq(table.classroomReservations.id, id))
             .returning();
         if (!patched) return null;
+        await this.setAttendees(id, studentIds, groupIds);
         return this.getById(id);
     },
 
+    async startDueReservations() {
+        const now = new Date();
+        const started = await db
+            .update(table.classroomReservations)
+            .set({ status: "ongoing", editedOn: now })
+            .where(and(
+                inArray(table.classroomReservations.status, ["scheduled", "cyclical"]),
+                lte(table.classroomReservations.reservationTime, now),
+            ))
+            .returning({ id: table.classroomReservations.id });
+        return started.length;
+    },
+
+    async completeFinishedReservations() {
+        const completed = await db
+            .update(table.classroomReservations)
+            .set({ status: "completed", editedOn: new Date() })
+            .where(and(
+                eq(table.classroomReservations.status, "ongoing"),
+                isNotNull(table.classroomReservations.durationMinutes),
+                sql`${table.classroomReservations.reservationTime} + (${table.classroomReservations.durationMinutes} * interval '1 minute') <= now()`,
+            ))
+            .returning({ id: table.classroomReservations.id });
+        return completed.length;
+    },
+
     async remove(id: string) {
+        await db.delete(table.reservationStudents).where(eq(table.reservationStudents.reservationId, id));
+        await db.delete(table.reservationGroups).where(eq(table.reservationGroups.reservationId, id));
         const [removed] = await db
             .delete(table.classroomReservations)
             .where(eq(table.classroomReservations.id, id))
             .returning();
         return removed;
-    }
+    },
 };

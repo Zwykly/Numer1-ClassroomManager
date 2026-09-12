@@ -1,0 +1,1 @@
+ALTER TABLE "classroomReservations" ADD COLUMN "durationMinutes" integer;

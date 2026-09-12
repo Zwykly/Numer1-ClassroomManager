@@ -1,6 +1,7 @@
-import { NotFoundError } from "elysia";
+import { NotFoundError, status } from "elysia";
 import { UsersService } from "../services/users";
-import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema } from "../models/users";
+import { UserAccountsService } from "../services/user_accounts";
+import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema, createUserAccountSchema } from "../models/users";
 
 export const UsersController = {
     async getAll({ query }: { query: typeof usersQuerySchema.static }) {
@@ -29,6 +30,17 @@ export const UsersController = {
         const created = await UsersService.create(body);
         if (!created) throw new NotFoundError( "User not found");
         return created;
+    },
+
+    async createAccount({ body }: { body: typeof createUserAccountSchema.static }) {
+        const result = await UserAccountsService.createAccount(body);
+        if (!result.ok) {
+            if (result.reason === "EMAIL_IN_USE") {
+                throw status(400, "A user with this email already exists");
+            }
+            throw status(500, "Failed to create user account");
+        }
+        return { user: result.user, password: result.password };
     },
 
     async update({ params: { id }, body }: { params: { id: string }, body: typeof updateUserSchema.static }) {

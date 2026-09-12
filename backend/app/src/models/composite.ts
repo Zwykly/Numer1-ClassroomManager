@@ -34,6 +34,10 @@ export const selectCompositeUserSchema = t.Composite([
     })
 ]);
 export const paginatedUsersResponseSchema = createPaginationResponseSchema(selectCompositeUserSchema);
+export const createUserAccountResponseSchema = t.Object({
+    user: selectCompositeUserSchema,
+    password: t.String(),
+});
 
 // --- Students ---
 export const selectCompositeStudentSchema = t.Composite([
@@ -44,6 +48,7 @@ export const selectCompositeStudentSchema = t.Composite([
     })
 ]);
 export const paginatedStudentsResponseSchema = createPaginationResponseSchema(selectCompositeStudentSchema);
+export const selectStudentsBatchResponseSchema = t.Array(selectCompositeStudentSchema);
 
 // --- Groups ---
 export const selectCompositeGroupSchema = t.Composite([
@@ -79,13 +84,26 @@ export const selectCompositeClassroomReservationSchema = t.Composite([
     _selectClassroomReservationsSchema,
     t.Object({
         teacher: t.Optional(_selectSimpleUserSchema),
-        groups: t.Optional(t.Array(selectSimpleGroupSchema)),
+        groups: t.Optional(t.Array(selectCompositeGroupSchema)),
         students: t.Optional(t.Array(selectSimpleStudentSchema)),
         classroom: t.Optional(selectSimpleClassroomSchema),
         onlineClassroom: t.Optional(selectSimpleOnlineClassroomSchema)
     })
 ]);
 export const paginatedClassroomReservationsResponseSchema = createPaginationResponseSchema(selectCompositeClassroomReservationSchema);
+export const recurringClassroomReservationsResponseSchema = t.Array(selectCompositeClassroomReservationSchema);
+
+// Lightweight reservation shape used by the calendar views (no attendee payloads)
+export const selectCalendarReservationSchema = t.Composite([
+    _selectClassroomReservationsSchema,
+    t.Object({
+        teacher: t.Optional(_selectSimpleUserSchema),
+        groups: t.Optional(t.Array(selectSimpleGroupSchema)),
+        classroom: t.Optional(selectSimpleClassroomSchema),
+        onlineClassroom: t.Optional(selectSimpleOnlineClassroomSchema)
+    })
+]);
+export const calendarClassroomReservationsResponseSchema = t.Array(selectCalendarReservationSchema);
 
 // --- Reservation Cycles ---
 export const selectCompositeReservationCycleSchema = t.Composite([

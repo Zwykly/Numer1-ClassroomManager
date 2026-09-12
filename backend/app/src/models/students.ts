@@ -18,6 +18,11 @@ export const studentsQuerySchema = t.Composite([
 // Inserts
 export const insertStudentSchema = t.Omit(_insertStudentsSchema, ['id']);
 
+// Batch inserts
+export const insertStudentsBatchSchema = t.Object({
+    students: t.Array(insertStudentSchema, { minItems: 1 }),
+});
+
 // Selects
 export const selectSimpleStudentSchema = _selectStudentsSchema;
 

@@ -1,7 +1,7 @@
-import { selectCompositeStudentSchema, paginatedStudentsResponseSchema } from "../models/composite";
+import { selectCompositeStudentSchema, paginatedStudentsResponseSchema, selectStudentsBatchResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
 import { StudentsController } from "../controllers/students";
-import { insertStudentSchema, updateStudentSchema, patchStudentSchema, studentsQuerySchema } from "../models/students";
+import { insertStudentSchema, insertStudentsBatchSchema, updateStudentSchema, patchStudentSchema, studentsQuerySchema } from "../models/students";
 import { authGuard } from "../auth/authGuard";
 
 const studentsRoutes = new Elysia({
@@ -18,7 +18,13 @@ const studentsRoutes = new Elysia({
     })
     .post("/", StudentsController.create, {
         body: insertStudentSchema,
-        response: selectCompositeStudentSchema
+        response: selectCompositeStudentSchema,
+        isAdmin: true
+    })
+    .post("/batch", StudentsController.createMany, {
+        body: insertStudentsBatchSchema,
+        response: selectStudentsBatchResponseSchema,
+        isAdmin: true
     })
     .put("/:id", StudentsController.update, {
         params: t.Object({ id: t.String() }),
@@ -32,6 +38,7 @@ const studentsRoutes = new Elysia({
     })
     .delete("/:id", StudentsController.remove, {
         params: t.Object({ id: t.String() }),
+        isAdmin: true
     });
 
 export default studentsRoutes;

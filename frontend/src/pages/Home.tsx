@@ -1,17 +1,11 @@
-import { Topbar } from "../components/Topbar";
-import { HeroButtons } from "../components/HeroButtons";
-import { WelcomeBanner } from "../components/WelcomeBanner";
-import { useAuth } from "@/utils/AuthProvider";
-import type { UserInfo } from "@/utils/models";
-
+import { TimelineView } from "../components/common/TimelineView";
+import { TimelineSelector } from "../components/common/TimelineSelector";
 
 export function Home() {
-    const { UserData } = useAuth();
     return (
-        <div className="w-full h-full flex flex-col">
-            <Topbar />
-            <WelcomeBanner userInfo={UserData?.user?.userInfo} />
-            <HeroButtons />
+        <div className="flex h-screen w-full flex-col bg-white">
+            <TimelineSelector />
+            <TimelineView />
         </div>
     );
 }

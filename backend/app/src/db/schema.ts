@@ -8,9 +8,11 @@ export const reservationStatusEnum = p.pgEnum("reservationStatus", ["scheduled",
 //Relacje: users, classrooms, onlineClassrooms
 export const classroomReservations = p.pgTable("classroomReservations", {
     id: p.uuid("id").primaryKey().defaultRandom(),
+    name: p.varchar("name"),
     classroomId: p.uuid("classroomId").references(() => classrooms.id),
     onlineClassroomId: p.uuid("onlineClassroomId").references(() => onlineClassrooms.id),
     reservationTime: p.timestamp("reservationTime").notNull(),
+    durationMinutes: p.integer("durationMinutes"),
     teacherId: p.uuid("teacherId").references(() => users.id).notNull(),
     additionalInfo: p.text("additionalInfo"),
     createdOn: p.timestamp("createdOn").defaultNow().notNull(),
@@ -143,6 +145,10 @@ export const relations = defineRelations({ ...table, user },
             users: r.one.users({
                 from: r.classroomReservations.teacherId,
                 to: r.users.id,
+            }),
+            cycle: r.one.reservationCycles({
+                from: r.classroomReservations.cycleId,
+                to: r.reservationCycles.id,
             }),
             groups: r.many.groups({
                 from: r.classroomReservations.id.through(r.reservationGroups.reservationId),

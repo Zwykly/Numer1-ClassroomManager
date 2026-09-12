@@ -145,6 +145,10 @@ export const relations = defineRelations({ ...table, user },
                 from: r.classroomReservations.teacherId,
                 to: r.users.id,
             }),
+            cycle: r.one.reservationCycles({
+                from: r.classroomReservations.cycleId,
+                to: r.reservationCycles.id,
+            }),
             groups: r.many.groups({
                 from: r.classroomReservations.id.through(r.reservationGroups.reservationId),
                 to: r.groups.id.through(r.reservationGroups.groupId)

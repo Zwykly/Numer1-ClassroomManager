@@ -72,22 +72,20 @@ export const auth = betterAuth({
     },
     hooks: {
         after: createAuthMiddleware(async (ctx) => {
-            console.log(ctx.path);
-            if (ctx.path === "/sign-in/email" || "/sign-in/username" || "/get-session") {
-                const returned = ctx.context.returned;
-                if (returned.user != null) {
-                    try {
-                        const userInfo = await UsersService.getByAuthId((returned as any).user.id);
-                        if (userInfo) {
-                            console.log("userInfo", userInfo);
-                            (returned as any).user.userInfo = userInfo;
-                        }
-                    } catch (error) {
-                        console.log("Failed to inject user info into login response", error);
-                    }
-                    return returned;
+            if (!["/sign-in/email", "/sign-in/username", "/get-session"].includes(ctx.path)) return;
+
+            const returned = ctx.context.returned as { user?: { id: string; userInfo?: unknown } } | null | undefined;
+            if (!returned?.user) return;
+
+            try {
+                const userInfo = await UsersService.getByAuthId(returned.user.id);
+                if (userInfo) {
+                    returned.user.userInfo = userInfo;
                 }
+            } catch (error) {
+                console.log("Failed to inject user info into login response", error);
             }
+            return returned;
         })
     }
 });

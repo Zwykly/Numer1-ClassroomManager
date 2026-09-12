@@ -160,7 +160,7 @@ export function StudentFormModal({
                     <div className="h-1 w-full rounded-full" style={{ backgroundColor: STUDENT_COLORS[0] }} />
                     <StudentFields value={editForm} onChange={(field, value) => setEditForm((current) => ({ ...current, [field]: value }))} />
                     <div className="mt-3 flex justify-end gap-2">
-                        <Button variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
+                        <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>Cancel</Button>
                         <Button
                             variant="primary"
                             onClick={handleSubmit}
@@ -183,7 +183,7 @@ export function StudentFormModal({
                             )}
                         </div>
                         <div className="mt-auto flex justify-end gap-2 pt-6">
-                            <Button variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
+                            <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>Cancel</Button>
                             <Button variant="primary" onClick={handleSubmit} disabled={!canSubmitAdd}>
                                 {isSubmitting ? "Adding..." : `Add ${drafts.length > 1 ? `${drafts.length} students` : "student"}`}
                             </Button>
@@ -204,7 +204,7 @@ export function StudentFormModal({
                                         onClick={() => setSelectedKey(draft.key)}
                                         className={cn(
                                             "group flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 transition",
-                                            isSelected ? "bg-black/40" : "bg-dark-grey/20 hover:bg-dark-grey/30",
+                                            isSelected ? "bg-dark-grey/40" : "bg-dark-grey/10 hover:bg-dark-grey/20",
                                         )}
                                     >
                                         <span className="h-2.5 w-2.5 rounded-[3px]" style={{ backgroundColor: color }} />

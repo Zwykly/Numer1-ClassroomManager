@@ -40,7 +40,7 @@ export function StudentClassModal({
                 </p>
             </div>
             <div className="mt-2 flex justify-end">
-                <Button variant="secondary" onClick={() => onOpenChange(false)}>Close</Button>
+                <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>Close</Button>
             </div>
         </Modal>
     );

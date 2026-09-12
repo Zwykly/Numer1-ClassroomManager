@@ -25,7 +25,7 @@ export function Button (
             <button
                 {...props}
                 className={cn
-                    ('py-2 px-6 rounded-lg inline-flex leading-tight text-center justify-center items-center shadow-lg duration-300',
+                    ('py-2 px-6 rounded-lg inline-flex leading-tight text-center justify-center items-center shadow-lg duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none',
                     ButtonStyles[variant],
                     className)}>
                     {children}

@@ -84,13 +84,14 @@ export const selectCompositeClassroomReservationSchema = t.Composite([
     _selectClassroomReservationsSchema,
     t.Object({
         teacher: t.Optional(_selectSimpleUserSchema),
-        groups: t.Optional(t.Array(selectSimpleGroupSchema)),
+        groups: t.Optional(t.Array(selectCompositeGroupSchema)),
         students: t.Optional(t.Array(selectSimpleStudentSchema)),
         classroom: t.Optional(selectSimpleClassroomSchema),
         onlineClassroom: t.Optional(selectSimpleOnlineClassroomSchema)
     })
 ]);
 export const paginatedClassroomReservationsResponseSchema = createPaginationResponseSchema(selectCompositeClassroomReservationSchema);
+export const recurringClassroomReservationsResponseSchema = t.Array(selectCompositeClassroomReservationSchema);
 
 // --- Reservation Cycles ---
 export const selectCompositeReservationCycleSchema = t.Composite([

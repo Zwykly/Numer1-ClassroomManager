@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, type ChangeEvent } from "react";
 import { Select } from 'radix-ui';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { clsx as cn } from "clsx";
@@ -125,7 +125,15 @@ function ViewSelector() {
 
 function MobileDateNav() {
     const selectedDate = useSelectedDate();
-    const { setSelectedDate, setDateToToday } = useSelectedDateActions();
+    const { setSelectedDate } = useSelectedDateActions();
+
+    const handleDateChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        if (!value) return;
+        const [year, month, day] = value.split("-").map(Number);
+        if (!year || !month || !day) return;
+        setSelectedDate(new Date(year, month - 1, day));
+    };
 
     return (
         <div className="mt-3 flex items-center justify-between gap-2 lg:hidden">
@@ -137,13 +145,18 @@ function MobileDateNav() {
             >
                 <ChevronLeft size={18} />
             </button>
-            <button
-                type="button"
-                onClick={setDateToToday}
-                className="flex-1 rounded-lg border border-light-grey bg-white px-3 py-2 text-sm font-bold text-black transition hover:border-grey"
-            >
-                {format(selectedDate, "EEEE, d MMM")}
-            </button>
+            <div className="relative flex-1">
+                <div className="w-full rounded-lg border border-light-grey bg-white px-3 py-2 text-center text-sm font-bold text-black">
+                    {format(selectedDate, "EEEE, d MMM")}
+                </div>
+                <input
+                    type="date"
+                    aria-label="Select a date"
+                    value={format(selectedDate, "yyyy-MM-dd")}
+                    onChange={handleDateChange}
+                    className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                />
+            </div>
             <button
                 type="button"
                 aria-label="Next day"

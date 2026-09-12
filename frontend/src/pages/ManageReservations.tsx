@@ -67,8 +67,12 @@ export function ManageReservations() {
 
     const confirmDelete = async () => {
         if (!selectedReservation) return;
-        await deleteReservation(selectedReservation.id);
-        setDeleteOpen(false);
+        try {
+            await deleteReservation(selectedReservation.id);
+            setDeleteOpen(false);
+        } catch (error) {
+            console.error("Failed to delete reservation:", error);
+        }
     };
 
     return (

@@ -15,6 +15,12 @@ type ReservationsTableProps = {
 
 const actionButtonStyles = "rounded-lg p-2 transition disabled:cursor-not-allowed disabled:opacity-30";
 
+const actionColors = {
+    expand: "text-darker-grey hover:bg-orange/10 hover:text-orange",
+    modify: "text-amber-600 hover:bg-amber-500/10 hover:text-amber-700",
+    delete: "text-red-600 hover:bg-red-500/10 hover:text-red-700",
+};
+
 export function isEditable(reservation: Reservation, isAdmin: boolean, currentUserId?: string) {
     if (reservation.status === "canceled" || reservation.status === "completed") return false;
     return isAdmin || (!!currentUserId && reservation.teacherId === currentUserId);
@@ -119,7 +125,7 @@ export function ReservationsTable({
                                     <button
                                         title={isExpanded ? "Collapse" : "Expand"}
                                         onClick={() => setExpandedId(isExpanded ? null : reservation.id)}
-                                        className="rounded-lg p-1.5 text-darker-grey transition hover:bg-orange/10 hover:text-orange"
+                                        className={cn(actionButtonStyles, "p-1.5", actionColors.expand)}
                                     >
                                         {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                                     </button>
@@ -167,7 +173,7 @@ export function ReservationsTable({
                                     <div className="flex flex-row justify-end gap-1">
                                         <button
                                             title={canEdit ? "Modify" : "This class can no longer be edited"}
-                                            className={cn(actionButtonStyles, "text-darker-grey hover:bg-orange/10 hover:text-orange")}
+                                            className={cn(actionButtonStyles, actionColors.modify)}
                                             onClick={() => onModify(reservation)}
                                             disabled={!canEdit}
                                         >
@@ -175,7 +181,7 @@ export function ReservationsTable({
                                         </button>
                                         <button
                                             title={canEdit ? "Delete" : "This class can no longer be edited"}
-                                            className={cn(actionButtonStyles, "text-darker-grey hover:bg-orange/10 hover:text-orange")}
+                                            className={cn(actionButtonStyles, actionColors.delete)}
                                             onClick={() => onDelete(reservation)}
                                             disabled={!canEdit}
                                         >

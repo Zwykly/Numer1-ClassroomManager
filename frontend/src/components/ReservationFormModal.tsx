@@ -100,6 +100,7 @@ export function ReservationFormModal({
     const [onlineClassrooms, setOnlineClassrooms] = useState<OnlineClassroomOption[]>([]);
     const [teachers, setTeachers] = useState<TeacherOption[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const durationOptions = useMemo(() => {
         const options = new Set(DURATION_OPTIONS);
@@ -111,6 +112,7 @@ export function ReservationFormModal({
     useEffect(() => {
         if (!open) return;
 
+        setError(null);
         fetchStudents();
         fetchGroups();
 
@@ -174,8 +176,7 @@ export function ReservationFormModal({
                 : Boolean(form.cycleEndDate)));
 
     const isValid =
-        form.name.trim().length > 0
-        && validTime
+        validTime
         && validRoom
         && Boolean(form.teacherId)
         && validRecurring
@@ -184,10 +185,11 @@ export function ReservationFormModal({
     const handleSubmit = async () => {
         if (!isValid) return;
         setIsSubmitting(true);
+        setError(null);
         try {
             if (isEdit && reservation) {
                 const patch: ReservationPatch = {
-                    name: form.name.trim(),
+                    name: form.name.trim() || null,
                     teacherId: isAdmin ? form.teacherId : undefined,
                     classroomId: form.roomType === "classroom" ? form.classroomId : null,
                     onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : null,
@@ -201,7 +203,7 @@ export function ReservationFormModal({
                 await onUpdate(reservation.id, patch);
             } else if (form.isRecurring) {
                 const payload: NewRecurringReservation = {
-                    name: form.name.trim(),
+                    name: form.name.trim() || "",
                     teacherId: form.teacherId,
                     classroomId: form.roomType === "classroom" ? form.classroomId : undefined,
                     onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : undefined,
@@ -218,7 +220,7 @@ export function ReservationFormModal({
                 await onCreateRecurring(payload);
             } else {
                 const payload: NewReservation = {
-                    name: form.name.trim(),
+                    name: form.name.trim() || null,
                     teacherId: form.teacherId,
                     classroomId: form.roomType === "classroom" ? form.classroomId : null,
                     onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : null,
@@ -232,6 +234,8 @@ export function ReservationFormModal({
                 await onCreate(payload);
             }
             onOpenChange(false);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -482,6 +486,10 @@ export function ReservationFormModal({
                         onToggle={(id) => toggleId("groupIds", id)}
                     />
                 </div>
+
+                {error && (
+                    <p className="rounded-xl bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700">{error}</p>
+                )}
 
                 <div className="mt-1 flex justify-end gap-2">
                     <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>

@@ -17,6 +17,8 @@ export type ReservationView = "all" | "recurring" | "upcoming" | "archived";
 type ReservationsState = {
     reservations: Reservation[];
     isLoading: boolean;
+    view: ReservationView;
+    search: string;
     actions: {
         fetchReservations: (view?: ReservationView, search?: string) => Promise<void>;
         createReservation: (data: NewReservation) => Promise<void>;
@@ -26,9 +28,17 @@ type ReservationsState = {
     };
 };
 
+function throwIfError(error: unknown, fallback: string) {
+    if (!error) return;
+    const value = (error as { value?: unknown })?.value;
+    throw new Error(typeof value === "string" && value.length > 0 ? value : fallback);
+}
+
 export const useReservationsStore = create<ReservationsState>()((set, get) => ({
     reservations: [],
     isLoading: false,
+    view: "all",
+    search: "",
     actions: {
         fetchReservations: async (view: ReservationView = "all", search?: string) => {
             set({ isLoading: true });
@@ -48,6 +58,8 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
                 }
 
                 set({
+                    view,
+                    search: search ?? "",
                     reservations: response.data.data.map((reservation) => ({
                         ...reservation,
                         reservationTime: new Date(reservation.reservationTime as unknown as string),
@@ -61,36 +73,24 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
             }
         },
         createReservation: async (data: NewReservation) => {
-            try {
-                await eden["classroom-reservations"].post(data);
-                await get().actions.fetchReservations();
-            } catch (error) {
-                console.error("Failed to create reservation:", error);
-            }
+            const response = await eden["classroom-reservations"].post(data);
+            throwIfError(response.error, "Failed to create reservation");
+            await get().actions.fetchReservations(get().view, get().search || undefined);
         },
         createRecurringReservation: async (data: NewRecurringReservation) => {
-            try {
-                await eden["classroom-reservations"].recurring.post(data);
-                await get().actions.fetchReservations();
-            } catch (error) {
-                console.error("Failed to create recurring reservation:", error);
-            }
+            const response = await eden["classroom-reservations"].recurring.post(data);
+            throwIfError(response.error, "Failed to create recurring reservation");
+            await get().actions.fetchReservations(get().view, get().search || undefined);
         },
         patchReservation: async (id: string, data: ReservationPatch) => {
-            try {
-                await eden["classroom-reservations"]({ id }).patch(data);
-                await get().actions.fetchReservations();
-            } catch (error) {
-                console.error("Failed to patch reservation:", error);
-            }
+            const response = await eden["classroom-reservations"]({ id }).patch(data);
+            throwIfError(response.error, "Failed to update reservation");
+            await get().actions.fetchReservations(get().view, get().search || undefined);
         },
         deleteReservation: async (id: string) => {
-            try {
-                await eden["classroom-reservations"]({ id }).delete();
-                await get().actions.fetchReservations();
-            } catch (error) {
-                console.error("Failed to delete reservation:", error);
-            }
+            const response = await eden["classroom-reservations"]({ id }).delete();
+            throwIfError(response.error, "Failed to delete reservation");
+            await get().actions.fetchReservations(get().view, get().search || undefined);
         },
     },
 }));

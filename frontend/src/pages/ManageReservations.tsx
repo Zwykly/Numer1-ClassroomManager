@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { clsx as cn } from "clsx";
-import { Sidebar } from "../components/Sidebar";
 import { Button } from "../components/common/Button";
 import { ConfirmModal } from "../components/common/ConfirmModal";
 import { ReservationsTable } from "../components/ReservationsTable";
@@ -76,10 +75,8 @@ export function ManageReservations() {
     };
 
     return (
-        <div className="w-full h-screen flex flex-row overflow-hidden">
-            <Sidebar />
-            <div className="h-screen flex flex-col w-full bg-white">
-                <div className="pt-15 px-8 flex flex-col h-full overflow-hidden">
+        <div className="flex h-screen w-full flex-col overflow-hidden bg-white">
+            <div className="pt-15 px-8 flex flex-col h-full overflow-hidden">
                     <div className="flex flex-row items-end justify-between gap-6">
                         <div>
                             <span className="text-xs font-bold uppercase tracking-[0.2em] text-orange">
@@ -141,7 +138,6 @@ export function ManageReservations() {
                         />
                     </div>
                 </div>
-            </div>
 
             <ReservationFormModal
                 open={formOpen}

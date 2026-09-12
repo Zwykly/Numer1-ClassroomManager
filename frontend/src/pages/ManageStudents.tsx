@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import { Sidebar } from "../components/Sidebar";
 import { Button } from "../components/common/Button";
 import { ConfirmModal } from "../components/common/ConfirmModal";
 import { StudentsTable } from "../components/StudentsTable";
@@ -69,10 +68,8 @@ export function ManageStudents() {
     };
 
     return (
-        <div className="w-full h-screen flex flex-row overflow-hidden">
-            <Sidebar />
-            <div className="h-screen flex flex-col w-full bg-white">
-                <div className="pt-15 px-8 flex flex-col h-full overflow-hidden">
+        <div className="flex h-screen w-full flex-col overflow-hidden bg-white">
+            <div className="pt-15 px-8 flex flex-col h-full overflow-hidden">
                     <div className="flex flex-row items-center justify-between">
                         <h1 className="text-black font-bold text-4xl">Students</h1>
                         {isAdmin && (
@@ -102,7 +99,6 @@ export function ManageStudents() {
                         />
                     </div>
                 </div>
-            </div>
 
             <StudentFormModal
                 open={formOpen}

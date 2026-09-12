@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { clsx as cn } from "clsx";
-import { Search, X } from "lucide-react";
+import { AlertTriangle, Search, X } from "lucide-react";
 import { format } from "date-fns";
 import { Modal } from "./common/Modal";
 import { Button } from "./common/Button";
 import { useStudents, useStudentsActions } from "@/stores/useStudentsStore";
 import { useGroups, useGroupsActions } from "@/stores/useGroupsStore";
-import type { Reservation, NewReservation, NewRecurringReservation, ReservationPatch } from "@/stores/useReservationsStore";
+import {
+    useReservationsActions,
+    type Reservation,
+    type NewReservation,
+    type NewRecurringReservation,
+    type ReservationPatch,
+    type ConflictCheck,
+    type ConflictResult,
+} from "@/stores/useReservationsStore";
 import eden from "@/lib/eden";
 
 type ReservationFormModalProps = {
@@ -79,6 +87,23 @@ function emptyForm(currentUserId?: string): Form {
     };
 }
 
+type ConflictItem = ConflictResult["conflicts"][number]["items"][number];
+
+function formatConflictSpan(item: ConflictItem) {
+    const start = new Date(item.reservationTime);
+    if (!item.durationMinutes) return format(start, "dd MMM, HH:mm");
+    const end = new Date(start.getTime() + item.durationMinutes * 60_000);
+    return `${format(start, "dd MMM, HH:mm")}–${format(end, "HH:mm")}`;
+}
+
+function conflictItemMessage(item: ConflictItem) {
+    const span = formatConflictSpan(item);
+    if (item.type === "room") {
+        return `Room "${item.roomName ?? "selected room"}" is already booked ${span}${item.name ? ` (${item.name})` : ""}.`;
+    }
+    return `Teacher ${item.teacherName ?? ""} is already teaching ${span}${item.name ? ` (${item.name})` : ""}.`;
+}
+
 export function ReservationFormModal({
     open,
     onOpenChange,
@@ -94,6 +119,7 @@ export function ReservationFormModal({
     const { fetchStudents } = useStudentsActions();
     const groups = useGroups();
     const { fetchGroups } = useGroupsActions();
+    const { checkConflicts } = useReservationsActions();
 
     const [form, setForm] = useState<Form>(emptyForm(currentUserId));
     const [classrooms, setClassrooms] = useState<ClassroomOption[]>([]);
@@ -101,6 +127,9 @@ export function ReservationFormModal({
     const [teachers, setTeachers] = useState<TeacherOption[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [conflicts, setConflicts] = useState<ConflictResult | null>(null);
+    const [isChecking, setIsChecking] = useState(false);
+    const [overrides, setOverrides] = useState<{ index: number; reservationTime: string }[]>([]);
 
     const durationOptions = useMemo(() => {
         const options = new Set(DURATION_OPTIONS);
@@ -113,6 +142,8 @@ export function ReservationFormModal({
         if (!open) return;
 
         setError(null);
+        setConflicts(null);
+        setOverrides([]);
         fetchStudents();
         fetchGroups();
 
@@ -154,6 +185,93 @@ export function ReservationFormModal({
         }
     }, [open, reservation, isAdmin, currentUserId]);
 
+    const applyOverride = (index: number, reservationTime: string) => {
+        setOverrides((current) => [
+            ...current.filter((override) => override.index !== index),
+            { index, reservationTime },
+        ]);
+    };
+
+    const applySeriesSuggestion = (anchor: string) => {
+        setField("reservationTime", toDateInput(anchor));
+        setOverrides([]);
+    };
+
+    useEffect(() => {
+        if (!open) return;
+
+        const classroomId = form.roomType === "classroom" ? form.classroomId : "";
+        const onlineClassroomId = form.roomType === "online" ? form.onlineClassroomId : "";
+        const validRoom = form.roomType === "classroom" ? classroomId : onlineClassroomId;
+        const validTime = form.reservationTime && !Number.isNaN(new Date(form.reservationTime).getTime());
+        const validRecurrence = !form.isRecurring
+            || (Number(form.frequency) >= 1
+                && (form.endMode === "occurrences"
+                    ? Number(form.numberOfOccurrences) >= 1
+                    : Boolean(form.cycleEndDate)));
+
+        if (!form.teacherId || !validTime || !validRoom || !validRecurrence) {
+            setConflicts(null);
+            return;
+        }
+
+        const timeout = setTimeout(async () => {
+            setIsChecking(true);
+            try {
+                const input: ConflictCheck = {
+                    teacherId: form.teacherId,
+                    classroomId: classroomId || null,
+                    onlineClassroomId: onlineClassroomId || null,
+                    durationMinutes: Number(form.durationMinutes) || null,
+                    ...(isEdit && reservation ? { excludeId: reservation.id } : {}),
+                };
+
+                if (!isEdit && form.isRecurring) {
+                    input.recurrence = {
+                        anchorDate: new Date(form.reservationTime).toISOString(),
+                        frequency: Number(form.frequency) || 1,
+                        ...(form.endMode === "occurrences"
+                            ? { numberOfOccurrences: Number(form.numberOfOccurrences) || 1 }
+                            : {
+                                cycleEndDate: form.cycleEndDate
+                                    ? new Date(form.cycleEndDate).toISOString()
+                                    : undefined,
+                            }),
+                        overrides,
+                    };
+                } else {
+                    input.reservationTime = new Date(form.reservationTime).toISOString();
+                }
+
+                const result = await checkConflicts(input);
+                setConflicts(result);
+            } catch (err) {
+                console.error("Failed to check conflicts:", err);
+                setConflicts(null);
+            } finally {
+                setIsChecking(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(timeout);
+    }, [
+        open,
+        isEdit,
+        reservation,
+        form.teacherId,
+        form.roomType,
+        form.classroomId,
+        form.onlineClassroomId,
+        form.reservationTime,
+        form.durationMinutes,
+        form.isRecurring,
+        form.frequency,
+        form.endMode,
+        form.numberOfOccurrences,
+        form.cycleEndDate,
+        overrides,
+    ]);
+
     const setField = <K extends keyof Form>(field: K, value: Form[K]) => {
         setForm((current) => ({ ...current, [field]: value }));
     };
@@ -175,11 +293,15 @@ export function ReservationFormModal({
                 ? Number(form.numberOfOccurrences) >= 1
                 : Boolean(form.cycleEndDate)));
 
+    const hasConflicts = (conflicts?.conflicts.length ?? 0) > 0;
+
     const isValid =
         validTime
         && validRoom
         && Boolean(form.teacherId)
         && validRecurring
+        && !hasConflicts
+        && !isChecking
         && !isSubmitting;
 
     const handleSubmit = async () => {
@@ -214,6 +336,7 @@ export function ReservationFormModal({
                     ...(form.endMode === "occurrences"
                         ? { numberOfOccurrences: Number(form.numberOfOccurrences) }
                         : { cycleEndDate: new Date(form.cycleEndDate).toISOString() }),
+                    occurrenceOverrides: overrides,
                     studentIds: form.studentIds,
                     groupIds: form.groupIds,
                 };
@@ -457,6 +580,88 @@ export function ReservationFormModal({
                             </label>
                         )}
                     </div>
+                )}
+
+                {hasConflicts && conflicts && (
+                    <div className="rounded-xl border border-red-300 bg-red-500/10 p-4">
+                        <div className="flex items-center gap-2 text-red-700">
+                            <AlertTriangle size={18} />
+                            <span className="text-sm font-bold">
+                                {conflicts.allConflicted
+                                    ? "Every class in this series conflicts"
+                                    : "Scheduling conflict detected"}
+                            </span>
+                        </div>
+
+                        {!isEdit && form.isRecurring ? (
+                            <div className="mt-3 flex flex-col gap-3">
+                                {conflicts.allConflicted && conflicts.suggestedAnchor && (
+                                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white/70 px-3 py-2">
+                                        <span className="text-sm text-red-800">
+                                            Suggested series time:{" "}
+                                            <strong>{format(new Date(conflicts.suggestedAnchor), "dd MMM yyyy, HH:mm")}</strong>
+                                        </span>
+                                        <Button
+                                            variant="secondary"
+                                            className="border border-grey px-3 py-1 text-xs"
+                                            onClick={() => applySeriesSuggestion(conflicts.suggestedAnchor!)}
+                                        >
+                                            Apply to series
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {conflicts.conflicts.map((entry) => {
+                                    const override = overrides.find((value) => value.index === entry.index);
+                                    const currentValue = override?.reservationTime ?? entry.suggestion ?? entry.reservationTime;
+                                    return (
+                                        <div key={entry.index} className="rounded-lg bg-white/70 px-3 py-2">
+                                            <div className="text-xs font-bold uppercase tracking-wide text-red-700">
+                                                {format(new Date(entry.reservationTime), "dd MMM yyyy, HH:mm")}
+                                            </div>
+                                            <ul className="mt-1 list-disc pl-4 text-sm text-red-800">
+                                                {entry.items.map((item, index) => (
+                                                    <li key={index}>{conflictItemMessage(item)}</li>
+                                                ))}
+                                            </ul>
+                                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                {entry.suggestion && (
+                                                    <Button
+                                                        variant="secondary"
+                                                        className="border border-grey px-3 py-1 text-xs"
+                                                        onClick={() => applyOverride(entry.index, entry.suggestion!)}
+                                                    >
+                                                        Use suggestion: {format(new Date(entry.suggestion), "dd MMM HH:mm")}
+                                                    </Button>
+                                                )}
+                                                <input
+                                                    type="datetime-local"
+                                                    value={toDateInput(currentValue)}
+                                                    onChange={(event) => {
+                                                        if (!event.target.value) return;
+                                                        applyOverride(entry.index, new Date(event.target.value).toISOString());
+                                                    }}
+                                                    className="rounded-lg border border-grey bg-white px-2 py-1 text-xs text-black focus:border-orange focus:outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <ul className="mt-2 list-disc pl-4 text-sm text-red-800">
+                                {conflicts.conflicts.flatMap((entry) => entry.items).map((item, index) => (
+                                    <li key={index}>{conflictItemMessage(item)}</li>
+                                ))}
+                            </ul>
+                        )}
+
+                        <p className="mt-2 text-xs text-red-700">Resolve the conflicts before saving.</p>
+                    </div>
+                )}
+
+                {isChecking && !hasConflicts && (
+                    <p className="text-xs text-darker-grey">Checking availability...</p>
                 )}
 
                 <div className="flex flex-col">

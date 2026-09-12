@@ -1,5 +1,5 @@
 import { addMinutes, format } from "date-fns";
-import { Calendar, Clock, Info, MapPin, Pencil, Repeat, User, Users } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, Info, MapPin, Pencil, Repeat, User, Users, XCircle } from "lucide-react";
 import { clsx as cn } from "clsx";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
@@ -54,10 +54,15 @@ export function ClassDetailsModal({
                     <div className="flex flex-row flex-wrap items-center gap-2">
                         <span
                             className={cn(
-                                "rounded-full px-3 py-1 text-xs font-bold capitalize",
+                                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold capitalize",
                                 statusStyles[reservation.status] ?? "bg-light-grey text-darker-grey",
                             )}
                         >
+                            {reservation.status === "ongoing" && (
+                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                            )}
+                            {reservation.status === "completed" && <CheckCircle2 size={13} />}
+                            {reservation.status === "canceled" && <XCircle size={13} />}
                             {reservation.status}
                         </span>
                         {reservation.cycleId && (

@@ -47,6 +47,14 @@ export function CalendarDatePicker(
         weeks.push(calendarDays.slice(i, i + 7));
     }
 
+    // Contiguous column range of displayed days per week, used to draw a continuous grey band.
+    const weekBands = weeks.map((week) => {
+        const columns = week
+            .map((day, index) => (displayedDays.has(dayKey(day)) ? index : -1))
+            .filter((index) => index !== -1);
+        return columns.length > 0 ? { start: columns[0]!, end: columns[columns.length - 1]! } : null;
+    });
+
     let dayCounter = 0;
 
     return (
@@ -64,22 +72,36 @@ export function CalendarDatePicker(
                     <a>Sa</a>
                     <a>Su</a>
                 </div>
-                {weeks.map((week) => {
-                    // Contiguous range of columns that belong to the currently displayed days.
-                    const displayedColumns = week
-                        .map((day, index) => (displayedDays.has(dayKey(day)) ? index : -1))
-                        .filter((index) => index !== -1);
-                    const bandStart = displayedColumns[0];
-                    const bandEnd = displayedColumns[displayedColumns.length - 1];
+                {weeks.map((week, weekIndex) => {
+                    const band = weekBands[weekIndex];
+                    const previousBand = weekBands[weekIndex - 1];
+                    const nextBand = weekBands[weekIndex + 1];
+                    const overlaps = (a: { start: number; end: number }, b: { start: number; end: number } | null | undefined) =>
+                        Boolean(b && a.start <= b.end && b.start <= a.end);
+                    const connectsAbove = Boolean(band && overlaps(band, previousBand));
+                    const connectsBelow = Boolean(band && overlaps(band, nextBand));
+
+                    const radius = connectsAbove && connectsBelow
+                        ? "rounded-none"
+                        : connectsAbove
+                            ? "rounded-b-sm"
+                            : connectsBelow
+                                ? "rounded-t-sm"
+                                : "rounded-sm";
 
                     return (
                         <div key={week[0]?.toISOString()} className="relative grid grid-cols-7 w-full h-auto text-center py-0.5">
-                            {bandStart !== undefined && bandEnd !== undefined && (
+                            {band && (
                                 <div
-                                    className="pointer-events-none absolute top-0.5 bottom-0.5 rounded-sm bg-grey"
+                                    className={cn(
+                                        "pointer-events-none absolute bg-grey",
+                                        radius,
+                                        connectsAbove ? "top-0" : "top-0.5",
+                                        connectsBelow ? "bottom-0" : "bottom-0.5",
+                                    )}
                                     style={{
-                                        left: `${(bandStart / 7) * 100}%`,
-                                        width: `${((bandEnd - bandStart + 1) / 7) * 100}%`,
+                                        left: `${(band.start / 7) * 100}%`,
+                                        width: `${((band.end - band.start + 1) / 7) * 100}%`,
                                     }}
                                 />
                             )}

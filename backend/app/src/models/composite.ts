@@ -44,6 +44,7 @@ export const selectCompositeStudentSchema = t.Composite([
     })
 ]);
 export const paginatedStudentsResponseSchema = createPaginationResponseSchema(selectCompositeStudentSchema);
+export const selectStudentsBatchResponseSchema = t.Array(selectCompositeStudentSchema);
 
 // --- Groups ---
 export const selectCompositeGroupSchema = t.Composite([

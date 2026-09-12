@@ -1,6 +1,6 @@
 import { NotFoundError } from "elysia";
 import { StudentsService } from "../services/students";
-import { insertStudentSchema, updateStudentSchema, patchStudentSchema, studentsQuerySchema } from "../models/students";
+import { insertStudentSchema, insertStudentsBatchSchema, updateStudentSchema, patchStudentSchema, studentsQuerySchema } from "../models/students";
 
 export const StudentsController = {
     async getAll({ query }: { query: typeof studentsQuerySchema.static }) {
@@ -17,6 +17,10 @@ export const StudentsController = {
         const created = await StudentsService.create(body);
         if (!created) throw new NotFoundError( "Student not found");
         return created;
+    },
+
+    async createMany({ body }: { body: typeof insertStudentsBatchSchema.static }) {
+        return await StudentsService.createMany(body.students);
     },
 
     async update({ params: { id }, body }: { params: { id: string }, body: typeof updateStudentSchema.static }) {

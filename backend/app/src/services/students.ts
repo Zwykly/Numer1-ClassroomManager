@@ -59,6 +59,16 @@ export const StudentsService = {
         return this.getById(newStudent.id);
     },
 
+    async createMany(students: (typeof insertStudentSchema.static)[]) {
+        const inserted = await db
+            .insert(table.students)
+            .values(students)
+            .returning();
+
+        const created = await Promise.all(inserted.map((student) => this.getById(student.id)));
+        return created.filter((student) => student !== null);
+    },
+
     async update(id: string, payload: typeof updateStudentSchema.static) {
         const [updatedStudent] = await db
             .update(table.students)

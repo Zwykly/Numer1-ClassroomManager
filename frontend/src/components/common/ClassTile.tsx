@@ -8,6 +8,7 @@ type ClassTileProps = {
     reservation: ClassroomReservation;
     isOwn?: boolean;
     className?: string;
+    onClick?: () => void;
 };
 
 export function classTitle(reservation: ClassroomReservation) {
@@ -25,16 +26,19 @@ export function classSubtitle(reservation: ClassroomReservation) {
     return reservation.classroom?.name ?? reservation.onlineClassroom?.name ?? "";
 }
 
-export function ClassTile({ reservation, isOwn, className }: ClassTileProps) {
+export function ClassTile({ reservation, isOwn, className, onClick }: ClassTileProps) {
     const accent = isOwn ? "hsl(19,97%,51%)" : teacherColor(reservation.teacherId);
     const background = isOwn ? "hsl(19,97%,95%)" : teacherTint(reservation.teacherId);
     const subtitle = classSubtitle(reservation);
     const isCanceled = reservation.status === "canceled";
 
     return (
-        <div
+        <button
+            type="button"
+            onClick={onClick}
             className={cn(
                 "relative flex h-full w-full flex-col justify-center overflow-hidden rounded-xl border border-black/5 px-3 py-1.5 text-left transition hover:brightness-[0.97]",
+                onClick && "cursor-pointer",
                 isCanceled && "opacity-60",
                 className,
             )}
@@ -53,6 +57,6 @@ export function ClassTile({ reservation, isOwn, className }: ClassTileProps) {
             {subtitle && (
                 <span className="mt-0.5 truncate text-xs leading-tight text-darker-grey">{subtitle}</span>
             )}
-        </div>
+        </button>
     );
 }

@@ -1,0 +1,138 @@
+import { addMinutes, format } from "date-fns";
+import { Calendar, Clock, Info, MapPin, Pencil, Repeat, User, Users } from "lucide-react";
+import { clsx as cn } from "clsx";
+import { Modal } from "./Modal";
+import { Button } from "./Button";
+import { teacherColor } from "@/utils/teacherColors";
+import type { ClassroomReservation } from "@/stores/useClassroomReservationsStore";
+
+type ClassDetailsModalProps = {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    reservation: ClassroomReservation | null;
+    currentUserId?: string;
+    isAdmin: boolean;
+    onEdit: (reservation: ClassroomReservation) => void;
+};
+
+const EDITABLE_STATUSES = ["scheduled", "cyclical", "ongoing"];
+
+const statusStyles: Record<string, string> = {
+    scheduled: "bg-blue-500/10 text-blue-700",
+    cyclical: "bg-orange/10 text-orange",
+    ongoing: "bg-emerald-500/10 text-emerald-700",
+    completed: "bg-light-grey text-darker-grey",
+    canceled: "bg-red-500/10 text-red-700",
+};
+
+export function ClassDetailsModal({
+    open,
+    onOpenChange,
+    reservation,
+    currentUserId,
+    isAdmin,
+    onEdit,
+}: ClassDetailsModalProps) {
+    const canEdit = Boolean(
+        reservation
+        && EDITABLE_STATUSES.includes(reservation.status)
+        && (isAdmin || reservation.teacherId === currentUserId),
+    );
+
+    const start = reservation ? new Date(reservation.reservationTime) : null;
+    const end = start && reservation?.durationMinutes ? addMinutes(start, reservation.durationMinutes) : null;
+
+    return (
+        <Modal
+            open={open}
+            onOpenChange={onOpenChange}
+            title={reservation?.name || "Untitled class"}
+            description="Class details"
+        >
+            {reservation && (
+                <div className="flex flex-col gap-5">
+                    <div className="flex flex-row flex-wrap items-center gap-2">
+                        <span
+                            className={cn(
+                                "rounded-full px-3 py-1 text-xs font-bold capitalize",
+                                statusStyles[reservation.status] ?? "bg-light-grey text-darker-grey",
+                            )}
+                        >
+                            {reservation.status}
+                        </span>
+                        {reservation.cycleId && (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange/10 px-3 py-1 text-xs font-bold text-orange">
+                                <Repeat size={13} />
+                                Recurring
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-3 text-sm">
+                        <InfoRow icon={<User size={16} />} label="Teacher">
+                            <span className="inline-flex items-center gap-2">
+                                <span
+                                    className="h-2.5 w-2.5 rounded-full"
+                                    style={{ backgroundColor: teacherColor(reservation.teacherId) }}
+                                />
+                                {reservation.teacher
+                                    ? `${reservation.teacher.firstName} ${reservation.teacher.lastName}`
+                                    : "Unassigned"}
+                            </span>
+                        </InfoRow>
+
+                        <InfoRow icon={<MapPin size={16} />} label={reservation.onlineClassroom ? "Online classroom" : "Classroom"}>
+                            {reservation.classroom?.name || reservation.onlineClassroom?.name || "No room assigned"}
+                        </InfoRow>
+
+                        <InfoRow icon={<Calendar size={16} />} label="Date">
+                            {start ? format(start, "EEEE, d MMMM yyyy") : "-"}
+                        </InfoRow>
+
+                        <InfoRow icon={<Clock size={16} />} label="Time">
+                            {start ? format(start, "HH:mm") : "-"}
+                            {end ? ` – ${format(end, "HH:mm")}` : ""}
+                            {reservation.durationMinutes ? ` (${reservation.durationMinutes} min)` : ""}
+                        </InfoRow>
+
+                        <InfoRow icon={<Users size={16} />} label={`Groups (${reservation.groups?.length ?? 0})`}>
+                            {reservation.groups && reservation.groups.length > 0
+                                ? reservation.groups.map((group) => group.name).join(", ")
+                                : "No groups assigned"}
+                        </InfoRow>
+
+                        {reservation.additionalInfo && (
+                            <InfoRow icon={<Info size={16} />} label="Additional info">
+                                {reservation.additionalInfo}
+                            </InfoRow>
+                        )}
+                    </div>
+
+                    <div className="flex justify-end gap-2 border-t border-light-grey pt-4">
+                        <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>
+                            Close
+                        </Button>
+                        {canEdit && (
+                            <Button variant="primary" className="gap-2" onClick={() => onEdit(reservation)}>
+                                <Pencil size={16} />
+                                Edit class
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            )}
+        </Modal>
+    );
+}
+
+function InfoRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
+    return (
+        <div className="flex flex-row items-start gap-3">
+            <span className="mt-0.5 text-darker-grey">{icon}</span>
+            <div className="flex flex-col">
+                <span className="text-xs font-bold uppercase tracking-wide text-darker-grey">{label}</span>
+                <span className="text-black/80">{children}</span>
+            </div>
+        </div>
+    );
+}

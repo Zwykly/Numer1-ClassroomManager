@@ -1,14 +1,18 @@
 import { DayTimeline } from "@/components/common/DayTimeline";
 import { MonthView } from "@/components/common/MonthView";
 import { DayClassesModal } from "@/components/common/DayClassesModal";
+import { ClassDetailsModal } from "@/components/common/ClassDetailsModal";
+import { ReservationFormModal } from "@/components/ReservationFormModal";
 import { useSelectedDate, useSelectedView } from "../../stores/useSelectedDateStore";
 import { useCurrentTimeTicker } from "../../utils/CurrentTime";
 import { isToday, format, isSameDay } from "date-fns";
 import { useRef, useEffect, useState } from "react";
 import { useAuth } from "@/utils/AuthProvider";
 import { getDisplayedDays, getFetchRange, HOUR_HEIGHT } from "../../utils/calendarRange";
-import { useClassroomReservations, useClassroomReservationsActions } from "../../stores/useClassroomReservationsStore";
+import { useClassroomReservations, useClassroomReservationsActions, type ClassroomReservation } from "../../stores/useClassroomReservationsStore";
 import { useSelectedClassFilter, useSelectedClassroom } from "../../stores/useSelectedTimelineStore";
+import { useReservationsActions, type Reservation, type ReservationPatch } from "../../stores/useReservationsStore";
+import eden from "@/lib/eden";
 
 function CurrentTimeLine () {
     const now = useCurrentTimeTicker(60000);
@@ -29,10 +33,15 @@ export function TimelineView () {
         const now = useCurrentTimeTicker(60000);
         const { UserData } = useAuth();
         const currentUserId = UserData?.user?.userInfo?.id;
+        const isAdmin = UserData?.user?.userInfo?.role === "admin";
         const selectedClassroom = useSelectedClassroom();
         const classFilter = useSelectedClassFilter();
         const [selectedDay, setSelectedDay] = useState<Date | null>(null);
         const [dayModalOpen, setDayModalOpen] = useState(false);
+        const [selectedReservation, setSelectedReservation] = useState<ClassroomReservation | null>(null);
+        const [detailsOpen, setDetailsOpen] = useState(false);
+        const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
+        const [editOpen, setEditOpen] = useState(false);
 
         const daysOfTheWeek = ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -42,6 +51,7 @@ export function TimelineView () {
         // Get reservations for the days displayed
         const classroomReservations = useClassroomReservations();
         const { fetchClassroomReservations } = useClassroomReservationsActions();
+        const { patchReservation } = useReservationsActions();
         useEffect(() => {
             fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
         }, [fetchClassroomReservations, from.getTime(), to.getTime(), selectedClassroom]);
@@ -64,9 +74,55 @@ export function TimelineView () {
             setDayModalOpen(true);
         };
 
+        const openDetails = (reservation: ClassroomReservation) => {
+            setSelectedReservation(reservation);
+            setDayModalOpen(false);
+            setDetailsOpen(true);
+        };
+
+        const handleEdit = async (reservation: ClassroomReservation) => {
+            try {
+                const response = await eden["classroom-reservations"]({ id: reservation.id }).get();
+                if (response.error || !response.data) return;
+                setEditingReservation(response.data as unknown as Reservation);
+                setDetailsOpen(false);
+                setEditOpen(true);
+            } catch (error) {
+                console.error("Failed to load class:", error);
+            }
+        };
+
+        const handleUpdate = async (id: string, data: ReservationPatch) => {
+            await patchReservation(id, data);
+            await fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
+        };
+
         const dayReservations = selectedDay
             ? visibleReservations.filter((reservation) => isSameDay(reservation.reservationTime, selectedDay))
             : [];
+
+        const modals = (
+            <>
+                <ClassDetailsModal
+                    open={detailsOpen}
+                    onOpenChange={setDetailsOpen}
+                    reservation={selectedReservation}
+                    currentUserId={currentUserId}
+                    isAdmin={isAdmin}
+                    onEdit={handleEdit}
+                />
+                <ReservationFormModal
+                    open={editOpen}
+                    onOpenChange={setEditOpen}
+                    reservation={editingReservation}
+                    currentUserId={currentUserId}
+                    isAdmin={isAdmin}
+                    onCreate={async () => {}}
+                    onCreateRecurring={async () => {}}
+                    onUpdate={handleUpdate}
+                />
+            </>
+        );
 
         if (view === "month") {
             return (
@@ -78,7 +134,9 @@ export function TimelineView () {
                         day={selectedDay}
                         reservations={dayReservations}
                         currentUserId={currentUserId}
+                        onSelectReservation={openDetails}
                     />
+                    {modals}
                 </div>
             );
         }
@@ -124,7 +182,13 @@ export function TimelineView () {
                                 const reservations = visibleReservations.filter(reservation => isSameDay(reservation.reservationTime, day))
                                 return (
 
-                                    <DayTimeline key={day.toISOString()} day={day} reservations={reservations} currentUserId={currentUserId} />
+                                    <DayTimeline
+                                        key={day.toISOString()}
+                                        day={day}
+                                        reservations={reservations}
+                                        currentUserId={currentUserId}
+                                        onSelectReservation={openDetails}
+                                    />
                                 );
                             })}
                     </div>
@@ -132,6 +196,7 @@ export function TimelineView () {
                 {/* Linia aktualnego czasu*/}
                 <CurrentTimeLine />
             </div>
+            {modals}
         </div>
     )
 }

@@ -22,6 +22,16 @@ export function buildPaginationResponse<T extends Record<string, any>>(
     };
 }
 
+export function getDateRangeWhere(columnName: string, from?: string, to?: string): Record<string, any> | undefined {
+    if (!from && !to) return undefined;
+
+    const range: Record<string, any> = {};
+    if (from) range.gte = new Date(from);
+    if (to) range.lte = new Date(to);
+
+    return { [columnName]: range };
+}
+
 export function normalizeFilterArray(val: string | string[] | undefined): string[] | undefined {
     if (!val) return undefined;
     if (Array.isArray(val)) return val.length > 0 ? val : undefined;

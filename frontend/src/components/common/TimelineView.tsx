@@ -1,7 +1,7 @@
 import { DayTimeline } from "@/components/common/DayTimeline";
 import { useSelectedDate, useSelectedDateRange } from "../../stores/useSelectedDateStore";
 import { useCurrentTimeTicker } from "../../utils/CurrentTime";
-import { startOfWeek, endOfWeek, eachDayOfInterval, isToday, format, isSameDay } from "date-fns";
+import { startOfWeek, endOfWeek, eachDayOfInterval, isToday, format, isSameDay, addDays } from "date-fns";
 import { useRef, useEffect } from "react";
 import { Eclipse } from "lucide-react";
 import eden from "../../lib/eden";
@@ -35,8 +35,8 @@ export function TimelineView () {
             const displayEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
             displayedDays = eachDayOfInterval({start: displayStart, end: displayEnd})
         } else {
-            const displayStart = selectedDate.getDate()-1;
-            const displayEnd = selectedDate.getDate()+(numberOfDisplayedDays-2);
+            const displayStart = addDays(selectedDate, -1);
+            const displayEnd = addDays(selectedDate, numberOfDisplayedDays - 2);
             displayedDays = eachDayOfInterval({start: displayStart, end: displayEnd})
         }
 

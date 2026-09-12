@@ -58,10 +58,7 @@ export const ClassroomReservationsService = {
 
         if (view === "archived") {
             return {
-                OR: [
-                    { status: { in: ["canceled", "completed"] } },
-                    { cycle: { status: "archived" } },
-                ],
+                status: { in: ["canceled", "completed"] },
             };
         }
 

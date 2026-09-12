@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { clsx as cn } from "clsx";
 import { Sidebar } from "../components/Sidebar";
 import { Button } from "../components/common/Button";
 import { ConfirmModal } from "../components/common/ConfirmModal";
 import { ReservationsTable } from "../components/ReservationsTable";
-import { RecurringClassesTable, buildCycleGroups } from "../components/RecurringClassesTable";
 import { ReservationFormModal } from "../components/ReservationFormModal";
 import {
     useReservations,
@@ -50,8 +49,6 @@ export function ManageReservations() {
         (reservation) => reservation.cycleId || reservation.status === "cyclical",
     ).length;
     const upcomingCount = reservations.filter((reservation) => reservation.status === "scheduled").length;
-
-    const cycleGroups = useMemo(() => buildCycleGroups(reservations), [reservations]);
 
     const openAdd = () => {
         setEditingReservation(null);
@@ -133,25 +130,15 @@ export function ManageReservations() {
                     />
 
                     <div className="mt-6 flex-1 overflow-y-auto pb-10">
-                        {view === "recurring" ? (
-                            <RecurringClassesTable
-                                groups={cycleGroups}
-                                isLoading={isLoading}
-                                currentUserId={currentUserId}
-                                isAdmin={isAdmin}
-                                onModify={openModify}
-                                onDelete={openDelete}
-                            />
-                        ) : (
-                            <ReservationsTable
-                                reservations={reservations}
-                                isLoading={isLoading}
-                                currentUserId={currentUserId}
-                                isAdmin={isAdmin}
-                                onModify={openModify}
-                                onDelete={openDelete}
-                            />
-                        )}
+                        <ReservationsTable
+                            reservations={reservations}
+                            isLoading={isLoading}
+                            currentUserId={currentUserId}
+                            isAdmin={isAdmin}
+                            groupRecurring={view !== "upcoming"}
+                            onModify={openModify}
+                            onDelete={openDelete}
+                        />
                     </div>
                 </div>
             </div>

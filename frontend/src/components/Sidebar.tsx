@@ -19,7 +19,7 @@ export function Sidebar() {
     const navigate = useNavigate();
     const { pathname } = useLocation();
     const { UserData, refetch } = useAuth();
-    const { openReservation, openStudent, openUser } = useActionModalActions();
+    const { openReservation, openStudent, openUser, openGroup } = useActionModalActions();
     const { setDateToToday } = useSelectedDateActions();
 
     const userInfo = UserData?.user?.userInfo;
@@ -49,6 +49,7 @@ export function Sidebar() {
         if (action.target === "reservation") openReservation();
         if (action.target === "student") openStudent();
         if (action.target === "user") openUser();
+        if (action.target === "group") openGroup();
     };
 
     const handleSignOut = async () => {

@@ -3,9 +3,11 @@ import { ReservationFormModal } from "./ReservationFormModal";
 import { StudentFormModal } from "./StudentFormModal";
 import { UserFormModal } from "./UserFormModal";
 import { UserCredentialsModal } from "./UserCredentialsModal";
+import { GroupFormModal } from "./GroupFormModal";
 import {
     useActionModalActions,
     useActiveActionModal,
+    useGroupModalData,
     useReservationModalData,
     useStudentModalData,
     useUserModalData,
@@ -13,6 +15,7 @@ import {
 import { useReservationsActions } from "@/stores/useReservationsStore";
 import { useStudentsActions } from "@/stores/useStudentsStore";
 import { useUsersActions, type NewUserAccount } from "@/stores/useUsersStore";
+import { useGroupsActions } from "@/stores/useGroupsStore";
 import { useAuth } from "@/utils/AuthProvider";
 
 type CreatedCredentials = {
@@ -27,6 +30,7 @@ export function ActionModalsHost() {
     const reservation = useReservationModalData();
     const student = useStudentModalData();
     const user = useUserModalData();
+    const group = useGroupModalData();
     const { close } = useActionModalActions();
 
     const { UserData } = useAuth();
@@ -36,6 +40,7 @@ export function ActionModalsHost() {
     const { createReservation, createRecurringReservation, patchReservation } = useReservationsActions();
     const { createStudents, patchStudent } = useStudentsActions();
     const { createUser, patchUser } = useUsersActions();
+    const { createGroup, patchGroup } = useGroupsActions();
 
     const [credentialsOpen, setCredentialsOpen] = useState(false);
     const [credentials, setCredentials] = useState<CreatedCredentials | null>(null);
@@ -85,6 +90,14 @@ export function ActionModalsHost() {
                 user={user}
                 onCreate={handleCreateUser}
                 onUpdate={patchUser}
+            />
+
+            <GroupFormModal
+                open={activeModal === "group"}
+                onOpenChange={handleClose}
+                group={group}
+                onCreate={createGroup}
+                onUpdate={patchGroup}
             />
 
             <UserCredentialsModal

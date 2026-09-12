@@ -5,7 +5,8 @@ import {
 } from "react-router-dom";
 import { publicRoutes } from "./publicRoutes";
 import { privateRoutes } from "./privateRoutes";
-import { ProtectedRoutes, OpenRoutes } from "../utils/RouteTypes";
+import { adminRoutes } from "./adminRoutes";
+import { ProtectedRoutes, OpenRoutes, AdminRoutes } from "../utils/RouteTypes";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -16,6 +17,11 @@ export const router = createBrowserRouter(
       ))}
       </Route>
       <Route element={<ProtectedRoutes />}>
+        <Route element={<AdminRoutes />}>
+          {adminRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={<route.element />} />
+          ))}
+        </Route>
         {privateRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={<route.element />} />
         ))}

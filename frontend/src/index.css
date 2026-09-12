@@ -7,7 +7,12 @@
     @apply text-[rgba(255,255,255,0.87)] bg-[#242424];
   }
 
+  html,
+  #root {
+    @apply h-full;
+  }
+
   body {
-    @apply grid place-items-center min-w-[320px] min-h-screen relative m-0 font-display;
+    @apply grid place-items-center min-w-[320px] min-h-screen relative m-0 font-display overflow-x-hidden;
   }
 }

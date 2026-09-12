@@ -51,7 +51,7 @@ export function ManageUsers() {
     };
 
     return (
-        <div className="flex h-screen w-full flex-col overflow-hidden bg-canvas">
+        <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-canvas">
             <div className="pt-15 px-8 flex flex-col h-full overflow-hidden">
                     <div className="flex flex-row items-end justify-between gap-6">
                         <div>

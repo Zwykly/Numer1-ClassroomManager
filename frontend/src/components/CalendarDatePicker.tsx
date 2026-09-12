@@ -54,8 +54,8 @@ export function CalendarDatePicker(
             <div className='w-full h-full flex flex-row items-start justify-between'>
                 <MonthPickerPopover />
             </div>
-            <div className='w-full h-full flex flex-col items-start justify-between'>
-                <div className='grid grid-cols-7 gap-1 w-full h-auto text-center text-darker-grey font-bold px-2 py-0.5'>
+            <div className='w-full h-full flex flex-col items-start justify-between px-2'>
+                <div className='grid grid-cols-7 w-full h-auto text-center text-darker-grey font-bold py-0.5'>
                     <a>Mo</a>
                     <a>Tu</a>
                     <a>We</a>
@@ -65,24 +65,38 @@ export function CalendarDatePicker(
                     <a>Su</a>
                 </div>
                 {weeks.map((week) => {
-                    return (
-                        <div key={week[0]?.toISOString()} className="grid grid-cols-7 gap-1 w-full h-auto text-center px-2 py-0.5">
-                        {week.map((day) => {
-                            const isDisplayed = displayedDays.has(dayKey(day));
-                            let className = ['duration-300 hover:bg-orange/30 rounded-sm',
-                                isDisplayed && !isSameDay(day, selectedDate) && 'bg-grey rounded-sm',
-                                !isSameMonth(day, selectedDate) && 'text-darker-grey font-light duration-300 hover:bg-orange/30 rounded-sm',
-                                isSameMonth(day, selectedDate) && 'text-light-black font-bold',
-                                isSameDay(day, selectedDate) && 'bg-orange text-white rounded-sm font-semibold',
-                                isSameDay(day, today) && 'ring-2 ring-orange rounded-sm',
-                            ].filter(Boolean).join(' ');
+                    // Contiguous range of columns that belong to the currently displayed days.
+                    const displayedColumns = week
+                        .map((day, index) => (displayedDays.has(dayKey(day)) ? index : -1))
+                        .filter((index) => index !== -1);
+                    const bandStart = displayedColumns[0];
+                    const bandEnd = displayedColumns[displayedColumns.length - 1];
 
-                            return (
-                                <button key={(dayCounter++).toString()} onClick={() => changeSelectedDay(day)} className={className}>
-                                    {day.getDate()}
-                                </button>
-                            );
-                        })}
+                    return (
+                        <div key={week[0]?.toISOString()} className="relative grid grid-cols-7 w-full h-auto text-center py-0.5">
+                            {bandStart !== undefined && bandEnd !== undefined && (
+                                <div
+                                    className="pointer-events-none absolute top-0.5 bottom-0.5 rounded-sm bg-grey"
+                                    style={{
+                                        left: `${(bandStart / 7) * 100}%`,
+                                        width: `${((bandEnd - bandStart + 1) / 7) * 100}%`,
+                                    }}
+                                />
+                            )}
+                            {week.map((day) => {
+                                let className = ['relative z-10 duration-300 hover:bg-orange/30 rounded-sm',
+                                    !isSameMonth(day, selectedDate) && 'text-darker-grey font-light duration-300 hover:bg-orange/30 rounded-sm',
+                                    isSameMonth(day, selectedDate) && 'text-light-black font-bold',
+                                    isSameDay(day, selectedDate) && 'bg-orange text-white rounded-sm font-semibold',
+                                    isSameDay(day, today) && 'ring-2 ring-orange rounded-sm',
+                                ].filter(Boolean).join(' ');
+
+                                return (
+                                    <button key={(dayCounter++).toString()} onClick={() => changeSelectedDay(day)} className={className}>
+                                        {day.getDate()}
+                                    </button>
+                                );
+                            })}
                         </div>
                     );
                 })}

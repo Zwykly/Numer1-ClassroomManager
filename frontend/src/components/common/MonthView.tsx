@@ -37,14 +37,25 @@ export function MonthView({ selectedDate, reservations, onSelectDay }: MonthView
     }
 
     return (
-        <div className="flex w-full flex-col gap-1">
-            <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold uppercase tracking-wide text-darker-grey">
+        <div className="w-full overflow-hidden rounded-2xl border border-light-grey bg-white">
+            <div className="grid grid-cols-7 border-b border-light-grey">
                 {WEEKDAYS.map((weekday) => (
-                    <span key={weekday} className="py-2">{weekday}</span>
+                    <span
+                        key={weekday}
+                        className="border-r border-light-grey py-2.5 text-center text-xs font-bold uppercase tracking-wide text-darker-grey last:border-r-0"
+                    >
+                        {weekday}
+                    </span>
                 ))}
             </div>
-            {weeks.map((week) => (
-                <div key={week[0]?.toISOString()} className="grid grid-cols-7 gap-1">
+            {weeks.map((week, weekIndex) => (
+                <div
+                    key={week[0]?.toISOString()}
+                    className={cn(
+                        "grid grid-cols-7",
+                        weekIndex < weeks.length - 1 && "border-b border-light-grey",
+                    )}
+                >
                     {week.map((day) => {
                         const count = countByDay.get(format(day, "yyyy-MM-dd")) ?? 0;
                         const inMonth = isSameMonth(day, selectedDate);
@@ -57,9 +68,9 @@ export function MonthView({ selectedDate, reservations, onSelectDay }: MonthView
                                 onClick={() => onSelectDay(day)}
                                 disabled={!inMonth}
                                 className={cn(
-                                    "flex min-h-[6.5rem] flex-col items-start gap-2 rounded-xl border border-transparent p-2 text-left transition",
-                                    inMonth && "hover:border-light-grey hover:bg-light-grey/40",
-                                    !inMonth && "cursor-default opacity-50",
+                                    "relative flex min-h-[7rem] flex-col items-start gap-2 border-r border-light-grey p-3 text-left transition last:border-r-0",
+                                    inMonth && "hover:bg-light-grey/40",
+                                    !inMonth && "cursor-default bg-light-grey/20",
                                 )}
                             >
                                 <span

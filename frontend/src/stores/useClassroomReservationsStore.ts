@@ -1,32 +1,32 @@
 import { create } from "zustand/react";
-import { addDays, endOfDay, startOfDay } from "date-fns";
-import type { selectCompositeClassroomReservationSchema } from "../../../backend/app/src/models/composite";
+import type { selectCalendarReservationSchema } from "../../../backend/app/src/models/composite";
 import eden from "@/lib/eden";
 
-export type ClassroomReservation = typeof selectCompositeClassroomReservationSchema.static;
+export type ClassroomReservation = typeof selectCalendarReservationSchema.static;
 
 type ClassroomReservationsState = {
     classroomReservations: ClassroomReservation[];
+    isLoading: boolean;
     actions: {
-        fetchClassroomReservations: (date: Date, range: number) => Promise<void>;
+        fetchClassroomReservations: (from: Date, to: Date, classroomId?: string) => Promise<void>;
         setClassroomReservations: (reservations: ClassroomReservation[]) => void;
         clearClassroomReservations: () => void;
     }
 }
 export const useClassroomReservationsStore = create<ClassroomReservationsState>()((set) => ({
     classroomReservations: [],
+    isLoading: false,
     actions: {
         setClassroomReservations: (reservations: ClassroomReservation[]) => set({ classroomReservations: reservations }),
         clearClassroomReservations: () => set({ classroomReservations: [] }),
-        fetchClassroomReservations: async (date: Date, range: number) => {
-            const from = startOfDay(date);
-            const to = endOfDay(addDays(from, Math.max(range - 1, 0)));
+        fetchClassroomReservations: async (from: Date, to: Date, classroomId?: string) => {
+            set({ isLoading: true });
             try {
-                const response = await eden["classroom-reservations"].get({
+                const response = await eden["classroom-reservations"].calendar.get({
                     query: {
                         from: from.toISOString(),
                         to: to.toISOString(),
-                        limit: 100,
+                        ...(classroomId ? { classroomId } : {}),
                     },
                 });
 
@@ -37,7 +37,7 @@ export const useClassroomReservationsStore = create<ClassroomReservationsState>(
                 }
 
                 set({
-                    classroomReservations: response.data.data.map((reservation) => ({
+                    classroomReservations: response.data.map((reservation) => ({
                         ...reservation,
                         reservationTime: new Date(reservation.reservationTime as unknown as string),
                     })),
@@ -45,10 +45,13 @@ export const useClassroomReservationsStore = create<ClassroomReservationsState>(
             } catch (error) {
                 console.error("Failed to fetch classroom reservations:", error);
                 set({ classroomReservations: [] });
+            } finally {
+                set({ isLoading: false });
             }
         }
     }
 }));
 
 export const useClassroomReservations = () => useClassroomReservationsStore((state) => state.classroomReservations);
+export const useClassroomReservationsLoading = () => useClassroomReservationsStore((state) => state.isLoading);
 export const useClassroomReservationsActions = () => useClassroomReservationsStore((state) => state.actions);

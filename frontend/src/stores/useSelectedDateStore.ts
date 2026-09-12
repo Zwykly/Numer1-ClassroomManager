@@ -1,28 +1,28 @@
 import { startOfDay } from "date-fns";
-import { use } from "react";
 import { create } from "zustand";
+import type { CalendarView } from "../utils/calendarRange";
 
 type SelectedDateState = {
     selectedDate: Date;
-    selectedDateRange: number;
+    selectedView: CalendarView;
     actions: {
         setSelectedDate: (date: Date) => void;
-        setSelectedDateRange: (range: number) => void;
+        setSelectedView: (view: CalendarView) => void;
         setDateToToday: () => void;
     }
 }
 
 export const useSelectedDateStore = create<SelectedDateState>()((set) => ({
     selectedDate: new Date(),
-    selectedDateRange: 7,
+    selectedView: "week",
     actions: {
         setSelectedDate: (date: Date) => set({ selectedDate: date }),
-        setSelectedDateRange: (range: number) => set({ selectedDateRange: range }),
+        setSelectedView: (view: CalendarView) => set({ selectedView: view }),
         setDateToToday: () => set({ selectedDate: startOfDay(new Date()) }),
     }
 }));
 
 export const useSelectedDate = () => useSelectedDateStore((state) => state.selectedDate);
-export const useSelectedDateRange = () => useSelectedDateStore((state) => state.selectedDateRange);
+export const useSelectedView = () => useSelectedDateStore((state) => state.selectedView);
 
 export const useSelectedDateActions = () => useSelectedDateStore((state) => state.actions);

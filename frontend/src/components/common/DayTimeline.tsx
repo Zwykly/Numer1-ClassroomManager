@@ -3,7 +3,7 @@ import { clsx as cn } from "clsx";
 import {eachHourOfInterval, getHours, isToday} from "date-fns";
 
 type DayTimelineData = {
-    numberOfDisplayedDays: number,
+    numberOfDisplayedDays?: number,
     className?: string,
     day: Date,
     reservations: ClassroomReservation[],

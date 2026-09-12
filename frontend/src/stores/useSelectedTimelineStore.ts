@@ -1,31 +1,26 @@
-import { set, startOfDay } from "date-fns";
-import { use } from "react";
 import { create } from "zustand";
+
+export type ClassFilter = "all" | "mine";
 
 type SelectedTimelineState = {
     selectedClassroom: string;
-    selectedUser: string;
-    selectedTimelineFilters: string[];
+    selectedClassFilter: ClassFilter;
     actions: {
         setSelectedClassroom: (classroom: string) => void;
-        setSelectedUser: (user: string) => void;
-        setSelectedTimelineFilters: (filters: string[]) => void;
+        setSelectedClassFilter: (filter: ClassFilter) => void;
     }
 }
 
 export const useSelectedTimelineStore = create<SelectedTimelineState>()((set) => ({
-    selectedClassroom: "Hejka",
-    selectedUser: "",
-    selectedTimelineFilters: [],
+    selectedClassroom: "all",
+    selectedClassFilter: "all",
     actions: {
         setSelectedClassroom: (classroom: string) => set({ selectedClassroom: classroom }),
-        setSelectedUser: (user: string) => set({ selectedUser: user }),
-        setSelectedTimelineFilters: (filters: string[]) => set({ selectedTimelineFilters: filters }),
+        setSelectedClassFilter: (filter: ClassFilter) => set({ selectedClassFilter: filter }),
     }
 }));
 
 export const useSelectedClassroom = () => useSelectedTimelineStore((state) => state.selectedClassroom);
-export const useSelectedUser = () => useSelectedTimelineStore((state) => state.selectedUser);
-export const useSelectedTimelineFilters = () => useSelectedTimelineStore((state) => state.selectedTimelineFilters);
+export const useSelectedClassFilter = () => useSelectedTimelineStore((state) => state.selectedClassFilter);
 
 export const useSelectedTimelineActions = () => useSelectedTimelineStore((state) => state.actions);

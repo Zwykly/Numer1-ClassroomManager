@@ -1,20 +1,15 @@
 import {
-    startOfMonth,
-    endOfMonth,
     eachDayOfInterval,
-    startOfWeek,
+    endOfMonth,
     endOfWeek,
-    eachWeekOfInterval,
-    isSameMonth,
-    isSameWeek,
     isSameDay,
-    add,
-    isSameYear,
+    isSameMonth,
+    startOfMonth,
+    startOfWeek,
 } from 'date-fns';
 import { clsx as cn } from "clsx";
-import { se } from 'date-fns/locale';
-import { useSelectedDate, useSelectedDateActions } from '../stores/useSelectedDateStore';
-import { MonthPicker } from './common/MonthPicker';
+import { useSelectedDate, useSelectedDateActions, useSelectedView } from '../stores/useSelectedDateStore';
+import { dayKey, getDisplayedDays } from '../utils/calendarRange';
 import { MonthPickerPopover } from './common/MonthPickerPopover';
 
 type CalendarDatePickerProps = {
@@ -28,6 +23,7 @@ export function CalendarDatePicker(
     }: CalendarDatePickerProps) {
 
     const selectedDate = useSelectedDate();
+    const selectedView = useSelectedView();
     const { setSelectedDate } = useSelectedDateActions();
     const today = new Date();
     // Function that changes the selected day state in store.
@@ -35,12 +31,14 @@ export function CalendarDatePicker(
         setSelectedDate(newSelectedDate);
     }
 
-    const month = selectedDate?.toLocaleString('default', { month: 'long' });
     const monthStart = startOfMonth(selectedDate);
     const monthEnd = endOfMonth(selectedDate);
     const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
     const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
     const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+
+    // Days currently shown in the timeline view, used to highlight the grey band.
+    const displayedDays = new Set(getDisplayedDays(selectedDate, selectedView).map(dayKey));
 
     // Mapping days to weeks for easier parsing to table
     const weeks: Date[][] = [];
@@ -67,15 +65,12 @@ export function CalendarDatePicker(
                     <a>Su</a>
                 </div>
                 {weeks.map((week) => {
-                    let isSameWeekBool = isSameWeek(week[0], selectedDate, { weekStartsOn: 1 });
-                    let className = [`grid grid-cols-7 gap-1 w-full h-auto text-center px-2 py-0.5`,
-                        isSameWeekBool && 'bg-grey rounded-sm'
-                    ] .filter(Boolean).join(' ');
-                    
                     return (
-                        <div key={week[0].toISOString()} className={cn(className)}>
+                        <div key={week[0]?.toISOString()} className="grid grid-cols-7 gap-1 w-full h-auto text-center px-2 py-0.5">
                         {week.map((day) => {
+                            const isDisplayed = displayedDays.has(dayKey(day));
                             let className = ['duration-300 hover:bg-orange/30 rounded-sm',
+                                isDisplayed && !isSameDay(day, selectedDate) && 'bg-grey rounded-sm',
                                 !isSameMonth(day, selectedDate) && 'text-darker-grey font-light duration-300 hover:bg-orange/30 rounded-sm',
                                 isSameMonth(day, selectedDate) && 'text-light-black font-bold',
                                 isSameDay(day, selectedDate) && 'bg-orange text-white rounded-sm font-semibold',

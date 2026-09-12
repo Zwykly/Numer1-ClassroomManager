@@ -3,7 +3,7 @@ import "./index.css";
 
 import logo from "./logo.svg";
 import reactLogo from "./react.svg";
-import { RouterProvider } from "react-router-dom";
+import { RouterProvider } from "react-router/dom";
 import { router } from "./router/router";
 import { AnimatedDotsBackground } from "./components/AnimatedDotsBackground";
 import { AuthProvider } from "./utils/AuthProvider";

@@ -1,5 +1,5 @@
 import { useAuth } from "./AuthProvider";
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate } from "react-router";
 
 export function ProtectedRoutes() {
     const { UserData } = useAuth();
@@ -11,6 +11,6 @@ export function OpenRoutes() {
 }
 export function AdminRoutes() {
     const { UserData } = useAuth();
-    const isAdmin = UserData?.user.userInfo?.role === "admin";
+    const isAdmin = UserData?.user?.userInfo?.role === "admin";
     return isAdmin ? <Outlet /> : <Navigate to="/myHome" replace />
 }

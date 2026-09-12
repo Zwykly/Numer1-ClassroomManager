@@ -1,5 +1,4 @@
 import { CalendarDaysIcon, GraduationCap, UsersRound } from "lucide-react";
-import { data } from "react-router-dom";
 
 export function HeroButtons() {
     return (

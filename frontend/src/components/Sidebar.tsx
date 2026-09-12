@@ -30,7 +30,7 @@ export function Sidebar() {
                     </div>
                     <Button variant="secondary" className="w-full mt-2" onClick={() => navigate("/manage-students")}> Manage students </Button>
                     <Button variant="secondary" className="w-full mt-2"> Manage groups </Button>
-                    <Button variant="secondary" className="w-full mt-2"> Manage reservations </Button>
+                    <Button variant="secondary" className="w-full mt-2" onClick={() => navigate("/manage-reservations")}> Manage reservations </Button>
                     {isAdmin && (
                         <Button variant="secondary" className="w-full mt-2" onClick={() => navigate("/manage-users")}> Manage users </Button>
                     )}

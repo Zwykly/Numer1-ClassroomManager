@@ -1,7 +1,7 @@
-import { selectCompositeClassroomReservationSchema, paginatedClassroomReservationsResponseSchema, recurringClassroomReservationsResponseSchema } from "../models/composite";
+import { selectCompositeClassroomReservationSchema, paginatedClassroomReservationsResponseSchema, recurringClassroomReservationsResponseSchema, calendarClassroomReservationsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
 import { ClassroomReservationsController } from "../controllers/classroom_reservations";
-import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, checkConflictsSchema, conflictResultSchema } from "../models/classroom_reservations";
+import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema, checkConflictsSchema, conflictResultSchema } from "../models/classroom_reservations";
 import { authGuard } from "../auth/authGuard";
 
 const classroomReservationsRoutes = new Elysia({
@@ -11,6 +11,11 @@ const classroomReservationsRoutes = new Elysia({
     .get("/", ClassroomReservationsController.getAll, {
         query: classroomReservationsQuerySchema,
         response: paginatedClassroomReservationsResponseSchema,
+        isAuth: true
+    })
+    .get("/calendar", ClassroomReservationsController.getCalendar, {
+        query: calendarReservationsQuerySchema,
+        response: calendarClassroomReservationsResponseSchema,
         isAuth: true
     })
     .get("/:id", ClassroomReservationsController.getById, {

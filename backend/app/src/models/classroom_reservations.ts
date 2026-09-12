@@ -24,6 +24,13 @@ export const classroomReservationsQuerySchema = t.Composite([
     })
 ]);
 
+// Query for the lightweight calendar range endpoint
+export const calendarReservationsQuerySchema = t.Object({
+    from: t.String({ format: 'date-time' }),
+    to: t.String({ format: 'date-time' }),
+    classroomId: t.Optional(t.String({ format: 'uuid' })),
+});
+
 // Inserts
 export const insertClassroomReservationSchema = t.Omit(_insertClassroomReservationsSchema, ['id', 'createdOn', 'editedOn']);
 

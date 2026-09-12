@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
-import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema } from "../models/classroom_reservations";
+import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema } from "../models/classroom_reservations";
 import { getLimit, getCursorWhere, getInArrayWhere, getDateRangeWhere, getFuzzySearchWhere, buildPaginationResponse } from "../utils/drizzle";
 import { buildOccurrenceDates } from "../utils/schedule";
 
@@ -9,6 +9,13 @@ const reservationRelations = {
     users: true,
     groups: { with: { students: true } },
     students: true,
+    classrooms: true,
+    onlineClassrooms: true,
+} as const;
+
+const calendarRelations = {
+    users: true,
+    groups: true,
     classrooms: true,
     onlineClassrooms: true,
 } as const;
@@ -94,6 +101,22 @@ export const ClassroomReservationsService = {
 
         if (!res) return null;
         return mapReservation(res);
+    },
+
+    async getCalendar(query: typeof calendarReservationsQuerySchema.static) {
+        const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
+        const classroomWhere = query.classroomId ? { classroomId: query.classroomId } : undefined;
+
+        const conditions = [dateWhere, classroomWhere].filter(Boolean);
+        const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
+
+        const data = await db.query.classroomReservations.findMany({
+            where: whereClause,
+            orderBy: (res, { asc }) => [asc(res.reservationTime)],
+            with: calendarRelations,
+        });
+
+        return data.map(mapReservation);
     },
 
     async setAttendees(reservationId: string, studentIds?: string[], groupIds?: string[]) {

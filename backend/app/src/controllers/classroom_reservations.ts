@@ -1,7 +1,7 @@
 import { NotFoundError, status } from "elysia";
 import { ClassroomReservationsService } from "../services/classroom_reservations";
 import { ConflictsService } from "../services/conflicts";
-import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, checkConflictsSchema } from "../models/classroom_reservations";
+import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema, checkConflictsSchema } from "../models/classroom_reservations";
 
 type AuthUser = {
     userInfo?: { id: string; role?: string | null } | null;
@@ -43,6 +43,10 @@ async function assertCanEdit(id: string, user: AuthUser) {
 export const ClassroomReservationsController = {
     async getAll({ query }: { query: typeof classroomReservationsQuerySchema.static }) {
         return await ClassroomReservationsService.getAll(query);
+    },
+
+    async getCalendar({ query }: { query: typeof calendarReservationsQuerySchema.static }) {
+        return await ClassroomReservationsService.getCalendar(query);
     },
 
     async getById({ params: { id } }: { params: { id: string } }) {

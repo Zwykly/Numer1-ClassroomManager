@@ -22,6 +22,7 @@ export function Button (
     } : ButtonProps) {
         return (
             <button
+                {...props}
                 className={cn
                     ('py-2 px-6 rounded-lg inline-flex leading-tight text-center justify-center items-center shadow-lg duration-300',
                     ButtonStyles[variant],

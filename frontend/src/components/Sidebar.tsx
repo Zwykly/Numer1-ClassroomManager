@@ -49,9 +49,11 @@ export function Sidebar() {
             </div>
 
             <div className="mt-4 flex flex-1 flex-col overflow-y-auto px-4 pb-4">
-                <div className="py-2">
-                    <CalendarDatePicker />
-                </div>
+                {pathname === "/myHome" && (
+                    <div className="py-2">
+                        <CalendarDatePicker />
+                    </div>
+                )}
 
                 <p className="px-3 pb-1 pt-3 text-[11px] font-bold uppercase tracking-[0.15em] text-darker-grey">
                     Actions

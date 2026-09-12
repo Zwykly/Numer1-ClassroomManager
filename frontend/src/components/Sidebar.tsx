@@ -4,9 +4,12 @@ import { Button } from "./common/Button";
 import { Calendar } from "lucide-react";
 import { CalendarDatePicker } from "./CalendarDatePicker";
 import { startOfDay, formatISO } from "date-fns";
+import { useAuth } from "@/utils/AuthProvider";
 
 export function Sidebar() {
     const navigate = useNavigate();
+    const { UserData } = useAuth();
+    const isAdmin = UserData?.user?.userInfo?.role === "admin";
 
     return (
         <div className="w-2/9 h-full bg-gray-200 flex flex-col items-center">
@@ -28,6 +31,9 @@ export function Sidebar() {
                     <Button variant="secondary" className="w-full mt-2" onClick={() => navigate("/manage-students")}> Manage students </Button>
                     <Button variant="secondary" className="w-full mt-2"> Manage groups </Button>
                     <Button variant="secondary" className="w-full mt-2"> Manage reservations </Button>
+                    {isAdmin && (
+                        <Button variant="secondary" className="w-full mt-2" onClick={() => navigate("/manage-users")}> Manage users </Button>
+                    )}
                     <Button variant="secondary" className="w-full mt-2hw"> View your calendar </Button>
                 </div>
                 <div className="bottomPart w-full flex flex-col items-center">

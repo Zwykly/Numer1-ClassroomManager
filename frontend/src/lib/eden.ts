@@ -1,6 +1,10 @@
 import type { App } from '../../../backend/app/src/index' 
 import { treaty } from '@elysiajs/eden';
 
-const eden = treaty<App>('http://localhost:3000');
+const eden = treaty<App>('http://localhost:3000', {
+    fetch: {
+        credentials: 'include',
+    },
+});
 
 export default eden;

@@ -10,7 +10,7 @@ const app = new Elysia()
   .use(openapi())
   .use(cors({
     origin: ["http://localhost:3030", "http://zwykly.duckdns.org", "http://zwykly.duckdns.org:3030"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"]
   }))

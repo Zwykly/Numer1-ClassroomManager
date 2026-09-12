@@ -34,6 +34,10 @@ export const selectCompositeUserSchema = t.Composite([
     })
 ]);
 export const paginatedUsersResponseSchema = createPaginationResponseSchema(selectCompositeUserSchema);
+export const createUserAccountResponseSchema = t.Object({
+    user: selectCompositeUserSchema,
+    password: t.String(),
+});
 
 // --- Students ---
 export const selectCompositeStudentSchema = t.Composite([

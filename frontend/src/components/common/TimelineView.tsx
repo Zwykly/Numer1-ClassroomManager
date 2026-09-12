@@ -150,27 +150,28 @@ export function TimelineView () {
 
     return (
         <div className="flex flex-col h-full pt-8 bg-canvas w-full">
-            {/*Header with day labels*/}
-            <div className="flex flex-row shrink-0 my-2">
-                <div className="w-16 flex shrink-0"></div>
-                <div className="w-full h-full grid" style={{ gridTemplateColumns: `repeat(${displayedDays.length}, 1fr)` }}>
-                    {
-                        displayedDays.map((day) => {
-                                const dayTextClassName = [ 
-                                    isToday(day) && "rounded-xl px-2 py-1 bg-orange text-white font-bold",
-                                    !isToday(day) && "font-semibold text-darker-grey"
-                                    ].filter(Boolean).join('');
-                            return(
-                                <div key={day.toISOString()} className="text-center">
-                                    <span className={dayTextClassName}>{daysOfTheWeek[day.getDay()]} {day.getDate()}</span>
-                                </div>
-                            )
-                        })}
-                </div>
-            </div>
             {/*Body where the timeline resides*/}
-            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto flex min-h-0 relative">
-                <div className="flex w-full absolute z-0">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 relative">
+                {/*Header with day labels - inside the scroll container so it shares the grid width*/}
+                <div className="sticky top-0 z-30 flex flex-row bg-canvas pb-2">
+                    <div className="w-16 flex shrink-0"></div>
+                    <div className="w-full grid" style={{ gridTemplateColumns: `repeat(${displayedDays.length}, 1fr)` }}>
+                        {
+                            displayedDays.map((day) => {
+                                    const dayTextClassName = [ 
+                                        isToday(day) && "rounded-xl px-2 py-1 bg-orange text-white font-bold",
+                                        !isToday(day) && "font-semibold text-darker-grey"
+                                        ].filter(Boolean).join('');
+                                return(
+                                    <div key={day.toISOString()} className="py-1 text-center">
+                                        <span className={dayTextClassName}>{daysOfTheWeek[day.getDay()]} {day.getDate()}</span>
+                                    </div>
+                                )
+                            })}
+                    </div>
+                </div>
+                {/*Timeline grid*/}
+                <div className="relative flex w-full">
                     <div className="w-16 text-end font-semibold text-darker-grey">
                         {hours.map(hour => {
                             return (
@@ -199,9 +200,9 @@ export function TimelineView () {
                                 );
                             })}
                     </div>
+                    {/* Linia aktualnego czasu*/}
+                    <CurrentTimeLine />
                 </div>
-                {/* Linia aktualnego czasu*/}
-                <CurrentTimeLine />
             </div>
             {modals}
         </div>

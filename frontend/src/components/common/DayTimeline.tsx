@@ -84,10 +84,10 @@ export function DayTimeline (
     const positioned = layoutReservations(reservations);
 
     return (
-        <div className={cn("relative flex flex-col border-l border-grey", className)}>
+        <div className={cn("relative flex flex-col border-l border-grid", className)}>
             {HOURS.map(hour => {
                 return (
-                    <div key={hour} className="h-16 border-t border-grey" />
+                    <div key={hour} className="h-16 border-t border-grid" />
                 )
             })}
             {positioned.map(({ reservation, left, width }) => {

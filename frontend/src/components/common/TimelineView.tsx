@@ -174,7 +174,7 @@ export function TimelineView () {
                     <div className="w-16 text-end font-semibold text-darker-grey">
                         {hours.map(hour => {
                             return (
-                                <div key={hour} className="h-16 border-t border-grey text-sm">
+                                <div key={hour} className="h-16 border-t border-grid text-sm">
                                     <span className="mr-1">{hour+":00"}</span>
                                 </div>
                             )

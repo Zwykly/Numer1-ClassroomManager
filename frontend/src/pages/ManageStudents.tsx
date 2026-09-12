@@ -70,8 +70,8 @@ export function ManageStudents() {
     const upcomingClasses = upcomingStudentClasses(selectedStudent?.reservations);
 
     return (
-        <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-canvas">
-            <div className="flex flex-col h-full overflow-hidden px-4 pt-8 sm:px-6 lg:px-8 lg:pt-15">
+        <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto overscroll-contain bg-canvas">
+            <div className="flex flex-col px-4 pt-8 pb-10 sm:px-6 lg:px-8 lg:pt-15">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <h1 className="text-black font-bold text-3xl sm:text-4xl">Students</h1>
                         {isAdmin && (
@@ -89,7 +89,7 @@ export function ManageStudents() {
                         className="mt-5 w-full max-w-sm rounded-xl border border-grey bg-white px-4 py-2 text-black placeholder:text-darker-grey focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30"
                     />
 
-                    <div className="mt-5 flex-1 overflow-y-auto pb-10">
+                    <div className="mt-5">
                         <StudentsTable
                             students={students}
                             isLoading={isLoading}

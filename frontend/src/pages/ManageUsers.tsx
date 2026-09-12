@@ -51,8 +51,8 @@ export function ManageUsers() {
     };
 
     return (
-        <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-canvas">
-            <div className="flex flex-col h-full overflow-hidden px-4 pt-8 sm:px-6 lg:px-8 lg:pt-15">
+        <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto overscroll-contain bg-canvas">
+            <div className="flex flex-col px-4 pt-8 pb-10 sm:px-6 lg:px-8 lg:pt-15">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <span className="text-xs font-bold uppercase tracking-[0.2em] text-orange">
@@ -85,7 +85,7 @@ export function ManageUsers() {
                         </div>
                     </div>
 
-                    <div className="mt-6 flex-1 overflow-y-auto pb-10">
+                    <div className="mt-6">
                         <UsersTable
                             users={users}
                             isLoading={isLoading}

@@ -133,7 +133,7 @@ export function TimelineView () {
 
         if (view === "month") {
             return (
-                <div className="flex h-full w-full flex-col overflow-y-auto bg-white px-6 pt-6">
+                <div className="flex h-full w-full flex-col overflow-y-auto bg-canvas px-6 pt-6">
                     <MonthView selectedDate={selectedDate} reservations={visibleReservations} onSelectDay={openDay} />
                     <DayClassesModal
                         open={dayModalOpen}
@@ -149,7 +149,7 @@ export function TimelineView () {
         }
 
     return (
-        <div className="flex flex-col h-full pt-8 bg-white w-full">
+        <div className="flex flex-col h-full pt-8 bg-canvas w-full">
             {/*Header with day labels*/}
             <div className="flex flex-row shrink-0 my-2">
                 <div className="w-16 flex shrink-0"></div>

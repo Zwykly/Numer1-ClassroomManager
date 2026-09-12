@@ -70,7 +70,7 @@ export function ManageStudents() {
     const upcomingClasses = upcomingStudentClasses(selectedStudent?.reservations);
 
     return (
-        <div className="flex h-screen w-full flex-col overflow-hidden bg-white">
+        <div className="flex h-screen w-full flex-col overflow-hidden bg-canvas">
             <div className="pt-15 px-8 flex flex-col h-full overflow-hidden">
                     <div className="flex flex-row items-center justify-between">
                         <h1 className="text-black font-bold text-4xl">Students</h1>

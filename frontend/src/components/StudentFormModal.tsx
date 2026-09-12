@@ -3,6 +3,7 @@ import { Plus, X } from "lucide-react";
 import { clsx as cn } from "clsx";
 import { Modal } from "./common/Modal";
 import { Button } from "./common/Button";
+import { randomId } from "@/utils/randomId";
 import type { NewStudent, Student, StudentPatch } from "@/stores/useStudentsStore";
 
 type StudentFormModalProps = {
@@ -43,7 +44,7 @@ const emptyForm: EditForm = {
 };
 
 const createDraft = (): Draft => ({
-    key: crypto.randomUUID(),
+    key: randomId(),
     ...emptyForm,
 });
 

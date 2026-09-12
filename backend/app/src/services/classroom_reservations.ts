@@ -30,7 +30,15 @@ function mapReservation(res: any) {
 
 export const ClassroomReservationsService = {
     buildViewWhere(view?: typeof classroomReservationsQuerySchema.static.view): Record<string, any> | undefined {
-        if (!view || view === "all") return undefined;
+        if (!view || view === "all") {
+            return {
+                status: { notIn: ["canceled", "completed"] },
+                OR: [
+                    { status: "ongoing" },
+                    { reservationTime: { gte: new Date() } },
+                ],
+            };
+        }
 
         if (view === "recurring") {
             return {

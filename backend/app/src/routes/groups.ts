@@ -1,7 +1,7 @@
 import { selectCompositeGroupSchema, paginatedGroupsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
 import { GroupsController } from "../controllers/groups";
-import { insertGroupSchema, updateGroupSchema, patchGroupSchema, groupsQuerySchema } from "../models/groups";
+import { createGroupSchema, updateGroupSchema, patchGroupSchema, groupsQuerySchema } from "../models/groups";
 import { authGuard } from "../auth/authGuard";
 
 const groupsRoutes = new Elysia({
@@ -17,7 +17,7 @@ const groupsRoutes = new Elysia({
         response: selectCompositeGroupSchema
     })
     .post("/", GroupsController.create, {
-        body: insertGroupSchema,
+        body: createGroupSchema,
         response: selectCompositeGroupSchema
     })
     .put("/:id", GroupsController.update, {

@@ -56,6 +56,7 @@ export const selectCompositeGroupSchema = t.Composite([
     t.Object({
         students: t.Optional(t.Array(selectSimpleStudentSchema)),
         users: t.Optional(t.Array(_selectSimpleUserSchema)),
+        reservations: t.Optional(t.Array(selectSimpleClassroomReservationSchema)),
     })
 ]);
 export const paginatedGroupsResponseSchema = createPaginationResponseSchema(selectCompositeGroupSchema);

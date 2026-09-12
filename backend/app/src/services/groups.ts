@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
-import { insertGroupSchema, updateGroupSchema, patchGroupSchema, groupsQuerySchema } from "../models/groups";
+import { createGroupSchema, updateGroupSchema, patchGroupSchema, groupsQuerySchema } from "../models/groups";
 import { getLimit, getCursorWhere, getFuzzySearchWhere, buildPaginationResponse } from "../utils/drizzle";
 
 export const GroupsService = {
@@ -20,6 +20,7 @@ export const GroupsService = {
             with: {
                 students: true,
                 teachers: true,
+                reservations: true,
             }
         });
 
@@ -27,6 +28,7 @@ export const GroupsService = {
             ...group,
             students: group.students,
             users: group.teachers,
+            reservations: group.reservations,
         }));
 
         return buildPaginationResponse(mappedGroups, query.limit);
@@ -38,6 +40,7 @@ export const GroupsService = {
             with: {
                 students: true,
                 teachers: true,
+                reservations: true,
             }
         });
 
@@ -47,34 +50,52 @@ export const GroupsService = {
             ...group,
             students: group.students,
             users: group.teachers,
+            reservations: group.reservations,
         };
     },
 
-    async create(payload: typeof insertGroupSchema.static) {
+    async setStudents(groupId: string, studentIds?: string[]) {
+        if (!studentIds) return;
+
+        await db.delete(table.groupStudents).where(eq(table.groupStudents.groupId, groupId));
+        if (studentIds.length > 0) {
+            await db.insert(table.groupStudents).values(
+                studentIds.map((studentId) => ({ groupId, studentId })),
+            );
+        }
+    },
+
+    async create(payload: typeof createGroupSchema.static) {
+        const { studentIds, ...group } = payload;
         const [newGroup] = await db
             .insert(table.groups)
-            .values(payload)
+            .values(group)
             .returning();
+        await this.setStudents(newGroup.id, studentIds);
         return this.getById(newGroup.id);
     },
 
     async update(id: string, payload: typeof updateGroupSchema.static) {
+        const { studentIds, ...group } = payload;
         const [updatedGroup] = await db
             .update(table.groups)
-            .set(payload)
+            .set(group)
             .where(eq(table.groups.id, id))
             .returning();
         if (!updatedGroup) return null;
+        await this.setStudents(id, studentIds);
         return this.getById(id);
     },
 
     async patch(id: string, payload: typeof patchGroupSchema.static) {
+        const { studentIds, ...group } = payload;
         const [patchedGroup] = await db
             .update(table.groups)
-            .set(payload)
+            .set(group)
             .where(eq(table.groups.id, id))
             .returning();
         if (!patchedGroup) return null;
+        await this.setStudents(id, studentIds);
         return this.getById(id);
     },
 

@@ -1,6 +1,6 @@
 import { NotFoundError } from "elysia";
 import { GroupsService } from "../services/groups";
-import { insertGroupSchema, updateGroupSchema, patchGroupSchema, groupsQuerySchema } from "../models/groups";
+import { createGroupSchema, updateGroupSchema, patchGroupSchema, groupsQuerySchema } from "../models/groups";
 
 export const GroupsController = {
     async getAll({ query }: { query: typeof groupsQuerySchema.static }) {
@@ -13,7 +13,7 @@ export const GroupsController = {
         return group;
     },
 
-    async create({ body }: { body: typeof insertGroupSchema.static }) {
+    async create({ body }: { body: typeof createGroupSchema.static }) {
         const created = await GroupsService.create(body);
         if (!created) throw new NotFoundError( "Group not found");
         return created;

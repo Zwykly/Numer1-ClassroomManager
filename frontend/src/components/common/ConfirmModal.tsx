@@ -26,8 +26,7 @@ export function ConfirmModal({
             <div className="mt-6 flex justify-end gap-2">
                 <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>Cancel</Button>
                 <Button
-                    variant="primary"
-                    className={isDestructive ? "!bg-light-black !text-orange hover:!bg-black" : undefined}
+                    variant={isDestructive ? "danger" : "primary"}
                     onClick={onConfirm}
                 >
                     {confirmLabel}

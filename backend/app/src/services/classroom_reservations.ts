@@ -28,7 +28,9 @@ function mapReservation(res: any) {
 
 export const ClassroomReservationsService = {
     buildViewWhere(view?: typeof classroomReservationsQuerySchema.static.view): Record<string, any> | undefined {
-        if (!view || view === "all") {
+        if (!view) return undefined;
+
+        if (view === "all") {
             return {
                 status: { notIn: ["canceled", "completed"] },
                 OR: [

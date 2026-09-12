@@ -46,6 +46,7 @@ export const createRecurringReservationSchema = t.Object({
     onlineClassroomId: t.Optional(t.String({ format: 'uuid' })),
     additionalInfo: t.Optional(t.Union([t.String(), t.Null()])),
     anchorDate: t.String({ format: 'date-time' }),
+    durationMinutes: t.Optional(t.Integer({ minimum: 1 })),
     frequency: t.Integer({ minimum: 1 }),
     cycleEndDate: t.Optional(t.String({ format: 'date-time' })),
     numberOfOccurrences: t.Optional(t.Integer({ minimum: 1 })),

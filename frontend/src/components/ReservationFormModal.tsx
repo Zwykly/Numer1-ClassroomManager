@@ -22,7 +22,7 @@ type ReservationFormModalProps = {
 
 type ClassroomOption = { id: string; name: string };
 type OnlineClassroomOption = { id: string; name: string };
-type TeacherOption = { id: string; firstName: string; lastName: string };
+type TeacherOption = { id: string; firstName: string; lastName: string; role?: string | null };
 
 type Form = {
     name: string;
@@ -31,6 +31,7 @@ type Form = {
     classroomId: string;
     onlineClassroomId: string;
     reservationTime: string;
+    durationMinutes: string;
     isRecurring: boolean;
     frequency: string;
     endMode: "occurrences" | "endDate";
@@ -46,6 +47,8 @@ const inputClass =
     "mt-1 w-full rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey/60 focus:border-orange focus:outline-none";
 
 const STATUS_OPTIONS = ["scheduled", "ongoing", "cyclical", "completed", "canceled"] as const;
+
+const DURATION_OPTIONS = [30, 45, 60, 75, 90, 120, 150, 180, 240];
 
 function toDateInput(value: string | Date) {
     try {
@@ -63,6 +66,7 @@ function emptyForm(currentUserId?: string): Form {
         classroomId: "",
         onlineClassroomId: "",
         reservationTime: toDateInput(new Date()),
+        durationMinutes: "60",
         isRecurring: false,
         frequency: "7",
         endMode: "occurrences",
@@ -97,6 +101,13 @@ export function ReservationFormModal({
     const [teachers, setTeachers] = useState<TeacherOption[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const durationOptions = useMemo(() => {
+        const options = new Set(DURATION_OPTIONS);
+        const current = Number(form.durationMinutes);
+        if (current > 0) options.add(current);
+        return [...options].sort((a, b) => a - b);
+    }, [form.durationMinutes]);
+
     useEffect(() => {
         if (!open) return;
 
@@ -112,7 +123,7 @@ export function ReservationFormModal({
         }).catch((error) => console.error("Failed to fetch online classrooms:", error));
 
         if (isAdmin) {
-            eden.users.get({ query: { limit: 100, role: "teacher" } }).then((response) => {
+            eden.users.get({ query: { limit: 100 } }).then((response) => {
                 setTeachers(response.data?.data ?? []);
             }).catch((error) => console.error("Failed to fetch teachers:", error));
         }
@@ -125,6 +136,7 @@ export function ReservationFormModal({
                 classroomId: reservation.classroomId ?? "",
                 onlineClassroomId: reservation.onlineClassroomId ?? "",
                 reservationTime: toDateInput(reservation.reservationTime),
+                durationMinutes: reservation.durationMinutes ? String(reservation.durationMinutes) : "60",
                 isRecurring: Boolean(reservation.cycleId),
                 frequency: "7",
                 endMode: "occurrences",
@@ -180,6 +192,7 @@ export function ReservationFormModal({
                     classroomId: form.roomType === "classroom" ? form.classroomId : null,
                     onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : null,
                     reservationTime: new Date(form.reservationTime),
+                    durationMinutes: Number(form.durationMinutes) || null,
                     additionalInfo: form.additionalInfo.trim() || null,
                     status: form.status as ReservationPatch["status"],
                     studentIds: form.studentIds,
@@ -194,6 +207,7 @@ export function ReservationFormModal({
                     onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : undefined,
                     additionalInfo: form.additionalInfo.trim() || null,
                     anchorDate: new Date(form.reservationTime).toISOString(),
+                    durationMinutes: Number(form.durationMinutes) || undefined,
                     frequency: Number(form.frequency),
                     ...(form.endMode === "occurrences"
                         ? { numberOfOccurrences: Number(form.numberOfOccurrences) }
@@ -209,6 +223,7 @@ export function ReservationFormModal({
                     classroomId: form.roomType === "classroom" ? form.classroomId : null,
                     onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : null,
                     reservationTime: new Date(form.reservationTime),
+                    durationMinutes: Number(form.durationMinutes) || null,
                     additionalInfo: form.additionalInfo.trim() || null,
                     status: "scheduled",
                     studentIds: form.studentIds,
@@ -260,6 +275,7 @@ export function ReservationFormModal({
                                 {teachers.map((teacher) => (
                                     <option key={teacher.id} value={teacher.id}>
                                         {teacher.firstName} {teacher.lastName}
+                                        {teacher.role === "admin" ? " (admin)" : ""}
                                     </option>
                                 ))}
                             </select>
@@ -332,6 +348,21 @@ export function ReservationFormModal({
                             onChange={(event) => setField("reservationTime", event.target.value)}
                             className={inputClass}
                         />
+                    </label>
+
+                    <label className="flex flex-1 flex-col">
+                        <span className="text-sm font-bold text-black">Duration</span>
+                        <select
+                            value={form.durationMinutes}
+                            onChange={(event) => setField("durationMinutes", event.target.value)}
+                            className={inputClass}
+                        >
+                            {durationOptions.map((minutes) => (
+                                <option key={minutes} value={String(minutes)}>
+                                    {minutes} minutes
+                                </option>
+                            ))}
+                        </select>
                     </label>
                 </div>
 

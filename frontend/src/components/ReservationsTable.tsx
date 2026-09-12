@@ -36,6 +36,15 @@ function formatTime(value: string | Date) {
     }
 }
 
+function formatEnd(value: string | Date, durationMinutes?: number | null) {
+    if (!durationMinutes) return "-";
+    try {
+        return format(new Date(new Date(value).getTime() + durationMinutes * 60_000), "HH:mm");
+    } catch {
+        return "-";
+    }
+}
+
 type Attendee = { id: string; name: string; group?: string };
 
 export function reservationAttendees(reservation: Reservation): Attendee[] {
@@ -85,6 +94,7 @@ export function ReservationsTable({
                     <th className="px-4 py-3 font-bold">Name</th>
                     <th className="px-4 py-3 font-bold">Teacher</th>
                     <th className="px-4 py-3 font-bold">Time</th>
+                    <th className="px-4 py-3 font-bold">Ends</th>
                     <th className="px-4 py-3 font-bold">Recurring</th>
                     <th className="px-4 py-3 font-bold">People</th>
                     <th className="py-3 pl-4 text-right font-bold">Actions</th>
@@ -132,6 +142,9 @@ export function ReservationsTable({
                                 <td className="px-4 py-4 text-black/70">
                                     {formatTime(reservation.reservationTime)}
                                 </td>
+                                <td className="px-4 py-4 text-black/70">
+                                    {formatEnd(reservation.reservationTime, reservation.durationMinutes)}
+                                </td>
                                 <td className="px-4 py-4">
                                     {reservation.cycleId || reservation.status === "cyclical" ? (
                                         <span className="inline-flex items-center gap-1.5 rounded-full bg-orange/10 px-3 py-1 text-xs font-bold text-orange">
@@ -175,7 +188,7 @@ export function ReservationsTable({
                             {isExpanded && (
                                 <tr key={`${reservation.id}-details`} className="border-b border-light-grey/70 bg-light-grey/20">
                                     <td />
-                                    <td colSpan={6} className="px-4 pb-6 pt-2">
+                                    <td colSpan={7} className="px-4 pb-6 pt-2">
                                         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                                             <div className="md:col-span-2">
                                                 <span className="text-xs font-bold uppercase tracking-wide text-darker-grey">

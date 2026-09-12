@@ -169,6 +169,7 @@ export const ClassroomReservationsService = {
                     classroomId: payload.classroomId ?? null,
                     onlineClassroomId: payload.onlineClassroomId ?? null,
                     reservationTime: date,
+                    durationMinutes: payload.durationMinutes ?? null,
                     teacherId: ownerId,
                     additionalInfo: payload.additionalInfo ?? null,
                     status: "cyclical",

@@ -12,6 +12,7 @@ export const classroomReservations = p.pgTable("classroomReservations", {
     classroomId: p.uuid("classroomId").references(() => classrooms.id),
     onlineClassroomId: p.uuid("onlineClassroomId").references(() => onlineClassrooms.id),
     reservationTime: p.timestamp("reservationTime").notNull(),
+    durationMinutes: p.integer("durationMinutes"),
     teacherId: p.uuid("teacherId").references(() => users.id).notNull(),
     additionalInfo: p.text("additionalInfo"),
     createdOn: p.timestamp("createdOn").defaultNow().notNull(),

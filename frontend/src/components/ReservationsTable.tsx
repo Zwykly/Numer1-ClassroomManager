@@ -2,6 +2,7 @@ import { Fragment, useState } from "react";
 import { Calendar, ChevronDown, ChevronRight, Clock, Pencil, Repeat, Trash2, Users } from "lucide-react";
 import { clsx as cn } from "clsx";
 import { format } from "date-fns";
+import { teacherColor } from "@/utils/teacherColors";
 import type { Reservation } from "@/stores/useReservationsStore";
 
 type ReservationsTableProps = {
@@ -215,7 +216,14 @@ export function ReservationsTable({
                                     </td>
                                     <td className="px-4 py-4">
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-black">{group.name || "Untitled class"}</span>
+                                            <span className="flex items-center gap-2">
+                                                <span
+                                                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                                    style={{ backgroundColor: teacherColor(group.teacher?.id) }}
+                                                    title={group.teacher ? `${group.teacher.firstName} ${group.teacher.lastName}` : undefined}
+                                                />
+                                                <span className="font-bold text-black">{group.name || "Untitled class"}</span>
+                                            </span>
                                             <span className="text-xs text-darker-grey">{group.roomName}</span>
                                         </div>
                                     </td>
@@ -338,8 +346,15 @@ export function ReservationsTable({
                                 </td>
                                 <td className="px-4 py-4">
                                     <div className="flex flex-col">
-                                        <span className="font-bold text-black">
-                                            {reservation.name || "Untitled class"}
+                                        <span className="flex items-center gap-2">
+                                            <span
+                                                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                                style={{ backgroundColor: teacherColor(reservation.teacherId) }}
+                                                title={reservation.teacher ? `${reservation.teacher.firstName} ${reservation.teacher.lastName}` : undefined}
+                                            />
+                                            <span className="font-bold text-black">
+                                                {reservation.name || "Untitled class"}
+                                            </span>
                                         </span>
                                         <span className="text-xs text-darker-grey">
                                             {reservation.classroom?.name || reservation.onlineClassroom?.name || "No room assigned"}

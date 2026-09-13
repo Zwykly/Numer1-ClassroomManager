@@ -53,7 +53,7 @@ export function GroupsTable({ groups, isLoading, canDelete, onEdit, onDelete }: 
                         <div key={group.id} className="border-b border-light-grey">
                             <div
                                 onClick={() => setExpandedId(isExpanded ? null : group.id)}
-                                className="flex cursor-pointer flex-col gap-2 px-1 py-4"
+                                className="flex cursor-pointer flex-col gap-3 px-1 py-4"
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex min-w-0 items-center gap-2">

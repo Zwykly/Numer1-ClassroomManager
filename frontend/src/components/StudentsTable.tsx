@@ -71,7 +71,7 @@ export function StudentsTable({
                         key={student.id}
                         className="flex flex-col gap-3 border-b border-light-grey px-1 py-4"
                     >
-                        <div className="flex flex-col gap-0.5">
+                        <div className="flex flex-col gap-1">
                             <span className="font-bold text-black">
                                 {student.firstName} {student.lastName}
                             </span>

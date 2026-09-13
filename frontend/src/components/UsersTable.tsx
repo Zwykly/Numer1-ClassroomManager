@@ -63,7 +63,7 @@ export function UsersTable({
                                 className="h-2.5 w-2.5 shrink-0 rounded-full"
                                 style={{ backgroundColor: teacherColor(user.id) }}
                             />
-                            <div className="flex min-w-0 flex-col">
+                            <div className="flex min-w-0 flex-col gap-1">
                                 <span className="truncate font-bold text-black">
                                     {user.firstName} {user.lastName}
                                 </span>

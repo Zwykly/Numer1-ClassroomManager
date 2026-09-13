@@ -27,7 +27,7 @@ export function TimelineSelector() {
     }, [isMobile, selectedView, setSelectedView]);
 
     return(
-        <div className="flex pt-4 px-4 sm:pt-15 sm:px-6 bg-canvas flex-col w-full">
+        <div className="flex pt-4 px-4 pb-4 sm:pt-15 sm:px-6 sm:pb-0 bg-canvas flex-col w-full">
             <div className="flex flex-row items-center justify-between gap-4">
                 <ClassroomSelector />
                 <ViewSelector />
@@ -178,7 +178,7 @@ function FilterSelector() {
     const { setSelectedClassFilter } = useSelectedTimelineActions();
 
     return (
-        <div className='flex flex-row gap-5 mt-2'>
+        <div className='flex flex-row gap-5 mt-3'>
             {filters.map((filter) => {
                 const isFilterSelected = selectedClassFilter === filter.value;
                 const filterClass = ['text-lg font-regular cursor-pointer hover:text-orange ',

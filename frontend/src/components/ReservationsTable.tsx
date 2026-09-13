@@ -184,7 +184,7 @@ export function ReservationsTable({
                                 className="flex cursor-pointer flex-col gap-2 px-1 py-4"
                             >
                                 <div className="flex items-start justify-between gap-3">
-                                    <div className="flex min-w-0 flex-col">
+                                    <div className="flex min-w-0 flex-col gap-1">
                                         <span className="flex items-center gap-2">
                                             <span
                                                 className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -276,7 +276,7 @@ export function ReservationsTable({
                             className="flex cursor-pointer flex-col gap-2 px-1 py-4"
                         >
                             <div className="flex items-start justify-between gap-3">
-                                <div className="flex min-w-0 flex-col">
+                                <div className="flex min-w-0 flex-col gap-1">
                                     <span className="flex items-center gap-2">
                                         <span
                                             className="h-2.5 w-2.5 shrink-0 rounded-full"

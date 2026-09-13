@@ -1,6 +1,7 @@
 import { addMinutes, format } from "date-fns";
 import { Calendar, CheckCircle2, Clock, Info, MapPin, Pencil, Repeat, User, Users, XCircle } from "lucide-react";
 import { clsx as cn } from "clsx";
+import { useState } from "react";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
 import { reservationAttendees } from "@/components/ReservationsTable";
@@ -15,6 +16,7 @@ type ClassDetailsModalProps = {
     currentUserId?: string;
     isAdmin: boolean;
     onEdit: (reservation: Reservation) => void;
+    onCancel?: (reservation: Reservation) => Promise<void> | void;
 };
 
 const EDITABLE_STATUSES = ["scheduled", "cyclical", "ongoing"];
@@ -35,12 +37,25 @@ export function ClassDetailsModal({
     currentUserId,
     isAdmin,
     onEdit,
+    onCancel,
 }: ClassDetailsModalProps) {
+    const [isCanceling, setIsCanceling] = useState(false);
     const canEdit = Boolean(
         reservation
         && EDITABLE_STATUSES.includes(reservation.status)
         && (isAdmin || reservation.teacherId === currentUserId),
     );
+    const canCancel = canEdit && Boolean(onCancel);
+
+    const handleCancel = async () => {
+        if (!reservation || !onCancel) return;
+        setIsCanceling(true);
+        try {
+            await onCancel(reservation);
+        } finally {
+            setIsCanceling(false);
+        }
+    };
 
     const start = reservation ? new Date(reservation.reservationTime) : null;
     const end = start && reservation?.durationMinutes ? addMinutes(start, reservation.durationMinutes) : null;
@@ -155,8 +170,19 @@ export function ClassDetailsModal({
                         <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>
                             Close
                         </Button>
+                        {canCancel && (
+                            <Button
+                                variant="danger"
+                                className="w-full gap-2 sm:w-auto"
+                                onClick={handleCancel}
+                                disabled={isCanceling}
+                            >
+                                <XCircle size={16} />
+                                {isCanceling ? "Canceling..." : "Cancel class"}
+                            </Button>
+                        )}
                         {canEdit && (
-                            <Button variant="primary" className="w-full gap-2 sm:w-auto" onClick={() => onEdit(reservation)}>
+                            <Button variant="primary" className="w-full gap-2 sm:w-auto" onClick={() => onEdit(reservation)} disabled={isCanceling}>
                                 <Pencil size={16} />
                                 Edit class
                             </Button>

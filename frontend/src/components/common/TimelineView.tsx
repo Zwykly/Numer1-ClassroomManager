@@ -97,6 +97,12 @@ export function TimelineView () {
             await fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
         };
 
+        const handleCancel = async (reservation: Reservation) => {
+            await patchReservation(reservation.id, { status: "canceled" });
+            await fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
+            setDetailsOpen(false);
+        };
+
         const dayReservations = selectedDay
             ? visibleReservations.filter((reservation) => isSameDay(reservation.reservationTime, selectedDay))
             : [];
@@ -111,6 +117,7 @@ export function TimelineView () {
                     currentUserId={currentUserId}
                     isAdmin={isAdmin}
                     onEdit={handleEdit}
+                    onCancel={handleCancel}
                 />
                 <ReservationFormModal
                     open={editOpen}

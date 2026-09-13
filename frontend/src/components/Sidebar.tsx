@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router";
 import { LogOut, Plus } from "lucide-react";
+import { clsx as cn } from "clsx";
 import logo from "../logo.png";
 import { Button } from "./common/Button";
 import { SidebarAction } from "./common/SidebarAction";
@@ -15,7 +16,12 @@ import {
     type SidebarPageActionDescriptor,
 } from "@/router/sidebarConfig";
 
-export function Sidebar() {
+type SidebarProps = {
+    onNavigate?: () => void;
+    className?: string;
+};
+
+export function Sidebar({ onNavigate, className }: SidebarProps) {
     const navigate = useNavigate();
     const { pathname } = useLocation();
     const { UserData, refetch } = useAuth();
@@ -39,27 +45,31 @@ export function Sidebar() {
 
     const handleNavigate = (action: Extract<SidebarNavDescriptor, { kind: "navigate" }>) => {
         navigate(action.to);
+        onNavigate?.();
     };
 
     const handlePageAction = (action: SidebarPageActionDescriptor) => {
         if (action.kind === "today") {
             setDateToToday();
+            onNavigate?.();
             return;
         }
         if (action.target === "reservation") openReservation();
         if (action.target === "student") openStudent();
         if (action.target === "user") openUser();
         if (action.target === "group") openGroup();
+        onNavigate?.();
     };
 
     const handleSignOut = async () => {
         await authClient.signOut();
         await refetch();
         navigate("/", { replace: true });
+        onNavigate?.();
     };
 
     return (
-        <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-light-grey bg-white">
+        <aside className={cn("h-full w-full shrink-0 flex-col border-r border-light-grey bg-white", className)}>
             <div className="flex items-center gap-3 px-5 py-6">
                 <img src={logo} alt="Classroom Manager" className="h-11 w-11 object-contain" />
                 <div className="flex flex-col leading-none">
@@ -69,7 +79,7 @@ export function Sidebar() {
             </div>
 
             <div className="px-4">
-                <Button variant="primary" className="w-full gap-2" onClick={() => openReservation()}>
+                <Button variant="primary" className="w-full gap-2" onClick={() => { openReservation(); onNavigate?.(); }}>
                     <Plus size={18} />
                     Reserve a classroom
                 </Button>

@@ -389,7 +389,7 @@ export function ReservationFormModal({
                     />
                 </label>
 
-                <div className="flex flex-row gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                     {isAdmin && (
                         <label className="flex flex-1 flex-col">
                             <span className="text-sm font-bold text-black">Teacher</span>
@@ -431,7 +431,7 @@ export function ReservationFormModal({
                     </div>
                 </div>
 
-                <div className="flex flex-row gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                     <label className="flex flex-1 flex-col">
                         <span className="text-sm font-bold text-black">
                             {form.roomType === "classroom" ? "Classroom" : "Online classroom"}
@@ -535,7 +535,7 @@ export function ReservationFormModal({
                 )}
 
                 {form.isRecurring && !isEdit && (
-                    <div className="flex flex-row gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row">
                         <label className="flex flex-1 flex-col">
                             <span className="text-sm font-bold text-black">Repeats every (days)</span>
                             <input
@@ -696,11 +696,11 @@ export function ReservationFormModal({
                     <p className="rounded-xl bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700">{error}</p>
                 )}
 
-                <div className="mt-1 flex justify-end gap-2">
-                    <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>
+                <div className="mt-1 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={handleSubmit} disabled={!isValid}>
+                    <Button variant="primary" className="w-full sm:w-auto" onClick={handleSubmit} disabled={!isValid}>
                         {isSubmitting ? "Saving..." : isEdit ? "Save changes" : "Reserve class"}
                     </Button>
                 </div>

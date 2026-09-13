@@ -51,25 +51,25 @@ export function ManageUsers() {
     };
 
     return (
-        <div className="flex h-screen w-full flex-col overflow-hidden bg-canvas">
-            <div className="pt-15 px-8 flex flex-col h-full overflow-hidden">
-                    <div className="flex flex-row items-end justify-between gap-6">
+        <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto overscroll-contain bg-canvas">
+            <div className="flex flex-col px-4 pt-8 pb-10 sm:px-6 lg:px-8 lg:pt-15">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <span className="text-xs font-bold uppercase tracking-[0.2em] text-orange">
                                 Administration
                             </span>
-                            <h1 className="mt-1 text-black font-bold text-4xl">Users</h1>
+                            <h1 className="mt-1 text-black font-bold text-3xl sm:text-4xl">Users</h1>
                             <p className="mt-2 max-w-xl text-sm text-darker-grey">
                                 Manage every account on the platform — create new users, adjust roles and remove access.
                             </p>
                         </div>
-                        <Button variant="primary" className="gap-2" onClick={openAdd}>
+                        <Button variant="primary" className="w-full gap-2 sm:w-auto" onClick={openAdd}>
                             <Plus size={20} />
                             Add user
                         </Button>
                     </div>
 
-                    <div className="mt-8 flex flex-row flex-wrap items-end justify-between gap-6">
+                    <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
                         <input
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
@@ -85,7 +85,7 @@ export function ManageUsers() {
                         </div>
                     </div>
 
-                    <div className="mt-6 flex-1 overflow-y-auto pb-10">
+                    <div className="mt-6">
                         <UsersTable
                             users={users}
                             isLoading={isLoading}

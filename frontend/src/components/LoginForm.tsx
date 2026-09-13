@@ -50,7 +50,7 @@ export function LoginForm() {
     }
 
     return (
-        <div className="flex w-full flex-col rounded-2xl border border-light-grey bg-white p-8 shadow-2xl">
+        <div className="flex w-full flex-col rounded-2xl border border-light-grey bg-white p-6 shadow-2xl sm:p-8">
             <div className="flex items-center gap-3">
                 <img src={logo} alt="Classroom Manager" className="h-11 w-11 object-contain" />
                 <div className="flex flex-col leading-none">

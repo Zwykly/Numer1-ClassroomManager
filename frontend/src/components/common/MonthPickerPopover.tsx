@@ -13,7 +13,7 @@ export function MonthPickerPopover () {
                     {selectedDate.toLocaleString("en-US", {month: "long"})} {selectedDate.getFullYear()}
                 </button>
             </Popover.Trigger>
-            <Popover.Content className="w-full flex flex-col bg-white shadow-lg rounded p-4">
+            <Popover.Content className="z-50 w-[var(--radix-popover-trigger-width)] flex flex-col bg-white shadow-lg rounded p-4 border border-light-grey">
                 <MonthPicker />
                 <Popover.Close className="w-full flex justify-center bg-orange text-white mt-2 font-bold py-2 rounded">
                     Select

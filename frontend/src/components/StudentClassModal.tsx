@@ -39,8 +39,8 @@ export function StudentClassModal({
                     This will let you assign a student to a scheduled class or a recurring class in a future update.
                 </p>
             </div>
-            <div className="mt-2 flex justify-end">
-                <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>Close</Button>
+            <div className="mt-2 flex justify-stretch sm:justify-end">
+                <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>Close</Button>
             </div>
         </Modal>
     );

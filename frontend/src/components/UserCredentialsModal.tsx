@@ -24,7 +24,18 @@ export function UserCredentialsModal({
     const handleCopy = async () => {
         if (!credentials) return;
         try {
-            await navigator.clipboard.writeText(credentials.password);
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(credentials.password);
+            } else {
+                const textarea = document.createElement("textarea");
+                textarea.value = credentials.password;
+                textarea.style.position = "fixed";
+                textarea.style.opacity = "0";
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+            }
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (error) {
@@ -66,8 +77,8 @@ export function UserCredentialsModal({
                         </div>
                     </div>
 
-                    <div className="flex justify-end">
-                        <Button variant="primary" onClick={() => onOpenChange(false)}>Done</Button>
+                    <div className="flex justify-stretch sm:justify-end">
+                        <Button variant="primary" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>Done</Button>
                     </div>
                 </div>
             )}

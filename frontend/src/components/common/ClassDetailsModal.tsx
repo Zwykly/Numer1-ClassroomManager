@@ -1,7 +1,9 @@
 import { addMinutes, format } from "date-fns";
 import { Calendar, CheckCircle2, Clock, Info, MapPin, Pencil, Repeat, User, Users, XCircle } from "lucide-react";
 import { clsx as cn } from "clsx";
+import { useState } from "react";
 import { Modal } from "./Modal";
+import { ConfirmModal } from "./ConfirmModal";
 import { Button } from "./Button";
 import { reservationAttendees } from "@/components/ReservationsTable";
 import { teacherColor } from "@/utils/teacherColors";
@@ -15,6 +17,7 @@ type ClassDetailsModalProps = {
     currentUserId?: string;
     isAdmin: boolean;
     onEdit: (reservation: Reservation) => void;
+    onCancel?: (reservation: Reservation) => Promise<void> | void;
 };
 
 const EDITABLE_STATUSES = ["scheduled", "cyclical", "ongoing"];
@@ -35,18 +38,34 @@ export function ClassDetailsModal({
     currentUserId,
     isAdmin,
     onEdit,
+    onCancel,
 }: ClassDetailsModalProps) {
+    const [isCanceling, setIsCanceling] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
     const canEdit = Boolean(
         reservation
         && EDITABLE_STATUSES.includes(reservation.status)
         && (isAdmin || reservation.teacherId === currentUserId),
     );
+    const canCancel = canEdit && Boolean(onCancel);
+
+    const handleCancel = async () => {
+        if (!reservation || !onCancel) return;
+        setIsCanceling(true);
+        try {
+            await onCancel(reservation);
+            setConfirmOpen(false);
+        } finally {
+            setIsCanceling(false);
+        }
+    };
 
     const start = reservation ? new Date(reservation.reservationTime) : null;
     const end = start && reservation?.durationMinutes ? addMinutes(start, reservation.durationMinutes) : null;
     const participants = reservation ? reservationAttendees(reservation) : [];
 
     return (
+        <>
         <Modal
             open={open}
             onOpenChange={onOpenChange}
@@ -151,20 +170,45 @@ export function ClassDetailsModal({
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-2 border-t border-light-grey pt-4">
-                        <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>
-                            Close
-                        </Button>
-                        {canEdit && (
-                            <Button variant="primary" className="gap-2" onClick={() => onEdit(reservation)}>
-                                <Pencil size={16} />
-                                Edit class
-                            </Button>
-                        )}
-                    </div>
+                    {(canCancel || canEdit) && (
+                        <div className="flex flex-row items-center gap-2 border-t border-light-grey pt-4 sm:justify-end">
+                            {canCancel && (
+                                <Button
+                                    variant="danger"
+                                    className="shrink-0 px-3 sm:mr-auto"
+                                    aria-label="Cancel class"
+                                    title={isCanceling ? "Canceling..." : "Cancel class"}
+                                    onClick={() => setConfirmOpen(true)}
+                                    disabled={isCanceling}
+                                >
+                                    <XCircle size={18} />
+                                </Button>
+                            )}
+                            {canEdit && (
+                                <Button variant="primary" className="flex-1 gap-2 sm:flex-none" onClick={() => onEdit(reservation)} disabled={isCanceling}>
+                                    <Pencil size={16} />
+                                    Edit class
+                                </Button>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </Modal>
+        <ConfirmModal
+            open={confirmOpen}
+            onOpenChange={setConfirmOpen}
+            title="Cancel class"
+            message={
+                reservation
+                    ? `Are you sure you want to cancel "${reservation.name || "this class"}"? It will be marked as canceled.`
+                    : "Are you sure you want to cancel this class?"
+            }
+            confirmLabel={isCanceling ? "Canceling..." : "Cancel class"}
+            isDestructive
+            onConfirm={handleCancel}
+        />
+        </>
     );
 }
 

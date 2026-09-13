@@ -130,7 +130,7 @@ export function GroupFormModal({ open, onOpenChange, group, onCreate, onUpdate }
             <div className="flex flex-col gap-4">
                 <div className="h-1 w-full rounded-full bg-orange" />
 
-                <div className="flex flex-row gap-5">
+                <div className="flex flex-col gap-5 sm:flex-row">
                     <div className="flex flex-1 flex-col gap-3">
                         <label className="flex flex-col">
                             <span className="text-sm font-bold text-black">Group name</span>
@@ -160,7 +160,7 @@ export function GroupFormModal({ open, onOpenChange, group, onCreate, onUpdate }
                         )}
                     </div>
 
-                    <div className="flex w-80 flex-col rounded-xl border border-light-grey p-3">
+                    <div className="flex w-full flex-col rounded-xl border border-light-grey p-3 sm:w-80">
                         <span className="px-1 text-xs font-bold uppercase tracking-wide text-darker-grey">
                             Students ({members.length})
                         </span>
@@ -228,11 +228,11 @@ export function GroupFormModal({ open, onOpenChange, group, onCreate, onUpdate }
                     </div>
                 </div>
 
-                <div className="mt-1 flex justify-end gap-2">
-                    <Button variant="secondary" className="border border-grey" onClick={() => onOpenChange(false)}>
+                <div className="mt-1 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={handleSubmit} disabled={!canSubmit}>
+                    <Button variant="primary" className="w-full sm:w-auto" onClick={handleSubmit} disabled={!canSubmit}>
                         {isSubmitting ? "Saving..." : isEdit ? "Save changes" : "Create group"}
                     </Button>
                 </div>

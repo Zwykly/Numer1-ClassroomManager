@@ -170,8 +170,231 @@ export function ReservationsTable({
 
     const entries = buildEntries(reservations, groupRecurring);
 
+    const mobileList = (
+        <div className="flex flex-col border-t border-light-grey md:hidden">
+            {entries.map((entry) => {
+                const isExpanded = expandedId === entry.key;
+
+                if (entry.kind === "group") {
+                    const { group } = entry;
+                    return (
+                        <div key={entry.key} className="border-b border-light-grey">
+                            <div
+                                onClick={() => setExpandedId(isExpanded ? null : entry.key)}
+                                className="flex cursor-pointer flex-col gap-2 px-1 py-4"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex min-w-0 flex-col gap-1">
+                                        <span className="flex items-center gap-2">
+                                            <span
+                                                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                                style={{ backgroundColor: teacherColor(group.teacher?.id) }}
+                                            />
+                                            <span className="truncate font-bold text-black">{group.name || "Untitled class"}</span>
+                                        </span>
+                                        <span className="text-xs text-darker-grey">{group.roomName}</span>
+                                    </div>
+                                    <span className={cn(actionButtonStyles, "shrink-0 p-1.5", actionColors.expand)}>
+                                        {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-darker-grey">
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <Calendar size={14} />
+                                        {format(group.firstTime, "dd MMM")} – {format(group.lastTime, "dd MMM")}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <Users size={14} />
+                                        {group.attendeeCount}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-orange/10 px-3 py-1 font-bold text-orange">
+                                        <Repeat size={12} />
+                                        Recurring
+                                    </span>
+                                </div>
+                            </div>
+
+                            {isExpanded && (
+                                <div className="flex flex-col gap-2 px-1 pb-5 pl-4">
+                                    {group.occurrences.map((occurrence) => {
+                                        const canEdit = isEditable(occurrence, isAdmin, currentUserId);
+                                        const people = reservationAttendees(occurrence).length;
+                                        return (
+                                            <div
+                                                key={occurrence.id}
+                                                className="flex flex-col gap-2 rounded-xl border border-light-grey bg-white px-3 py-2"
+                                            >
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-black">
+                                                        <Clock size={14} className="text-darker-grey" />
+                                                        {formatTime(occurrence.reservationTime)}
+                                                    </span>
+                                                    <span className={cn("rounded-full px-3 py-1 text-xs font-bold capitalize", statusStyles[occurrence.status] ?? "bg-light-grey text-darker-grey")}>
+                                                        {occurrence.status}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-xs text-darker-grey">
+                                                        Ends {formatEnd(occurrence.reservationTime, occurrence.durationMinutes)} · {people} people
+                                                    </span>
+                                                    <div className="flex flex-row gap-1">
+                                                        <button
+                                                            title={canEdit ? "Modify" : "This class can no longer be edited"}
+                                                            className={cn(actionButtonStyles, actionColors.modify)}
+                                                            onClick={() => onModify(occurrence)}
+                                                            disabled={!canEdit}
+                                                        >
+                                                            <Pencil size={16} />
+                                                        </button>
+                                                        <button
+                                                            title={canEdit ? "Delete" : "This class can no longer be edited"}
+                                                            className={cn(actionButtonStyles, actionColors.delete)}
+                                                            onClick={() => onDelete(occurrence)}
+                                                            disabled={!canEdit}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    );
+                }
+
+                const { reservation } = entry;
+                const attendees = reservationAttendees(reservation);
+                const canEdit = isEditable(reservation, isAdmin, currentUserId);
+
+                return (
+                    <div key={entry.key} className="border-b border-light-grey">
+                        <div
+                            onClick={() => setExpandedId(isExpanded ? null : entry.key)}
+                            className="flex cursor-pointer flex-col gap-2 px-1 py-4"
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 flex-col gap-1">
+                                    <span className="flex items-center gap-2">
+                                        <span
+                                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                            style={{ backgroundColor: teacherColor(reservation.teacherId) }}
+                                        />
+                                        <span className="truncate font-bold text-black">{reservation.name || "Untitled class"}</span>
+                                    </span>
+                                    <span className="text-xs text-darker-grey">
+                                        {reservation.classroom?.name || reservation.onlineClassroom?.name || "No room assigned"}
+                                    </span>
+                                </div>
+                                <span className={cn(actionButtonStyles, "shrink-0 p-1.5", actionColors.expand)}>
+                                    {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-darker-grey">
+                                <span className="inline-flex items-center gap-1.5">
+                                    <Clock size={14} />
+                                    {formatTime(reservation.reservationTime)}
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <Users size={14} />
+                                    {attendees.length}
+                                </span>
+                                {reservation.cycleId || reservation.status === "cyclical" ? (
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-orange/10 px-3 py-1 font-bold text-orange">
+                                        <Repeat size={12} />
+                                        Recurring
+                                    </span>
+                                ) : (
+                                    <span className="rounded-full bg-light-grey px-3 py-1 font-bold text-darker-grey">
+                                        One-off
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        {isExpanded && (
+                            <div className="flex flex-col gap-3 px-1 pb-5 pl-4">
+                                <div className="flex flex-row items-center justify-between gap-2">
+                                    <span className={cn("w-fit rounded-full px-3 py-1 text-xs font-bold capitalize", statusStyles[reservation.status] ?? "bg-light-grey text-darker-grey")}>
+                                        {reservation.status}
+                                    </span>
+                                    <div className="flex flex-row gap-1">
+                                        <button
+                                            title={canEdit ? "Modify" : "This class can no longer be edited"}
+                                            className={cn(actionButtonStyles, actionColors.modify)}
+                                            onClick={() => onModify(reservation)}
+                                            disabled={!canEdit}
+                                        >
+                                            <Pencil size={18} />
+                                        </button>
+                                        <button
+                                            title={canEdit ? "Delete" : "This class can no longer be edited"}
+                                            className={cn(actionButtonStyles, actionColors.delete)}
+                                            onClick={() => onDelete(reservation)}
+                                            disabled={!canEdit}
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-1.5 text-sm text-darker-grey">
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <Clock size={15} className="text-darker-grey" />
+                                        {formatTime(reservation.reservationTime)} – {formatEnd(reservation.reservationTime, reservation.durationMinutes)}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <Calendar size={15} className="text-darker-grey" />
+                                        Created {formatTime(reservation.createdOn)}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <span className="text-xs font-bold uppercase tracking-wide text-darker-grey">
+                                        Attending ({attendees.length})
+                                    </span>
+                                    {attendees.length > 0 ? (
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                            {attendees.map((attendee) => (
+                                                <span
+                                                    key={attendee.id}
+                                                    title={attendee.group ? `Group: ${attendee.group}` : undefined}
+                                                    className="inline-flex items-center gap-1.5 rounded-full border border-light-grey bg-white px-3 py-1 text-xs font-medium text-black"
+                                                >
+                                                    {attendee.name}
+                                                    {attendee.group && (
+                                                        <span className="text-darker-grey">· {attendee.group}</span>
+                                                    )}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="mt-2 text-sm text-darker-grey">No students assigned yet.</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <span className="text-xs font-bold uppercase tracking-wide text-darker-grey">
+                                        Additional info
+                                    </span>
+                                    <p className="mt-1 text-sm text-darker-grey">
+                                        {reservation.additionalInfo || "No additional information."}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+
     return (
-        <div className="overflow-hidden rounded-2xl border border-light-grey bg-white">
+        <>
+        {mobileList}
+        <div className="hidden overflow-hidden rounded-2xl border border-light-grey bg-white md:block">
             <table className="w-full border-collapse text-left text-sm">
                 <thead>
                     <tr className="border-b border-light-grey bg-light-grey/50 text-xs uppercase tracking-wide text-darker-grey">
@@ -466,5 +689,6 @@ export function ReservationsTable({
             </tbody>
             </table>
         </div>
+        </>
     );
 }

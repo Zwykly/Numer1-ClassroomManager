@@ -118,7 +118,7 @@ export function UserFormModal({
             <div className="flex flex-col gap-3">
                 <div className="h-1 w-full rounded-full bg-orange" />
 
-                <div className="flex flex-row gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                     <Field
                         label="First name"
                         value={form.firstName}
@@ -184,9 +184,9 @@ export function UserFormModal({
                     />
                 </div>
 
-                <div className="mt-3 flex justify-end gap-2">
-                    <Button variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button variant="primary" onClick={handleSubmit} disabled={!isValid}>
+                <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button variant="primary" className="w-full sm:w-auto" onClick={handleSubmit} disabled={!isValid}>
                         {isSubmitting ? "Saving..." : isEdit ? "Save changes" : "Create account"}
                     </Button>
                 </div>

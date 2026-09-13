@@ -30,8 +30,14 @@ Classroom Manager is an easy to use system designed to manage classroom reservat
 # Docker Deployment (Debian VPS)
 
 The entire stack — PostgreSQL, the backend API, the frontend, the 24h offsite
-backup sidecar and Watchtower auto-updates — is described by
-[`docker-compose.yml`](./docker-compose.yml) and works out of the box.
+backup sidecar and Watchtower auto-updates — runs from a **self-contained
+deployment bundle** in [`deploy/vps/`](./deploy/vps). The VPS does **not** need
+the source repository: all images are built by GitHub Actions and pulled from
+GitHub Container Registry (GHCR). See
+[`deploy/vps/README.md`](./deploy/vps/README.md) for the short version.
+
+The root [`docker-compose.yml`](./docker-compose.yml) is for building/running
+from source during development.
 
 ## Architecture
 
@@ -74,11 +80,14 @@ sudo ufw allow 443/tcp
 sudo ufw enable
 ```
 
-## 2. Configure the environment
+## 2. Get the deployment files and configure
+
+The VPS only needs the files in [`deploy/vps/`](./deploy/vps). Copy that folder
+to the server (or download the **`vps-bundle`** artifact from the latest
+successful Actions run on `main`), then:
 
 ```bash
-git clone https://github.com/Zwykly/Numer1-ClassroomManager.git
-cd Numer1-ClassroomManager
+cd deploy/vps
 cp .env.example .env
 ```
 
@@ -104,11 +113,23 @@ RCLONE_REMOTE=b2:classroom-backups
 
 ## 3. First deploy
 
-The images are built locally on the first run (no registry access required):
+Images are pulled from GHCR (public packages), so no build or registry login is
+needed on the server:
 
 ```bash
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 docker compose logs -f backend
+```
+
+To build the images locally from source instead, clone the repo and use the root
+compose file, which contains the build contexts:
+
+```bash
+git clone https://github.com/Zwykly/Numer1-ClassroomManager.git
+cd Numer1-ClassroomManager
+cp .env.example .env
+docker compose up -d --build
 ```
 
 On startup the backend automatically:
@@ -195,38 +216,46 @@ Certbot rewrites the blocks for TLS and sets up automatic renewal.
 
 ## 6. Updating when a new version lands on `main`
 
-Images are published to GitHub Container Registry (GHCR) by the workflow in
-[`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml)
-on every push to `main`, and **Watchtower** on the VPS polls every 5 minutes and
-recreates `backend`/`frontend` when `:latest` changes. The database is never
-auto-updated; schema migrations run inside the backend entrypoint on restart.
+The workflow in
+[`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml):
 
-One-time step: make the two GHCR packages public (GitHub → your profile →
-**Packages** → package → *Package settings* → *Change visibility*), so
-Watchtower can pull without credentials. The source is public anyway. If you
-prefer private packages, run `docker login ghcr.io` on the VPS and mount the
-Docker config into Watchtower (`-v $HOME/.docker/config.json:/config.json`).
+- **On a pull request into `main`:** builds all three images (`backend`,
+  `frontend`, `backup`) and pushes them tagged `pr-<number>` and `sha-<commit>`.
+  This validates the PR and makes the exact build available for testing.
+- **When the PR is merged to `main`:** builds again and publishes **`:latest`**.
 
-After the first deploy, updates are fully automatic. To force one manually:
+**Watchtower** on the VPS polls every 5 minutes and recreates `backend` and
+`frontend` when `:latest` changes. The database is never auto-updated; schema
+migrations run inside the backend entrypoint on restart. (`backup` is
+intentionally not auto-updated so an in-progress dump is never interrupted.)
+
+One-time step: make the three GHCR packages public (GitHub → your profile →
+**Packages** → package → *Package settings* → *Change visibility*), so the VPS
+can pull without credentials. If you prefer private packages, run
+`docker login ghcr.io` on the VPS and mount the Docker config into Watchtower
+(`-v $HOME/.docker/config.json:/config.json`).
+
+After the first deploy, updates are fully automatic. To force one manually (from
+inside `deploy/vps` on the VPS):
 
 ```bash
-# Option A - helper script (pulls the commit, pulls images, restarts)
-bash deploy/update.sh
+# Option A - helper script
+bash update.sh
 
-# Option B - images only (fastest)
+# Option B - images only
 docker compose pull
 docker compose up -d
-
-# Option C - rebuild from source
-git pull
-docker compose up -d --build
 ```
 
-To roll back, pin a commit tag in `.env` and recreate:
+Branches from forks can't push to GHCR with the default token, so their PRs only
+build (no images are published) — which is expected.
+
+To roll back, pin a built commit tag in `.env` and recreate:
 
 ```env
-BACKEND_IMAGE=ghcr.io/zwykly/numer1-classroommanager-backend:<git-sha>
-FRONTEND_IMAGE=ghcr.io/zwykly/numer1-classroommanager-frontend:<git-sha>
+BACKEND_IMAGE=ghcr.io/zwykly/numer1-classroommanager-backend:sha-<commit>
+FRONTEND_IMAGE=ghcr.io/zwykly/numer1-classroommanager-frontend:sha-<commit>
+BACKUP_IMAGE=ghcr.io/zwykly/numer1-classroommanager-backup:sha-<commit>
 ```
 
 ## 7. Offsite database backups every 24 hours
@@ -245,10 +274,10 @@ rclone config            # create a remote, e.g. "b2" or "s3"
 rclone mkdir b2:classroom-backups
 ```
 
-Copy the config into the project:
+Copy the config into the `rclone/` folder that the backup container mounts:
 
 ```bash
-cp deploy/rclone/rclone.conf.example deploy/rclone/rclone.conf
+cp rclone/rclone.conf.example rclone/rclone.conf
 # paste the remote block that `rclone config` produced
 ```
 
@@ -267,8 +296,8 @@ docker compose up -d backup
 docker compose logs -f backup
 ```
 
-`deploy/rclone/rclone.conf` is gitignored and mounted read-only into the
-container, so credentials never end up in the image.
+`rclone/rclone.conf` is gitignored and mounted read-only into the container, so
+credentials never end up in the image.
 
 ### 7.2 Verify backups
 

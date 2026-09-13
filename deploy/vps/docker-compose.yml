@@ -1,3 +1,12 @@
+# ---------------------------------------------------------------------------
+# Classroom Manager - VPS production stack
+#
+# Self-contained: this file plus `.env`, `rclone/rclone.conf` and (optionally)
+# `update.sh` are everything the server needs. All images are pulled from GHCR,
+# so the source repository does NOT have to be on the VPS.
+#
+# First start:  docker compose pull && docker compose up -d
+# ---------------------------------------------------------------------------
 name: classroom-manager
 
 services:
@@ -21,9 +30,6 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE:-ghcr.io/zwykly/numer1-classroommanager-backend:latest}
-    build:
-      context: .
-      dockerfile: backend/app/Dockerfile
     restart: unless-stopped
     depends_on:
       db:
@@ -47,9 +53,6 @@ services:
 
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/zwykly/numer1-classroommanager-frontend:latest}
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
     restart: unless-stopped
     depends_on:
       - backend
@@ -68,9 +71,6 @@ services:
 
   backup:
     image: ${BACKUP_IMAGE:-ghcr.io/zwykly/numer1-classroommanager-backup:latest}
-    build:
-      context: .
-      dockerfile: docker/backup/Dockerfile
     restart: unless-stopped
     depends_on:
       db:
@@ -83,8 +83,7 @@ services:
       BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
     volumes:
-      - ./deploy/backup/backup.sh:/usr/local/bin/backup.sh:ro
-      - ./deploy/rclone:/config:ro
+      - ./rclone:/config:ro
       - db_backups:/backups
     networks:
       - classroom

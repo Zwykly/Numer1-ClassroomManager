@@ -6,6 +6,7 @@
 .env.*
 !.env.example
 deploy/rclone/rclone.conf
+deploy/vps/rclone/rclone.conf
 
 # Local backup dumps
 backups/

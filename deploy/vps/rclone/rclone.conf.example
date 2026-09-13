@@ -1,0 +1,26 @@
+# rclone configuration used by the backup container (mounted at
+# /config/rclone.conf). Copy this file to `rclone.conf` and fill in the remote
+# you want to use. `rclone config` on any machine produces a compatible file.
+#
+# Set RCLONE_REMOTE in `.env` to "<remote-name>:<path>", e.g.
+#   RCLONE_REMOTE=b2:classroom-backups
+
+# --- Example: Backblaze B2 -------------------------------------------------
+[b2]
+type = b2
+account = your-key-id
+key = your-application-key
+
+# --- Example: Amazon S3 / S3-compatible ------------------------------------
+[s3]
+type = s3
+provider = Other
+access_key_id = your-access-key
+secret_access_key = your-secret-key
+endpoint = https://s3.eu-central-1.amazonaws.com
+
+# --- Example: Google Drive -------------------------------------------------
+[gdrive]
+type = drive
+scope = drive
+# Run `rclone config` to generate the token block, then paste it here.

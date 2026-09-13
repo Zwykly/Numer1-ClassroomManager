@@ -171,11 +171,11 @@ export function ClassDetailsModal({
                     </div>
 
                     {(canCancel || canEdit) && (
-                        <div className="flex flex-col-reverse gap-2 border-t border-light-grey pt-4 sm:flex-row sm:items-center sm:justify-end">
+                        <div className="flex flex-row items-center gap-2 border-t border-light-grey pt-4 sm:justify-end">
                             {canCancel && (
                                 <Button
                                     variant="danger"
-                                    className="w-full px-3 sm:mr-auto sm:w-auto"
+                                    className="flex-1 px-3 sm:mr-auto sm:flex-none"
                                     aria-label="Cancel class"
                                     title={isCanceling ? "Canceling..." : "Cancel class"}
                                     onClick={() => setConfirmOpen(true)}
@@ -185,7 +185,7 @@ export function ClassDetailsModal({
                                 </Button>
                             )}
                             {canEdit && (
-                                <Button variant="primary" className="w-full gap-2 sm:w-auto" onClick={() => onEdit(reservation)} disabled={isCanceling}>
+                                <Button variant="primary" className="flex-1 gap-2 sm:flex-none" onClick={() => onEdit(reservation)} disabled={isCanceling}>
                                     <Pencil size={16} />
                                     Edit class
                                 </Button>

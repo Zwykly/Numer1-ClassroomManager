@@ -13,6 +13,31 @@ import { openAPI } from "better-auth/plugins";
 
 type InsertUserPayload = typeof insertUserSchema.static;
 
+// Origins are configuration-driven so the same image can be deployed on any
+// domain: TRUSTED_ORIGINS holds the frontend origins and BETTER_AUTH_URL the
+// public backend URL. Defaults below keep local/LAN development working.
+const envTrustedOrigins = (process.env.TRUSTED_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+
+function hostFromUrl(value: string | undefined): string | null {
+    if (!value) return null;
+    try {
+        return new URL(value).host;
+    } catch {
+        return null;
+    }
+}
+
+const envAllowedHosts = [process.env.BETTER_AUTH_URL, ...envTrustedOrigins]
+    .map(hostFromUrl)
+    .filter((host): host is string => host !== null)
+    .flatMap((host) => {
+        const hostname = host.split(":")[0];
+        return [host, `${hostname}:*`];
+    });
+
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
         provider: "pg",
@@ -29,8 +54,9 @@ export const auth = betterAuth({
             "172.*",
             "zwykly.duckdns.org",
             "zwykly.duckdns.org:*",
+            ...envAllowedHosts,
         ],
-        fallback: "http://localhost:3000",
+        fallback: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
     },
     trustedOrigins: [
         "http://localhost:3030",
@@ -41,6 +67,7 @@ export const auth = betterAuth({
         "http://192.168.*",
         "http://10.*",
         "http://172.*",
+        ...envTrustedOrigins,
     ],
     emailAndPassword: {
         enabled: true,

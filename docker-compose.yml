@@ -1,0 +1,111 @@
+name: classroom-manager
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - classroom
+
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/zwykly/numer1-classroommanager-backend:latest}
+    build:
+      context: .
+      dockerfile: backend/app/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@classroom.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}
+      ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME:-Admin}
+      ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:-User}
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:${BACKEND_PORT:-3000}:3000"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    networks:
+      - classroom
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/zwykly/numer1-classroommanager-frontend:latest}
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      PORT: "3030"
+      # Full public URL of the backend, e.g. https://api.example.com.
+      # Leave empty when the backend is reachable on the same host at :3000.
+      BUN_PUBLIC_API_URL: ${BUN_PUBLIC_API_URL:-}
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:${FRONTEND_PORT:-3030}:3030"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    networks:
+      - classroom
+
+  backup:
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    image: classroom-manager-backup:local
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    user: "0:0"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      RCLONE_CONFIG: /config/rclone.conf
+      RCLONE_REMOTE: ${RCLONE_REMOTE:?RCLONE_REMOTE is required}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - ./deploy/backup/backup.sh:/usr/local/bin/backup.sh:ro
+      - ./deploy/rclone:/config:ro
+      - db_backups:/backups
+    networks:
+      - classroom
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: "300"
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_ROLLING_RESTART: "true"
+    networks:
+      - classroom
+
+volumes:
+  db_data:
+  db_backups:
+
+networks:
+  classroom:
+    driver: bridge

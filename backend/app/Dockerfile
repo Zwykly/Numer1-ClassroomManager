@@ -1,37 +1,35 @@
+# syntax=docker/dockerfile:1
+
+# ---------------------------------------------------------------------------
+# Classroom Manager - backend (Bun + Elysia + Drizzle)
+# Build context is the repository root:
+#   docker build -f backend/app/Dockerfile .
+# ---------------------------------------------------------------------------
+
 FROM oven/bun:alpine AS base
+WORKDIR /app
 
-WORKDIR /usr/src/app
+# --- dependencies (includes drizzle-kit, used to apply migrations) ---------
+FROM base AS deps
+COPY backend/app/package.json backend/app/bun.lock ./
+RUN bun install --frozen-lockfile
 
-# install dependencies into temp directory
-# this will cache them and speed up future builds
-FROM base AS install
-RUN mkdir -p /temp/dev
-COPY package.json bun.lock /temp/dev/
-RUN cd /temp/dev && bun install --frozen-lockfile
-
-# install with --production (exclude devDependencies)
-RUN mkdir -p /temp/prod
-COPY package.json bun.lock /temp/prod/
-RUN cd /temp/prod && bun install --frozen-lockfile --production
-
-# copy node_modules from temp directory
-# then copy all (non-ignored) project files into the image
-FROM base AS prerelease
-COPY --from=install /temp/dev/node_modules node_modules
-COPY . .
-
-# copy production dependencies and source code into final image
+# --- runtime ---------------------------------------------------------------
 FROM base AS release
-COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src/app/src ./src
-COPY --from=prerelease /usr/src/app/drizzle ./drizzle
-COPY --from=prerelease /usr/src/app/package.json .
-COPY --from=prerelease /usr/src/app/drizzle.config.ts .
-COPY --from=prerelease /usr/src/app/auth-schema.ts .
-COPY --from=prerelease /usr/src/app/tsconfig.json .
+ENV NODE_ENV=production
 
-# run the app
+COPY --from=deps /app/node_modules ./node_modules
+COPY backend/app/package.json backend/app/bun.lock ./
+COPY backend/app/tsconfig.json ./
+COPY backend/app/drizzle.config.ts ./
+COPY backend/app/auth-schema.ts ./
+COPY backend/app/src ./src
+COPY backend/app/drizzle ./drizzle
+COPY backend/app/seed-admin.ts ./seed-admin.ts
+COPY docker/backend/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 USER bun
-EXPOSE 3000/tcp
+EXPOSE 3000
 
-ENTRYPOINT ["sh", "-c", "bunx drizzle-kit migrate && bun run dev"]
+ENTRYPOINT ["/app/entrypoint.sh"]

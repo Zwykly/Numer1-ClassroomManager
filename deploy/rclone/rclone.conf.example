@@ -1,0 +1,28 @@
+# rclone configuration for offsite database backups.
+#
+# Copy this file to `deploy/rclone/rclone.conf` and fill in the remote(s) you
+# want to use. It is mounted into the backup container at /config/rclone.conf.
+# `rclone config` on your laptop produces a compatible file you can paste here.
+#
+# Set RCLONE_REMOTE in the root `.env` to "<remote-name>:<path>", e.g.
+#   RCLONE_REMOTE=b2:classroom-backups
+
+# --- Example: Backblaze B2 -------------------------------------------------
+[b2]
+type = b2
+account = your-key-id
+key = your-application-key
+
+# --- Example: Amazon S3 / S3-compatible ------------------------------------
+[s3]
+type = s3
+provider = Other
+access_key_id = your-access-key
+secret_access_key = your-secret-key
+endpoint = https://s3.eu-central-1.amazonaws.com
+
+# --- Example: Google Drive -------------------------------------------------
+[gdrive]
+type = drive
+scope = drive
+# Run `rclone config` to generate the token block, then paste it here.

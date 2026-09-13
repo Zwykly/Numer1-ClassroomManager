@@ -3,6 +3,7 @@ import { Calendar, CheckCircle2, Clock, Info, MapPin, Pencil, Repeat, User, User
 import { clsx as cn } from "clsx";
 import { useState } from "react";
 import { Modal } from "./Modal";
+import { ConfirmModal } from "./ConfirmModal";
 import { Button } from "./Button";
 import { reservationAttendees } from "@/components/ReservationsTable";
 import { teacherColor } from "@/utils/teacherColors";
@@ -40,6 +41,7 @@ export function ClassDetailsModal({
     onCancel,
 }: ClassDetailsModalProps) {
     const [isCanceling, setIsCanceling] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
     const canEdit = Boolean(
         reservation
         && EDITABLE_STATUSES.includes(reservation.status)
@@ -52,6 +54,7 @@ export function ClassDetailsModal({
         setIsCanceling(true);
         try {
             await onCancel(reservation);
+            setConfirmOpen(false);
         } finally {
             setIsCanceling(false);
         }
@@ -62,6 +65,7 @@ export function ClassDetailsModal({
     const participants = reservation ? reservationAttendees(reservation) : [];
 
     return (
+        <>
         <Modal
             open={open}
             onOpenChange={onOpenChange}
@@ -166,31 +170,45 @@ export function ClassDetailsModal({
                         </div>
                     </div>
 
-                    <div className="flex flex-col-reverse gap-2 border-t border-light-grey pt-4 sm:flex-row sm:justify-end">
-                        <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>
-                            Close
-                        </Button>
-                        {canCancel && (
-                            <Button
-                                variant="danger"
-                                className="w-full gap-2 sm:w-auto"
-                                onClick={handleCancel}
-                                disabled={isCanceling}
-                            >
-                                <XCircle size={16} />
-                                {isCanceling ? "Canceling..." : "Cancel class"}
-                            </Button>
-                        )}
-                        {canEdit && (
-                            <Button variant="primary" className="w-full gap-2 sm:w-auto" onClick={() => onEdit(reservation)} disabled={isCanceling}>
-                                <Pencil size={16} />
-                                Edit class
-                            </Button>
-                        )}
-                    </div>
+                    {(canCancel || canEdit) && (
+                        <div className="flex flex-col-reverse gap-2 border-t border-light-grey pt-4 sm:flex-row sm:items-center sm:justify-end">
+                            {canCancel && (
+                                <Button
+                                    variant="danger"
+                                    className="w-full px-3 sm:mr-auto sm:w-auto"
+                                    aria-label="Cancel class"
+                                    title={isCanceling ? "Canceling..." : "Cancel class"}
+                                    onClick={() => setConfirmOpen(true)}
+                                    disabled={isCanceling}
+                                >
+                                    <XCircle size={18} />
+                                </Button>
+                            )}
+                            {canEdit && (
+                                <Button variant="primary" className="w-full gap-2 sm:w-auto" onClick={() => onEdit(reservation)} disabled={isCanceling}>
+                                    <Pencil size={16} />
+                                    Edit class
+                                </Button>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </Modal>
+        <ConfirmModal
+            open={confirmOpen}
+            onOpenChange={setConfirmOpen}
+            title="Cancel class"
+            message={
+                reservation
+                    ? `Are you sure you want to cancel "${reservation.name || "this class"}"? It will be marked as canceled.`
+                    : "Are you sure you want to cancel this class?"
+            }
+            confirmLabel={isCanceling ? "Canceling..." : "Cancel class"}
+            isDestructive
+            onConfirm={handleCancel}
+        />
+        </>
     );
 }
 

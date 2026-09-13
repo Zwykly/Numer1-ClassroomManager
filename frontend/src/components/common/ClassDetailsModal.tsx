@@ -175,7 +175,7 @@ export function ClassDetailsModal({
                             {canCancel && (
                                 <Button
                                     variant="danger"
-                                    className="flex-1 px-3 sm:mr-auto sm:flex-none"
+                                    className="shrink-0 px-3 sm:mr-auto"
                                     aria-label="Cancel class"
                                     title={isCanceling ? "Canceling..." : "Cancel class"}
                                     onClick={() => setConfirmOpen(true)}

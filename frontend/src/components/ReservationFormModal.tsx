@@ -15,6 +15,7 @@ import {
     type ConflictCheck,
     type ConflictResult,
 } from "@/stores/useReservationsStore";
+import { useAuth } from "@/utils/AuthProvider";
 import eden from "@/lib/eden";
 
 type ReservationFormModalProps = {
@@ -123,6 +124,8 @@ export function ReservationFormModal({
     const groups = useGroups();
     const { fetchGroups } = useGroupsActions();
     const { checkConflicts, checkFutureConflicts } = useReservationsActions();
+    const { UserData } = useAuth();
+    const ownOnlineClassroom = UserData?.user?.userInfo?.onlineClassroom ?? null;
 
     const [form, setForm] = useState<Form>(emptyForm(currentUserId));
     const [classrooms, setClassrooms] = useState<ClassroomOption[]>([]);
@@ -136,6 +139,9 @@ export function ReservationFormModal({
     const [futureConflicts, setFutureConflicts] = useState<ConflictResult | null>(null);
     const [isCheckingFuture, setIsCheckingFuture] = useState(false);
     const [overrides, setOverrides] = useState<{ index: number; reservationTime: string }[]>([]);
+
+    // The server already scopes the fetched list to the teacher's own classroom.
+    const teacherOnlineClassroomId = ownOnlineClassroom?.id ?? onlineClassrooms[0]?.id;
 
     const durationOptions = useMemo(() => {
         const options = new Set(DURATION_OPTIONS);
@@ -209,7 +215,9 @@ export function ReservationFormModal({
         name: form.name.trim() || null,
         teacherId: isAdmin ? form.teacherId : undefined,
         classroomId: form.roomType === "classroom" ? form.classroomId : null,
-        onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : null,
+        onlineClassroomId: form.roomType === "online"
+            ? (isAdmin ? form.onlineClassroomId : teacherOnlineClassroomId ?? null)
+            : null,
         reservationTime: new Date(form.reservationTime),
         durationMinutes: Number(form.durationMinutes) || null,
         additionalInfo: form.additionalInfo.trim() || null,
@@ -348,6 +356,24 @@ export function ReservationFormModal({
         setForm((current) => ({ ...current, [field]: value }));
     };
 
+    // Teachers can only host online classes in their own online classroom.
+    const onlineClassroomOptions = useMemo<OnlineClassroomOption[]>(() => {
+        if (!isAdmin) {
+            if (ownOnlineClassroom) return [{ id: ownOnlineClassroom.id, name: ownOnlineClassroom.name }];
+            return onlineClassrooms;
+        }
+        return onlineClassrooms;
+    }, [isAdmin, ownOnlineClassroom, onlineClassrooms]);
+
+    const selectRoomType = (roomType: Form["roomType"]) => {
+        setForm((current) => {
+            if (roomType === "online" && !isAdmin && teacherOnlineClassroomId) {
+                return { ...current, roomType, onlineClassroomId: teacherOnlineClassroomId };
+            }
+            return { ...current, roomType };
+        });
+    };
+
     const toggleId = (field: "studentIds" | "groupIds", id: string) => {
         setForm((current) => ({
             ...current,
@@ -422,7 +448,9 @@ export function ReservationFormModal({
                     name: form.name.trim() || "",
                     teacherId: form.teacherId,
                     classroomId: form.roomType === "classroom" ? form.classroomId : undefined,
-                    onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : undefined,
+                    onlineClassroomId: form.roomType === "online"
+                        ? (isAdmin ? form.onlineClassroomId : teacherOnlineClassroomId)
+                        : undefined,
                     additionalInfo: form.additionalInfo.trim() || null,
                     anchorDate: new Date(form.reservationTime).toISOString(),
                     durationMinutes: Number(form.durationMinutes) || undefined,
@@ -440,7 +468,9 @@ export function ReservationFormModal({
                     name: form.name.trim() || null,
                     teacherId: form.teacherId,
                     classroomId: form.roomType === "classroom" ? form.classroomId : null,
-                    onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : null,
+                    onlineClassroomId: form.roomType === "online"
+                        ? (isAdmin ? form.onlineClassroomId : teacherOnlineClassroomId ?? null)
+                        : null,
                     reservationTime: new Date(form.reservationTime),
                     durationMinutes: Number(form.durationMinutes) || null,
                     additionalInfo: form.additionalInfo.trim() || null,
@@ -510,7 +540,7 @@ export function ReservationFormModal({
                                 <button
                                     key={roomType}
                                     type="button"
-                                    onClick={() => setField("roomType", roomType)}
+                                    onClick={() => selectRoomType(roomType)}
                                     className={cn(
                                         "flex-1 rounded-xl border px-4 py-2 text-sm font-bold capitalize transition",
                                         form.roomType === roomType
@@ -547,10 +577,11 @@ export function ReservationFormModal({
                             <select
                                 value={form.onlineClassroomId}
                                 onChange={(event) => setField("onlineClassroomId", event.target.value)}
-                                className={inputClass}
+                                disabled={!isAdmin}
+                                className={cn(inputClass, !isAdmin && "cursor-not-allowed bg-light-grey text-darker-grey")}
                             >
                                 <option value="">Select an online classroom...</option>
-                                {onlineClassrooms.map((classroom) => (
+                                {onlineClassroomOptions.map((classroom) => (
                                     <option key={classroom.id} value={classroom.id}>
                                         {classroom.name}
                                     </option>

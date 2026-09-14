@@ -3,6 +3,7 @@ import { db } from "../db/db";
 import { table } from "../db/schema";
 import { user as authUser } from "../../auth-schema";
 import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema } from "../models/users";
+import { OnlineClassroomsService } from "./online_classrooms";
 import { getLimit, getCursorWhere, getInArrayWhere, getFuzzySearchWhere, buildPaginationResponse } from "../utils/drizzle";
 
 export const UsersService = {
@@ -81,7 +82,23 @@ export const UsersService = {
             .insert(table.users)
             .values(payload)
             .returning();
+        await this.ensureOnlineClassroom(newUser.id, newUser.firstName, newUser.lastName);
         return this.getById(newUser.id);
+    },
+
+    // Every user gets their own online classroom so classes can be hosted online
+    // without additional setup.
+    async ensureOnlineClassroom(userId: string, firstName: string, lastName: string) {
+        const existing = await OnlineClassroomsService.getByTeacherId(userId);
+        if (existing) return existing;
+
+        const created = await OnlineClassroomsService.create({
+            name: `${firstName} ${lastName} - online`,
+            teacherId: userId,
+            comment: null,
+            status: "active",
+        });
+        return created?.id ?? null;
     },
 
     async update(id: string, payload: typeof updateUserSchema.static) {

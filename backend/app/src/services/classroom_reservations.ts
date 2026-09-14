@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, lte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
 import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema } from "../models/classroom_reservations";
@@ -255,6 +255,67 @@ export const ClassroomReservationsService = {
         if (!patched) return null;
         await this.setAttendees(id, studentIds, groupIds);
         return this.getById(id);
+    },
+
+    // The selected occurrence together with every later occurrence of the same cycle.
+    async getFutureSiblings(id: string) {
+        const selected = await db.query.classroomReservations.findFirst({ where: { id } });
+        if (!selected || !selected.cycleId) return { selected: selected ?? null, siblings: [] };
+
+        const siblings = await db.query.classroomReservations.findMany({
+            where: {
+                cycleId: selected.cycleId,
+                reservationTime: { gte: selected.reservationTime },
+            },
+            orderBy: (res, { asc }) => [asc(res.reservationTime)],
+        });
+
+        return { selected, siblings };
+    },
+
+    // Applies the changes to the selected occurrence and all future ones, shifting
+    // every date by the same delta so the recurrence spacing is preserved.
+    async applyFuture(id: string, payload: typeof patchClassroomReservationSchema.static) {
+        const { studentIds, groupIds, reservationTime, ...fields } = payload;
+        const { selected, siblings } = await this.getFutureSiblings(id);
+        if (!selected) return [];
+
+        const selectedTime = new Date(selected.reservationTime).getTime();
+        const delta = reservationTime ? new Date(reservationTime).getTime() - selectedTime : 0;
+
+        const updatedIds: string[] = [];
+        for (const occurrence of siblings) {
+            const nextTime = delta !== 0
+                ? new Date(new Date(occurrence.reservationTime).getTime() + delta)
+                : undefined;
+
+            const [updated] = await db
+                .update(table.classroomReservations)
+                .set({
+                    ...fields,
+                    ...(nextTime ? { reservationTime: nextTime } : {}),
+                    editedOn: new Date(),
+                })
+                .where(eq(table.classroomReservations.id, occurrence.id))
+                .returning();
+            if (!updated) continue;
+
+            await this.setAttendees(occurrence.id, studentIds, groupIds);
+            updatedIds.push(occurrence.id);
+        }
+
+        if (selected.cycleId && delta !== 0) {
+            const cycle = await db.query.reservationCycles.findFirst({ where: { id: selected.cycleId } });
+            if (cycle) {
+                await db
+                    .update(table.reservationCycles)
+                    .set({ anchorDate: new Date(new Date(cycle.anchorDate).getTime() + delta) })
+                    .where(eq(table.reservationCycles.id, selected.cycleId));
+            }
+        }
+
+        const updated = await Promise.all(updatedIds.map((updatedId) => this.getById(updatedId)));
+        return updated.filter(Boolean);
     },
 
     async startDueReservations() {

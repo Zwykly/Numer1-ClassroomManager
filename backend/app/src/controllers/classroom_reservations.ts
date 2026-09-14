@@ -25,6 +25,25 @@ async function assertNoConflicts(input: Parameters<typeof ConflictsService.check
     }
 }
 
+async function assertNoSlotConflicts(slots: Date[], input: Parameters<typeof ConflictsService.checkSlots>[1]) {
+    const result = await ConflictsService.checkSlots(slots, input);
+    if (result.conflicts.length > 0) {
+        throw status(409, result);
+    }
+}
+
+// Proposed time for every occurrence from the selected one onward, shifted by the
+// same delta as the edited occurrence so the whole future series moves together.
+async function futureSlots(id: string, body: typeof patchClassroomReservationSchema.static, existing: { reservationTime: unknown }) {
+    const { siblings } = await ClassroomReservationsService.getFutureSiblings(id);
+    const selectedTime = new Date(existing.reservationTime as string).getTime();
+    const delta = body.reservationTime
+        ? new Date(body.reservationTime as unknown as string).getTime() - selectedTime
+        : 0;
+
+    return siblings.map((occurrence) => new Date(new Date(occurrence.reservationTime).getTime() + delta));
+}
+
 async function assertCanEdit(id: string, user: AuthUser) {
     const reservation = await ClassroomReservationsService.getById(id);
     if (!reservation) throw new NotFoundError("Classroom Reservation not found");
@@ -123,6 +142,33 @@ export const ClassroomReservationsController = {
         const patched = await ClassroomReservationsService.patch(id, body);
         if (!patched) throw new NotFoundError("Classroom Reservation not found");
         return patched;
+    },
+
+    async checkFutureConflicts({ params: { id }, body, user }: { params: { id: string }; body: typeof patchClassroomReservationSchema.static; user: AuthUser }) {
+        const existing = await assertCanEdit(id, user);
+        const teacherId = isAdmin(user) ? (body.teacherId ?? existing.teacherId) : requireUserId(user);
+        const slots = await futureSlots(id, body, existing);
+        return await ConflictsService.checkSlots(slots, {
+            teacherId,
+            classroomId: body.classroomId !== undefined ? body.classroomId : existing.classroomId,
+            onlineClassroomId: body.onlineClassroomId !== undefined ? body.onlineClassroomId : existing.onlineClassroomId,
+            durationMinutes: body.durationMinutes !== undefined ? body.durationMinutes : existing.durationMinutes,
+            excludeCycleId: existing.cycleId ?? undefined,
+        });
+    },
+
+    async patchFuture({ params: { id }, body, user }: { params: { id: string }; body: typeof patchClassroomReservationSchema.static; user: AuthUser }) {
+        const existing = await assertCanEdit(id, user);
+        const teacherId = isAdmin(user) ? (body.teacherId ?? existing.teacherId) : requireUserId(user);
+        const slots = await futureSlots(id, body, existing);
+        await assertNoSlotConflicts(slots, {
+            teacherId,
+            classroomId: body.classroomId !== undefined ? body.classroomId : existing.classroomId,
+            onlineClassroomId: body.onlineClassroomId !== undefined ? body.onlineClassroomId : existing.onlineClassroomId,
+            durationMinutes: body.durationMinutes !== undefined ? body.durationMinutes : existing.durationMinutes,
+            excludeCycleId: existing.cycleId ?? undefined,
+        });
+        return await ClassroomReservationsService.applyFuture(id, body);
     },
 
     async remove({ params: { id }, user }: { params: { id: string }; user: AuthUser }) {

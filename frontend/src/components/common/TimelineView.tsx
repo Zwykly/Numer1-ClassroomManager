@@ -49,7 +49,8 @@ export function TimelineView () {
         // Get reservations for the days displayed
         const classroomReservations = useClassroomReservations();
         const { fetchClassroomReservations } = useClassroomReservationsActions();
-        const { patchReservation } = useReservationsActions();
+        const { patchReservation, patchFutureReservation } = useReservationsActions();
+
         useEffect(() => {
             fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
         }, [fetchClassroomReservations, from.getTime(), to.getTime(), selectedClassroom]);
@@ -107,6 +108,11 @@ export function TimelineView () {
             await fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
         };
 
+        const handleUpdateFuture = async (id: string, data: ReservationPatch) => {
+            await patchFutureReservation(id, data);
+            await fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
+        };
+
         const handleCancel = async (reservation: Reservation) => {
             await patchReservation(reservation.id, { status: "canceled" });
             await fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
@@ -143,6 +149,7 @@ export function TimelineView () {
                     onCreate={async () => {}}
                     onCreateRecurring={async () => {}}
                     onUpdate={handleUpdate}
+                    onUpdateFuture={handleUpdateFuture}
                 />
             </>
         );

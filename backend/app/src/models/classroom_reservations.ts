@@ -85,6 +85,7 @@ export const checkConflictsSchema = t.Object({
     reservationTime: t.Optional(t.String({ format: 'date-time' })),
     recurrence: t.Optional(recurrenceInputSchema),
     excludeId: t.Optional(t.String({ format: 'uuid' })),
+    excludeCycleId: t.Optional(t.String({ format: 'uuid' })),
 });
 
 const conflictItemSchema = t.Object({

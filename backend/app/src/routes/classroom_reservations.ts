@@ -33,6 +33,18 @@ const classroomReservationsRoutes = new Elysia({
         response: conflictResultSchema,
         isAuth: true
     })
+    .post("/:id/future-conflicts", ClassroomReservationsController.checkFutureConflicts, {
+        params: t.Object({ id: t.String() }),
+        body: patchClassroomReservationSchema,
+        response: conflictResultSchema,
+        isAuth: true
+    })
+    .patch("/:id/future", ClassroomReservationsController.patchFuture, {
+        params: t.Object({ id: t.String() }),
+        body: patchClassroomReservationSchema,
+        response: recurringClassroomReservationsResponseSchema,
+        isAuth: true
+    })
     .post("/recurring", ClassroomReservationsController.createRecurring, {
         body: createRecurringReservationSchema,
         response: recurringClassroomReservationsResponseSchema,

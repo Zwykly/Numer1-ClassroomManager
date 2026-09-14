@@ -57,7 +57,10 @@ export const ConflictsService = {
             },
         });
 
-        return rows.filter((reservation) => reservation.id !== input.excludeId);
+        return rows.filter((reservation) =>
+            reservation.id !== input.excludeId
+            && (!input.excludeCycleId || reservation.cycleId !== input.excludeCycleId),
+        );
     },
 
     matchesProposed(start: Date, input: CheckInput, reservation: BusyReservation): ("room" | "teacher")[] {
@@ -147,6 +150,10 @@ export const ConflictsService = {
             slots = [new Date(input.reservationTime)];
         }
 
+        return this.checkSlots(slots, input);
+    },
+
+    async checkSlots(slots: Date[], input: CheckInput): Promise<typeof conflictResultSchema.static> {
         if (slots.length === 0) return { conflicts: [] };
 
         const busy = await this.getBusy(input);

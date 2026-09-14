@@ -101,7 +101,8 @@ export const selectCalendarReservationSchema = t.Composite([
         teacher: t.Optional(_selectSimpleUserSchema),
         groups: t.Optional(t.Array(selectSimpleGroupSchema)),
         classroom: t.Optional(selectSimpleClassroomSchema),
-        onlineClassroom: t.Optional(selectSimpleOnlineClassroomSchema)
+        onlineClassroom: t.Optional(selectSimpleOnlineClassroomSchema),
+        restricted: t.Optional(t.Boolean())
     })
 ]);
 export const calendarClassroomReservationsResponseSchema = t.Array(selectCalendarReservationSchema);

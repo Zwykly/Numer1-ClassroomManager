@@ -45,8 +45,11 @@ export const ClassroomReservationsController = {
         return await ClassroomReservationsService.getAll(query);
     },
 
-    async getCalendar({ query }: { query: typeof calendarReservationsQuerySchema.static }) {
-        return await ClassroomReservationsService.getCalendar(query);
+    async getCalendar({ query, user }: { query: typeof calendarReservationsQuerySchema.static; user: AuthUser }) {
+        return await ClassroomReservationsService.getCalendar(query, {
+            id: user?.userInfo?.id,
+            isAdmin: isAdmin(user),
+        });
     },
 
     async getById({ params: { id } }: { params: { id: string } }) {

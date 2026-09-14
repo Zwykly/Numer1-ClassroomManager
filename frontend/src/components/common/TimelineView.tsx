@@ -2,6 +2,7 @@ import { DayTimeline } from "@/components/common/DayTimeline";
 import { MonthView } from "@/components/common/MonthView";
 import { DayClassesModal } from "@/components/common/DayClassesModal";
 import { ClassDetailsModal } from "@/components/common/ClassDetailsModal";
+import { ReservedSlotModal } from "@/components/common/ReservedSlotModal";
 import { MobileTimeline } from "@/components/common/MobileTimeline";
 import { CurrentTimeLine } from "@/components/common/CurrentTimeLine";
 import { ReservationFormModal } from "@/components/ReservationFormModal";
@@ -35,6 +36,8 @@ export function TimelineView () {
         const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
         const [detailsOpen, setDetailsOpen] = useState(false);
         const [detailsLoading, setDetailsLoading] = useState(false);
+        const [restrictedReservation, setRestrictedReservation] = useState<ClassroomReservation | null>(null);
+        const [restrictedOpen, setRestrictedOpen] = useState(false);
         const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
         const [editOpen, setEditOpen] = useState(false);
 
@@ -70,6 +73,13 @@ export function TimelineView () {
         };
 
         const openDetails = async (reservation: ClassroomReservation) => {
+            if (reservation.restricted) {
+                setDayModalOpen(false);
+                setRestrictedReservation(reservation);
+                setRestrictedOpen(true);
+                return;
+            }
+
             setDayModalOpen(false);
             setSelectedReservation(null);
             setDetailsOpen(true);
@@ -118,6 +128,11 @@ export function TimelineView () {
                     isAdmin={isAdmin}
                     onEdit={handleEdit}
                     onCancel={handleCancel}
+                />
+                <ReservedSlotModal
+                    open={restrictedOpen}
+                    onOpenChange={setRestrictedOpen}
+                    reservation={restrictedReservation}
                 />
                 <ReservationFormModal
                     open={editOpen}

@@ -20,6 +20,11 @@ const calendarRelations = {
     onlineClassrooms: true,
 } as const;
 
+type Viewer = {
+    id?: string;
+    isAdmin: boolean;
+};
+
 function mapReservation(res: any) {
     const { users, classrooms, onlineClassrooms, ...base } = res;
 
@@ -30,6 +35,22 @@ function mapReservation(res: any) {
         students: res.students,
         classroom: classrooms ?? undefined,
         onlineClassroom: onlineClassrooms ?? undefined,
+    };
+}
+
+// Hides the details of a class the viewer is not allowed to see. Only the status,
+// whether it recurs and the slot itself remain visible.
+function maskReservation(reservation: ReturnType<typeof mapReservation>) {
+    return {
+        ...reservation,
+        name: null,
+        additionalInfo: null,
+        teacher: undefined,
+        groups: [],
+        students: [],
+        classroom: undefined,
+        onlineClassroom: undefined,
+        restricted: true,
     };
 }
 
@@ -103,7 +124,7 @@ export const ClassroomReservationsService = {
         return mapReservation(res);
     },
 
-    async getCalendar(query: typeof calendarReservationsQuerySchema.static) {
+    async getCalendar(query: typeof calendarReservationsQuerySchema.static, viewer?: Viewer) {
         const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
         const classroomWhere = query.classroomId ? { classroomId: query.classroomId } : undefined;
 
@@ -116,7 +137,16 @@ export const ClassroomReservationsService = {
             with: calendarRelations,
         });
 
-        return data.map(mapReservation);
+        const mapped = data.map(mapReservation);
+        if (!viewer || viewer.isAdmin) {
+            return mapped.map((reservation) => ({ ...reservation, restricted: false }));
+        }
+
+        return mapped.map((reservation) => (
+            reservation.teacherId === viewer.id
+                ? { ...reservation, restricted: false }
+                : maskReservation(reservation)
+        ));
     },
 
     async setAttendees(reservationId: string, studentIds?: string[], groupIds?: string[]) {

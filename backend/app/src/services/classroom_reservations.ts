@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
 import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema } from "../models/classroom_reservations";
@@ -93,15 +93,35 @@ export const ClassroomReservationsService = {
         return undefined;
     },
 
-    async getAll(query: typeof classroomReservationsQuerySchema.static) {
+    async getOwnOnlineClassroomId(userId: string) {
+        const oc = await db.query.onlineClassrooms.findFirst({ where: { teacherId: userId } });
+        return oc?.id;
+    },
+
+    // Reservations on an online classroom are only visible to the teacher they
+    // belong to and to administrators.
+    async onlineVisibilityWhere(viewer?: Viewer): Promise<Record<string, any> | undefined> {
+        if (!viewer || viewer.isAdmin || !viewer.id) return undefined;
+
+        const ownOnlineId = await this.getOwnOnlineClassroomId(viewer.id);
+        return {
+            OR: [
+                { onlineClassroomId: { isNull: true } },
+                ...(ownOnlineId ? [{ onlineClassroomId: ownOnlineId }] : []),
+            ],
+        };
+    },
+
+    async getAll(query: typeof classroomReservationsQuerySchema.static, viewer?: Viewer) {
         const limit = getLimit(query.limit);
         const cursorWhere = getCursorWhere(query.cursor);
         const statusWhere = getInArrayWhere("status", query.status);
         const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
         const searchWhere = getFuzzySearchWhere(["name"], query.search);
         const viewWhere = this.buildViewWhere(query.view);
+        const onlineWhere = await this.onlineVisibilityWhere(viewer);
 
-        const conditions = [cursorWhere, statusWhere, dateWhere, searchWhere, viewWhere].filter(Boolean);
+        const conditions = [cursorWhere, statusWhere, dateWhere, searchWhere, viewWhere, onlineWhere].filter(Boolean);
         const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const data = await db.query.classroomReservations.findMany({
@@ -127,9 +147,12 @@ export const ClassroomReservationsService = {
     async getCalendar(query: typeof calendarReservationsQuerySchema.static, viewer?: Viewer) {
         const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
         const classroomWhere = query.classroomId ? { classroomId: query.classroomId } : undefined;
+        const onlineClassroomWhere = query.onlineClassroomId ? { onlineClassroomId: query.onlineClassroomId } : undefined;
+        const includeOnlineWhere = query.includeOnline === false ? { onlineClassroomId: { isNull: true } } : undefined;
+        const visibilityWhere = await this.onlineVisibilityWhere(viewer);
 
-        const conditions = [dateWhere, classroomWhere].filter(Boolean);
-        const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
+        const conditions = [dateWhere, classroomWhere, onlineClassroomWhere, includeOnlineWhere, visibilityWhere].filter(Boolean);
+        const whereClause: any = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const data = await db.query.classroomReservations.findMany({
             where: whereClause,

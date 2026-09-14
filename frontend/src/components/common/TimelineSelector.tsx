@@ -3,11 +3,13 @@ import { Select } from 'radix-ui';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { clsx as cn } from "clsx";
 import { addDays, format } from "date-fns";
-import { useSelectedClassroom, useSelectedClassFilter, useSelectedTimelineActions, type ClassFilter } from '../../stores/useSelectedTimelineStore';
+import { useSelectedClassroom, useSelectedClassFilter, useSelectedIncludeOnline, useSelectedTimelineActions, type ClassFilter } from '../../stores/useSelectedTimelineStore';
 import { useSelectedView, useSelectedDate, useSelectedDateActions } from '../../stores/useSelectedDateStore';
 import { useClassrooms, useClassroomsActions } from '../../stores/useClassroomsStore';
+import { useOnlineClassrooms, useOnlineClassroomsActions } from '../../stores/useOnlineClassroomsStore';
 import { CALENDAR_VIEWS, MOBILE_CALENDAR_VIEWS } from '../../utils/calendarRange';
 import { useIsMobile } from '@/utils/useMediaQuery';
+import { useAuth } from '@/utils/AuthProvider';
 
 const disableRing = '!border-0 !outline-none !ring-0 !shadow-none focus:!outline-none focus-visible:!outline-none focus:!ring-0 focus-visible:!ring-0';
 
@@ -41,6 +43,8 @@ export function TimelineSelector() {
 function ClassroomSelector() {
     const classrooms = useClassrooms();
     const { fetchClassrooms } = useClassroomsActions();
+    const onlineClassrooms = useOnlineClassrooms();
+    const { fetchOnlineClassrooms } = useOnlineClassroomsActions();
     const selectedClassroom = useSelectedClassroom();
     const { setSelectedClassroom } = useSelectedTimelineActions();
 
@@ -48,9 +52,26 @@ function ClassroomSelector() {
         fetchClassrooms();
     }, [fetchClassrooms]);
 
+    useEffect(() => {
+        fetchOnlineClassrooms();
+    }, [fetchOnlineClassrooms]);
+
+    const onlineClassroomLabel = (onlineClassroom: (typeof onlineClassrooms)[number]) => {
+        const teacher = onlineClassroom.teacher;
+        return teacher
+            ? `${teacher.firstName} ${teacher.lastName} - online`
+            : `${onlineClassroom.name} - online`;
+    };
+
+    const selectedOnlineId = selectedClassroom.startsWith("online:") ? selectedClassroom.slice("online:".length) : null;
     const selectedClassroomName = selectedClassroom === "all"
         ? "All classrooms"
-        : classrooms.find((classroom) => classroom.id === selectedClassroom)?.name ?? "All classrooms";
+        : selectedOnlineId
+            ? (() => {
+                const onlineClassroom = onlineClassrooms.find((item) => item.id === selectedOnlineId);
+                return onlineClassroom ? onlineClassroomLabel(onlineClassroom) : "Online classroom";
+            })()
+            : classrooms.find((classroom) => classroom.id === selectedClassroom)?.name ?? "All classrooms";
 
     return (
         <Select.Root value={selectedClassroom} onValueChange={setSelectedClassroom}>
@@ -85,6 +106,19 @@ function ClassroomSelector() {
                                         value={classroom.id}
                                     >
                                         {classroom.name}
+                                    </Select.Item>
+                                );
+                            })
+                        }
+                        {
+                            onlineClassrooms.map((onlineClassroom) => {
+                                return (
+                                    <Select.Item
+                                        key={onlineClassroom.id}
+                                        className={cn('text-lg sm:text-2xl py-1 px-3 gap-2 flex items-center transition duration-200 ease-in-out text-darker-grey hover:text-white hover:bg-orange transition-100 cursor-pointer rounded', disableRing)}
+                                        value={`online:${onlineClassroom.id}`}
+                                    >
+                                        {onlineClassroomLabel(onlineClassroom)}
                                     </Select.Item>
                                 );
                             })
@@ -175,10 +209,14 @@ function FilterSelector() {
         { value: "mine", label: "My classes" },
     ];
     const selectedClassFilter = useSelectedClassFilter();
-    const { setSelectedClassFilter } = useSelectedTimelineActions();
+    const selectedClassroom = useSelectedClassroom();
+    const includeOnline = useSelectedIncludeOnline();
+    const { setSelectedClassFilter, setIncludeOnline } = useSelectedTimelineActions();
+    const { UserData } = useAuth();
+    const isAdmin = UserData?.user?.userInfo?.role === "admin";
 
     return (
-        <div className='flex flex-row gap-5 mt-3'>
+        <div className='flex flex-row flex-wrap items-center gap-5 mt-3'>
             {filters.map((filter) => {
                 const isFilterSelected = selectedClassFilter === filter.value;
                 const filterClass = ['text-lg font-regular cursor-pointer hover:text-orange ',
@@ -196,6 +234,22 @@ function FilterSelector() {
                     </span>
                 );
             })}
+
+            {isAdmin && selectedClassroom === "all" && (
+                <button
+                    type="button"
+                    onClick={() => setIncludeOnline(!includeOnline)}
+                    title={includeOnline ? "Hide online classes" : "Show online classes"}
+                    className={cn(
+                        "rounded-full border px-3 py-1 text-sm font-bold transition",
+                        includeOnline
+                            ? "border-orange bg-orange/10 text-orange"
+                            : "border-light-grey bg-white text-darker-grey hover:border-grey",
+                    )}
+                >
+                    Online classes
+                </button>
+            )}
         </div>
     )
 }

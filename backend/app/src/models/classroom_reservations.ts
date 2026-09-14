@@ -29,6 +29,8 @@ export const calendarReservationsQuerySchema = t.Object({
     from: t.String({ format: 'date-time' }),
     to: t.String({ format: 'date-time' }),
     classroomId: t.Optional(t.String({ format: 'uuid' })),
+    onlineClassroomId: t.Optional(t.String({ format: 'uuid' })),
+    includeOnline: t.Optional(t.Boolean()),
 });
 
 // Inserts

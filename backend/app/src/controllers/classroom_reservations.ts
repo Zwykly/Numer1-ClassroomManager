@@ -1,6 +1,7 @@
 import { NotFoundError, status } from "elysia";
 import { ClassroomReservationsService } from "../services/classroom_reservations";
 import { ConflictsService } from "../services/conflicts";
+import { OnlineClassroomsService } from "../services/online_classrooms";
 import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema, checkConflictsSchema } from "../models/classroom_reservations";
 
 type AuthUser = {
@@ -59,9 +60,22 @@ async function assertCanEdit(id: string, user: AuthUser) {
     return reservation;
 }
 
+// Non-admins may only schedule classes in their own online classroom.
+async function assertOnlineAccess(user: AuthUser, onlineClassroomId?: string | null) {
+    if (!onlineClassroomId || isAdmin(user)) return;
+
+    const ownerId = await OnlineClassroomsService.getOwnerId(onlineClassroomId);
+    if (!ownerId || ownerId !== requireUserId(user)) {
+        throw status(403, "You can only schedule classes in your own online classroom");
+    }
+}
+
 export const ClassroomReservationsController = {
-    async getAll({ query }: { query: typeof classroomReservationsQuerySchema.static }) {
-        return await ClassroomReservationsService.getAll(query);
+    async getAll({ query, user }: { query: typeof classroomReservationsQuerySchema.static; user: AuthUser }) {
+        return await ClassroomReservationsService.getAll(query, {
+            id: user?.userInfo?.id,
+            isAdmin: isAdmin(user),
+        });
     },
 
     async getCalendar({ query, user }: { query: typeof calendarReservationsQuerySchema.static; user: AuthUser }) {
@@ -71,19 +85,27 @@ export const ClassroomReservationsController = {
         });
     },
 
-    async getById({ params: { id } }: { params: { id: string } }) {
+    async getById({ params: { id }, user }: { params: { id: string }; user: AuthUser }) {
         const res = await ClassroomReservationsService.getById(id);
         if (!res) throw new NotFoundError("Classroom Reservation not found");
+
+        if (!isAdmin(user) && res.onlineClassroomId) {
+            const ownerId = await OnlineClassroomsService.getOwnerId(res.onlineClassroomId);
+            if (ownerId !== user?.userInfo?.id) throw new NotFoundError("Classroom Reservation not found");
+        }
+
         return res;
     },
 
     async checkConflicts({ body, user }: { body: typeof checkConflictsSchema.static; user: AuthUser }) {
+        await assertOnlineAccess(user, body.onlineClassroomId);
         const teacherId = isAdmin(user) ? (body.teacherId ?? requireUserId(user)) : requireUserId(user);
         return await ConflictsService.check({ ...body, teacherId });
     },
 
     async create({ body, user }: { body: typeof createClassroomReservationSchema.static; user: AuthUser }) {
         const teacherId = isAdmin(user) ? (body.teacherId ?? requireUserId(user)) : requireUserId(user);
+        await assertOnlineAccess(user, body.onlineClassroomId);
         await assertNoConflicts({
             teacherId,
             classroomId: body.classroomId ?? null,
@@ -98,6 +120,7 @@ export const ClassroomReservationsController = {
 
     async createRecurring({ body, user }: { body: typeof createRecurringReservationSchema.static; user: AuthUser }) {
         const teacherId = isAdmin(user) ? (body.teacherId ?? requireUserId(user)) : requireUserId(user);
+        await assertOnlineAccess(user, body.onlineClassroomId);
         await assertNoConflicts({
             teacherId,
             classroomId: body.classroomId ?? null,
@@ -116,6 +139,7 @@ export const ClassroomReservationsController = {
 
     async update({ params: { id }, body, user }: { params: { id: string }; body: typeof updateClassroomReservationSchema.static; user: AuthUser }) {
         const existing = await assertCanEdit(id, user);
+        await assertOnlineAccess(user, body.onlineClassroomId !== undefined ? body.onlineClassroomId : existing.onlineClassroomId);
         await assertNoConflicts({
             teacherId: body.teacherId ?? existing.teacherId,
             classroomId: body.classroomId !== undefined ? body.classroomId : existing.classroomId,
@@ -131,6 +155,7 @@ export const ClassroomReservationsController = {
 
     async patch({ params: { id }, body, user }: { params: { id: string }; body: typeof patchClassroomReservationSchema.static; user: AuthUser }) {
         const existing = await assertCanEdit(id, user);
+        await assertOnlineAccess(user, body.onlineClassroomId !== undefined ? body.onlineClassroomId : existing.onlineClassroomId);
         await assertNoConflicts({
             teacherId: body.teacherId ?? existing.teacherId,
             classroomId: body.classroomId !== undefined ? body.classroomId : existing.classroomId,
@@ -146,6 +171,7 @@ export const ClassroomReservationsController = {
 
     async checkFutureConflicts({ params: { id }, body, user }: { params: { id: string }; body: typeof patchClassroomReservationSchema.static; user: AuthUser }) {
         const existing = await assertCanEdit(id, user);
+        await assertOnlineAccess(user, body.onlineClassroomId !== undefined ? body.onlineClassroomId : existing.onlineClassroomId);
         const teacherId = isAdmin(user) ? (body.teacherId ?? existing.teacherId) : requireUserId(user);
         const slots = await futureSlots(id, body, existing);
         return await ConflictsService.checkSlots(slots, {
@@ -159,6 +185,7 @@ export const ClassroomReservationsController = {
 
     async patchFuture({ params: { id }, body, user }: { params: { id: string }; body: typeof patchClassroomReservationSchema.static; user: AuthUser }) {
         const existing = await assertCanEdit(id, user);
+        await assertOnlineAccess(user, body.onlineClassroomId !== undefined ? body.onlineClassroomId : existing.onlineClassroomId);
         const teacherId = isAdmin(user) ? (body.teacherId ?? existing.teacherId) : requireUserId(user);
         const slots = await futureSlots(id, body, existing);
         await assertNoSlotConflicts(slots, {

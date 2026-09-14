@@ -74,6 +74,7 @@ export const paginatedClassroomsResponseSchema = createPaginationResponseSchema(
 export const selectCompositeOnlineClassroomSchema = t.Composite([
     _selectOnlineClassroomsSchema,
     t.Object({
+        teacher: t.Optional(_selectSimpleUserSchema),
         reservations: t.Optional(t.Array(selectSimpleClassroomReservationSchema)),
         reservationCycles: t.Optional(t.Array(selectSimpleReservationCycleSchema))
     })

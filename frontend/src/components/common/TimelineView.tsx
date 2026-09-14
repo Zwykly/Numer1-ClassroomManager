@@ -9,12 +9,12 @@ import { ReservationFormModal } from "@/components/ReservationFormModal";
 import { useSelectedDate, useSelectedView } from "../../stores/useSelectedDateStore";
 import { useCurrentTimeTicker } from "../../utils/CurrentTime";
 import { isToday, isSameDay } from "date-fns";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/utils/AuthProvider";
 import { getDisplayedDays, getFetchRange, HOUR_HEIGHT, TIMELINE_HOURS, minutesFromTimelineStart } from "../../utils/calendarRange";
 import { useIsMobile } from "@/utils/useMediaQuery";
-import { useClassroomReservations, useClassroomReservationsActions, type ClassroomReservation } from "../../stores/useClassroomReservationsStore";
-import { useSelectedClassFilter, useSelectedClassroom } from "../../stores/useSelectedTimelineStore";
+import { useClassroomReservations, useClassroomReservationsActions, type ClassroomReservation, type ClassroomReservationFilter } from "../../stores/useClassroomReservationsStore";
+import { useSelectedClassFilter, useSelectedClassroom, useSelectedIncludeOnline } from "../../stores/useSelectedTimelineStore";
 import { useReservationsActions, type Reservation, type ReservationPatch } from "../../stores/useReservationsStore";
 import eden from "@/lib/eden";
 
@@ -30,6 +30,7 @@ export function TimelineView () {
         const currentUserId = UserData?.user?.userInfo?.id;
         const isAdmin = UserData?.user?.userInfo?.role === "admin";
         const selectedClassroom = useSelectedClassroom();
+        const includeOnline = useSelectedIncludeOnline();
         const classFilter = useSelectedClassFilter();
         const [selectedDay, setSelectedDay] = useState<Date | null>(null);
         const [dayModalOpen, setDayModalOpen] = useState(false);
@@ -51,9 +52,19 @@ export function TimelineView () {
         const { fetchClassroomReservations } = useClassroomReservationsActions();
         const { patchReservation, patchFutureReservation } = useReservationsActions();
 
+        const classroomFilter = useMemo<ClassroomReservationFilter>(() => {
+            if (selectedClassroom.startsWith("online:")) {
+                return { onlineClassroomId: selectedClassroom.slice("online:".length) };
+            }
+            if (selectedClassroom !== "all") {
+                return { classroomId: selectedClassroom };
+            }
+            return { includeOnline };
+        }, [selectedClassroom, includeOnline]);
+
         useEffect(() => {
-            fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
-        }, [fetchClassroomReservations, from.getTime(), to.getTime(), selectedClassroom]);
+            fetchClassroomReservations(from, to, classroomFilter);
+        }, [fetchClassroomReservations, from.getTime(), to.getTime(), classroomFilter]);
 
         const visibleReservations = classroomReservations.filter((reservation) =>
             classFilter === "mine" ? reservation.teacherId === currentUserId : true,
@@ -105,17 +116,17 @@ export function TimelineView () {
 
         const handleUpdate = async (id: string, data: ReservationPatch) => {
             await patchReservation(id, data);
-            await fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
+            await fetchClassroomReservations(from, to, classroomFilter);
         };
 
         const handleUpdateFuture = async (id: string, data: ReservationPatch) => {
             await patchFutureReservation(id, data);
-            await fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
+            await fetchClassroomReservations(from, to, classroomFilter);
         };
 
         const handleCancel = async (reservation: Reservation) => {
             await patchReservation(reservation.id, { status: "canceled" });
-            await fetchClassroomReservations(from, to, selectedClassroom === "all" ? undefined : selectedClassroom);
+            await fetchClassroomReservations(from, to, classroomFilter);
             setDetailsOpen(false);
         };
 

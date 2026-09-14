@@ -15,6 +15,7 @@ import {
     type ConflictCheck,
     type ConflictResult,
 } from "@/stores/useReservationsStore";
+import { useAuth } from "@/utils/AuthProvider";
 import eden from "@/lib/eden";
 
 type ReservationFormModalProps = {
@@ -26,6 +27,7 @@ type ReservationFormModalProps = {
     onCreate: (data: NewReservation) => Promise<void>;
     onCreateRecurring: (data: NewRecurringReservation) => Promise<void>;
     onUpdate: (id: string, data: ReservationPatch) => Promise<void>;
+    onUpdateFuture: (id: string, data: ReservationPatch) => Promise<void>;
 };
 
 type ClassroomOption = { id: string; name: string };
@@ -113,13 +115,17 @@ export function ReservationFormModal({
     onCreate,
     onCreateRecurring,
     onUpdate,
+    onUpdateFuture,
 }: ReservationFormModalProps) {
     const isEdit = Boolean(reservation);
+    const isRecurringEdit = isEdit && Boolean(reservation?.cycleId);
     const students = useStudents();
     const { fetchStudents } = useStudentsActions();
     const groups = useGroups();
     const { fetchGroups } = useGroupsActions();
-    const { checkConflicts } = useReservationsActions();
+    const { checkConflicts, checkFutureConflicts } = useReservationsActions();
+    const { UserData } = useAuth();
+    const ownOnlineClassroom = UserData?.user?.userInfo?.onlineClassroom ?? null;
 
     const [form, setForm] = useState<Form>(emptyForm(currentUserId));
     const [classrooms, setClassrooms] = useState<ClassroomOption[]>([]);
@@ -129,7 +135,13 @@ export function ReservationFormModal({
     const [error, setError] = useState<string | null>(null);
     const [conflicts, setConflicts] = useState<ConflictResult | null>(null);
     const [isChecking, setIsChecking] = useState(false);
+    const [scope, setScope] = useState<"single" | "future">("single");
+    const [futureConflicts, setFutureConflicts] = useState<ConflictResult | null>(null);
+    const [isCheckingFuture, setIsCheckingFuture] = useState(false);
     const [overrides, setOverrides] = useState<{ index: number; reservationTime: string }[]>([]);
+
+    // The server already scopes the fetched list to the teacher's own classroom.
+    const teacherOnlineClassroomId = ownOnlineClassroom?.id ?? onlineClassrooms[0]?.id;
 
     const durationOptions = useMemo(() => {
         const options = new Set(DURATION_OPTIONS);
@@ -144,6 +156,8 @@ export function ReservationFormModal({
         setError(null);
         setConflicts(null);
         setOverrides([]);
+        setScope("single");
+        setFutureConflicts(null);
         fetchStudents();
         fetchGroups();
 
@@ -197,8 +211,27 @@ export function ReservationFormModal({
         setOverrides([]);
     };
 
+    const buildEditPatch = (): ReservationPatch => ({
+        name: form.name.trim() || null,
+        teacherId: isAdmin ? form.teacherId : undefined,
+        classroomId: form.roomType === "classroom" ? form.classroomId : null,
+        onlineClassroomId: form.roomType === "online"
+            ? (isAdmin ? form.onlineClassroomId : teacherOnlineClassroomId ?? null)
+            : null,
+        reservationTime: new Date(form.reservationTime),
+        durationMinutes: Number(form.durationMinutes) || null,
+        additionalInfo: form.additionalInfo.trim() || null,
+        status: form.status as ReservationPatch["status"],
+        studentIds: form.studentIds,
+        groupIds: form.groupIds,
+    });
+
     useEffect(() => {
         if (!open) return;
+        if (isRecurringEdit && scope === "future") {
+            setConflicts(null);
+            return;
+        }
 
         const classroomId = form.roomType === "classroom" ? form.classroomId : "";
         const onlineClassroomId = form.roomType === "online" ? form.onlineClassroomId : "";
@@ -258,6 +291,8 @@ export function ReservationFormModal({
         open,
         isEdit,
         reservation,
+        scope,
+        isRecurringEdit,
         form.teacherId,
         form.roomType,
         form.classroomId,
@@ -272,8 +307,71 @@ export function ReservationFormModal({
         overrides,
     ]);
 
+    useEffect(() => {
+        if (!open || !isRecurringEdit || scope !== "future" || !reservation) {
+            setFutureConflicts(null);
+            return;
+        }
+
+        const validRoom = form.roomType === "classroom" ? form.classroomId : form.onlineClassroomId;
+        const validTime = form.reservationTime && !Number.isNaN(new Date(form.reservationTime).getTime());
+        if (!form.teacherId || !validTime || !validRoom) {
+            setFutureConflicts(null);
+            return;
+        }
+
+        const timeout = setTimeout(async () => {
+            setIsCheckingFuture(true);
+            try {
+                const result = await checkFutureConflicts(reservation.id, buildEditPatch());
+                setFutureConflicts(result);
+            } catch (err) {
+                console.error("Failed to check future conflicts:", err);
+                setFutureConflicts(null);
+            } finally {
+                setIsCheckingFuture(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(timeout);
+    }, [
+        open,
+        isRecurringEdit,
+        scope,
+        reservation,
+        form.teacherId,
+        form.roomType,
+        form.classroomId,
+        form.onlineClassroomId,
+        form.reservationTime,
+        form.durationMinutes,
+        form.status,
+        form.name,
+        form.additionalInfo,
+        form.studentIds,
+        form.groupIds,
+    ]);
+
     const setField = <K extends keyof Form>(field: K, value: Form[K]) => {
         setForm((current) => ({ ...current, [field]: value }));
+    };
+
+    // Teachers can only host online classes in their own online classroom.
+    const onlineClassroomOptions = useMemo<OnlineClassroomOption[]>(() => {
+        if (!isAdmin) {
+            if (ownOnlineClassroom) return [{ id: ownOnlineClassroom.id, name: ownOnlineClassroom.name }];
+            return onlineClassrooms;
+        }
+        return onlineClassrooms;
+    }, [isAdmin, ownOnlineClassroom, onlineClassrooms]);
+
+    const selectRoomType = (roomType: Form["roomType"]) => {
+        setForm((current) => {
+            if (roomType === "online" && !isAdmin && teacherOnlineClassroomId) {
+                return { ...current, roomType, onlineClassroomId: teacherOnlineClassroomId };
+            }
+            return { ...current, roomType };
+        });
     };
 
     const toggleId = (field: "studentIds" | "groupIds", id: string) => {
@@ -285,6 +383,33 @@ export function ReservationFormModal({
         }));
     };
 
+    // Students that are already covered by one of the selected groups.
+    const groupStudentIds = useMemo(() => {
+        const ids = new Set<string>();
+        for (const groupId of form.groupIds) {
+            const group = groups.find((item) => item.id === groupId);
+            for (const student of group?.students ?? []) ids.add(student.id);
+        }
+        return ids;
+    }, [groups, form.groupIds]);
+
+    // Adding a group replaces any of its members that were picked individually.
+    const toggleGroup = (id: string) => {
+        setForm((current) => {
+            if (current.groupIds.includes(id)) {
+                return { ...current, groupIds: current.groupIds.filter((value) => value !== id) };
+            }
+
+            const group = groups.find((item) => item.id === id);
+            const memberIds = new Set((group?.students ?? []).map((student) => student.id));
+            return {
+                ...current,
+                groupIds: [...current.groupIds, id],
+                studentIds: current.studentIds.filter((studentId) => !memberIds.has(studentId)),
+            };
+        });
+    };
+
     const validTime = Boolean(form.reservationTime) && !Number.isNaN(new Date(form.reservationTime).getTime());
     const validRoom = form.roomType === "classroom" ? Boolean(form.classroomId) : Boolean(form.onlineClassroomId);
     const validRecurring = !form.isRecurring
@@ -293,7 +418,9 @@ export function ReservationFormModal({
                 ? Number(form.numberOfOccurrences) >= 1
                 : Boolean(form.cycleEndDate)));
 
-    const hasConflicts = (conflicts?.conflicts.length ?? 0) > 0;
+    const activeConflicts = scope === "future" ? futureConflicts : conflicts;
+    const activeChecking = scope === "future" ? isCheckingFuture : isChecking;
+    const hasConflicts = (activeConflicts?.conflicts.length ?? 0) > 0;
 
     const isValid =
         validTime
@@ -301,7 +428,7 @@ export function ReservationFormModal({
         && Boolean(form.teacherId)
         && validRecurring
         && !hasConflicts
-        && !isChecking
+        && !activeChecking
         && !isSubmitting;
 
     const handleSubmit = async () => {
@@ -310,25 +437,20 @@ export function ReservationFormModal({
         setError(null);
         try {
             if (isEdit && reservation) {
-                const patch: ReservationPatch = {
-                    name: form.name.trim() || null,
-                    teacherId: isAdmin ? form.teacherId : undefined,
-                    classroomId: form.roomType === "classroom" ? form.classroomId : null,
-                    onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : null,
-                    reservationTime: new Date(form.reservationTime),
-                    durationMinutes: Number(form.durationMinutes) || null,
-                    additionalInfo: form.additionalInfo.trim() || null,
-                    status: form.status as ReservationPatch["status"],
-                    studentIds: form.studentIds,
-                    groupIds: form.groupIds,
-                };
-                await onUpdate(reservation.id, patch);
+                const patch = buildEditPatch();
+                if (isRecurringEdit && scope === "future") {
+                    await onUpdateFuture(reservation.id, patch);
+                } else {
+                    await onUpdate(reservation.id, patch);
+                }
             } else if (form.isRecurring) {
                 const payload: NewRecurringReservation = {
                     name: form.name.trim() || "",
                     teacherId: form.teacherId,
                     classroomId: form.roomType === "classroom" ? form.classroomId : undefined,
-                    onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : undefined,
+                    onlineClassroomId: form.roomType === "online"
+                        ? (isAdmin ? form.onlineClassroomId : teacherOnlineClassroomId)
+                        : undefined,
                     additionalInfo: form.additionalInfo.trim() || null,
                     anchorDate: new Date(form.reservationTime).toISOString(),
                     durationMinutes: Number(form.durationMinutes) || undefined,
@@ -346,7 +468,9 @@ export function ReservationFormModal({
                     name: form.name.trim() || null,
                     teacherId: form.teacherId,
                     classroomId: form.roomType === "classroom" ? form.classroomId : null,
-                    onlineClassroomId: form.roomType === "online" ? form.onlineClassroomId : null,
+                    onlineClassroomId: form.roomType === "online"
+                        ? (isAdmin ? form.onlineClassroomId : teacherOnlineClassroomId ?? null)
+                        : null,
                     reservationTime: new Date(form.reservationTime),
                     durationMinutes: Number(form.durationMinutes) || null,
                     additionalInfo: form.additionalInfo.trim() || null,
@@ -416,7 +540,7 @@ export function ReservationFormModal({
                                 <button
                                     key={roomType}
                                     type="button"
-                                    onClick={() => setField("roomType", roomType)}
+                                    onClick={() => selectRoomType(roomType)}
                                     className={cn(
                                         "flex-1 rounded-xl border px-4 py-2 text-sm font-bold capitalize transition",
                                         form.roomType === roomType
@@ -453,10 +577,11 @@ export function ReservationFormModal({
                             <select
                                 value={form.onlineClassroomId}
                                 onChange={(event) => setField("onlineClassroomId", event.target.value)}
-                                className={inputClass}
+                                disabled={!isAdmin}
+                                className={cn(inputClass, !isAdmin && "cursor-not-allowed bg-light-grey text-darker-grey")}
                             >
                                 <option value="">Select an online classroom...</option>
-                                {onlineClassrooms.map((classroom) => (
+                                {onlineClassroomOptions.map((classroom) => (
                                     <option key={classroom.id} value={classroom.id}>
                                         {classroom.name}
                                     </option>
@@ -534,6 +659,37 @@ export function ReservationFormModal({
                     </div>
                 )}
 
+                {isRecurringEdit && (
+                    <div className="flex flex-col">
+                        <span className="text-sm font-bold text-black">Apply changes to</span>
+                        <div className="mt-1 flex flex-row gap-2">
+                            {([
+                                { value: "single", label: "This occurrence" },
+                                { value: "future", label: "This and all future" },
+                            ] as const).map((option) => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => setScope(option.value)}
+                                    className={cn(
+                                        "flex-1 rounded-xl border px-4 py-2 text-sm font-bold transition",
+                                        scope === option.value
+                                            ? "border-orange bg-orange/10 text-orange"
+                                            : "border-grey bg-white text-darker-grey hover:border-dark-grey",
+                                    )}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                        {scope === "future" && (
+                            <span className="mt-1.5 text-xs text-darker-grey">
+                                The same changes will be applied to this class and every following one.
+                            </span>
+                        )}
+                    </div>
+                )}
+
                 {form.isRecurring && !isEdit && (
                     <div className="flex flex-col gap-3 sm:flex-row">
                         <label className="flex flex-1 flex-col">
@@ -582,36 +738,38 @@ export function ReservationFormModal({
                     </div>
                 )}
 
-                {hasConflicts && conflicts && (
+                {hasConflicts && activeConflicts && (
                     <div className="rounded-xl border border-red-300 bg-red-500/10 p-4">
                         <div className="flex items-center gap-2 text-red-700">
                             <AlertTriangle size={18} />
                             <span className="text-sm font-bold">
-                                {conflicts.allConflicted
-                                    ? "Every class in this series conflicts"
-                                    : "Scheduling conflict detected"}
+                                {scope === "future"
+                                    ? "These changes conflict with future classes"
+                                    : activeConflicts.allConflicted
+                                        ? "Every class in this series conflicts"
+                                        : "Scheduling conflict detected"}
                             </span>
                         </div>
 
                         {!isEdit && form.isRecurring ? (
                             <div className="mt-3 flex flex-col gap-3">
-                                {conflicts.allConflicted && conflicts.suggestedAnchor && (
+                                {activeConflicts.allConflicted && activeConflicts.suggestedAnchor && (
                                     <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white/70 px-3 py-2">
                                         <span className="text-sm text-red-800">
                                             Suggested series time:{" "}
-                                            <strong>{format(new Date(conflicts.suggestedAnchor), "dd MMM yyyy, HH:mm")}</strong>
+                                            <strong>{format(new Date(activeConflicts.suggestedAnchor), "dd MMM yyyy, HH:mm")}</strong>
                                         </span>
                                         <Button
                                             variant="secondary"
                                             className="border border-grey px-3 py-1 text-xs"
-                                            onClick={() => applySeriesSuggestion(conflicts.suggestedAnchor!)}
+                                            onClick={() => applySeriesSuggestion(activeConflicts.suggestedAnchor!)}
                                         >
                                             Apply to series
                                         </Button>
                                     </div>
                                 )}
 
-                                {conflicts.conflicts.map((entry) => {
+                                {activeConflicts.conflicts.map((entry) => {
                                     const override = overrides.find((value) => value.index === entry.index);
                                     const currentValue = override?.reservationTime ?? entry.suggestion ?? entry.reservationTime;
                                     return (
@@ -649,18 +807,29 @@ export function ReservationFormModal({
                                 })}
                             </div>
                         ) : (
-                            <ul className="mt-2 list-disc pl-4 text-sm text-red-800">
-                                {conflicts.conflicts.flatMap((entry) => entry.items).map((item, index) => (
-                                    <li key={index}>{conflictItemMessage(item)}</li>
+                            <div className="mt-3 flex flex-col gap-2">
+                                {activeConflicts.conflicts.map((entry) => (
+                                    <div key={entry.index} className="rounded-lg bg-white/70 px-3 py-2">
+                                        {scope === "future" && (
+                                            <div className="text-xs font-bold uppercase tracking-wide text-red-700">
+                                                {format(new Date(entry.reservationTime), "dd MMM yyyy, HH:mm")}
+                                            </div>
+                                        )}
+                                        <ul className="list-disc pl-4 text-sm text-red-800">
+                                            {entry.items.map((item, index) => (
+                                                <li key={index}>{conflictItemMessage(item)}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 ))}
-                            </ul>
+                            </div>
                         )}
 
                         <p className="mt-2 text-xs text-red-700">Resolve the conflicts before saving.</p>
                     </div>
                 )}
 
-                {isChecking && !hasConflicts && (
+                {activeChecking && !hasConflicts && (
                     <p className="text-xs text-darker-grey">Checking availability...</p>
                 )}
 
@@ -681,6 +850,7 @@ export function ReservationFormModal({
                         placeholder="Search students..."
                         items={students.map((student) => ({ id: student.id, name: `${student.firstName} ${student.lastName}` }))}
                         selected={form.studentIds}
+                        disabledIds={groupStudentIds}
                         onToggle={(id) => toggleId("studentIds", id)}
                     />
                     <MultiSelect
@@ -688,7 +858,7 @@ export function ReservationFormModal({
                         placeholder="Search groups..."
                         items={groups.map((group) => ({ id: group.id, name: group.name }))}
                         selected={form.groupIds}
-                        onToggle={(id) => toggleId("groupIds", id)}
+                        onToggle={toggleGroup}
                     />
                 </div>
 
@@ -714,10 +884,11 @@ type MultiSelectProps = {
     placeholder: string;
     items: { id: string; name: string }[];
     selected: string[];
+    disabledIds?: Set<string>;
     onToggle: (id: string) => void;
 };
 
-function MultiSelect({ label, placeholder, items, selected, onToggle }: MultiSelectProps) {
+function MultiSelect({ label, placeholder, items, selected, disabledIds, onToggle }: MultiSelectProps) {
     const [search, setSearch] = useState("");
 
     const filtered = useMemo(() => {
@@ -744,14 +915,20 @@ function MultiSelect({ label, placeholder, items, selected, onToggle }: MultiSel
                 )}
                 {filtered.map((item) => {
                     const isSelected = selected.includes(item.id);
+                    const isDisabled = !isSelected && Boolean(disabledIds?.has(item.id));
                     return (
                         <button
                             key={item.id}
                             type="button"
                             onClick={() => onToggle(item.id)}
+                            disabled={isDisabled}
+                            title={isDisabled ? "Already included in a selected group" : undefined}
                             className={cn(
                                 "flex items-center justify-between rounded-lg px-3 py-1.5 text-left text-sm transition",
-                                isSelected ? "bg-orange/10 text-orange" : "text-black/80 hover:bg-light-grey/60",
+                                isSelected
+                                    ? "bg-orange/10 text-orange"
+                                    : "text-black/80 hover:bg-light-grey/60",
+                                isDisabled && "cursor-not-allowed opacity-40 hover:bg-transparent",
                             )}
                         >
                             <span className="truncate">{item.name}</span>

@@ -10,28 +10,34 @@ const onlineClassroomsRoutes = new Elysia({
     .use(authGuard)
     .get("/", OnlineClassroomsController.getAll, {
         query: onlineClassroomsQuerySchema,
-        response: paginatedOnlineClassroomsResponseSchema
+        response: paginatedOnlineClassroomsResponseSchema,
+        isAuth: true
     })
     .get("/:id", OnlineClassroomsController.getById, {
         params: t.Object({ id: t.String() }),
-        response: selectCompositeOnlineClassroomSchema
+        response: selectCompositeOnlineClassroomSchema,
+        isAuth: true
     })
     .post("/", OnlineClassroomsController.create, {
         body: insertOnlineClassroomSchema,
-        response: selectCompositeOnlineClassroomSchema
+        response: selectCompositeOnlineClassroomSchema,
+        isAuth: true
     })
     .put("/:id", OnlineClassroomsController.update, {
         params: t.Object({ id: t.String() }),
         body: updateOnlineClassroomSchema,
-        response: selectCompositeOnlineClassroomSchema
+        response: selectCompositeOnlineClassroomSchema,
+        isAuth: true
     })
     .patch("/:id", OnlineClassroomsController.patch, {
         params: t.Object({ id: t.String() }),
         body: patchOnlineClassroomSchema,
-        response: selectCompositeOnlineClassroomSchema
+        response: selectCompositeOnlineClassroomSchema,
+        isAuth: true
     })
     .delete("/:id", OnlineClassroomsController.remove, {
         params: t.Object({ id: t.String() }),
+        isAuth: true
     });
 
 export default onlineClassroomsRoutes;

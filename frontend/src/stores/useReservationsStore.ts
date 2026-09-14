@@ -28,8 +28,10 @@ type ReservationsState = {
         createReservation: (data: NewReservation) => Promise<void>;
         createRecurringReservation: (data: NewRecurringReservation) => Promise<void>;
         patchReservation: (id: string, data: ReservationPatch) => Promise<void>;
+        patchFutureReservation: (id: string, data: ReservationPatch) => Promise<void>;
         deleteReservation: (id: string) => Promise<void>;
         checkConflicts: (input: ConflictCheck) => Promise<ConflictResult>;
+        checkFutureConflicts: (id: string, data: ReservationPatch) => Promise<ConflictResult>;
     };
 };
 
@@ -92,6 +94,11 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
             throwIfError(response.error, "Failed to update reservation");
             await get().actions.fetchReservations(get().view, get().search || undefined);
         },
+        patchFutureReservation: async (id: string, data: ReservationPatch) => {
+            const response = await eden["classroom-reservations"]({ id }).future.patch(data);
+            throwIfError(response.error, "Failed to update future reservations");
+            await get().actions.fetchReservations(get().view, get().search || undefined);
+        },
         deleteReservation: async (id: string) => {
             const response = await eden["classroom-reservations"]({ id }).delete();
             throwIfError(response.error, "Failed to delete reservation");
@@ -99,6 +106,14 @@ export const useReservationsStore = create<ReservationsState>()((set, get) => ({
         },
         checkConflicts: async (input: ConflictCheck) => {
             const response = await eden["classroom-reservations"].conflicts.post(input);
+            if (response.error || !response.data) {
+                const value = (response.error as { value?: unknown })?.value;
+                throw new Error(typeof value === "string" && value.length > 0 ? value : "Failed to check conflicts");
+            }
+            return response.data;
+        },
+        checkFutureConflicts: async (id: string, data: ReservationPatch) => {
+            const response = await eden["classroom-reservations"]({ id })["future-conflicts"].post(data);
             if (response.error || !response.data) {
                 const value = (response.error as { value?: unknown })?.value;
                 throw new Error(typeof value === "string" && value.length > 0 ? value : "Failed to check conflicts");

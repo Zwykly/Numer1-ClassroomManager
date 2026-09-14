@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, lte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
 import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema } from "../models/classroom_reservations";
@@ -20,6 +20,11 @@ const calendarRelations = {
     onlineClassrooms: true,
 } as const;
 
+type Viewer = {
+    id?: string;
+    isAdmin: boolean;
+};
+
 function mapReservation(res: any) {
     const { users, classrooms, onlineClassrooms, ...base } = res;
 
@@ -30,6 +35,22 @@ function mapReservation(res: any) {
         students: res.students,
         classroom: classrooms ?? undefined,
         onlineClassroom: onlineClassrooms ?? undefined,
+    };
+}
+
+// Hides the details of a class the viewer is not allowed to see. Only the status,
+// whether it recurs and the slot itself remain visible.
+function maskReservation(reservation: ReturnType<typeof mapReservation>) {
+    return {
+        ...reservation,
+        name: null,
+        additionalInfo: null,
+        teacher: undefined,
+        groups: [],
+        students: [],
+        classroom: undefined,
+        onlineClassroom: undefined,
+        restricted: true,
     };
 }
 
@@ -72,15 +93,35 @@ export const ClassroomReservationsService = {
         return undefined;
     },
 
-    async getAll(query: typeof classroomReservationsQuerySchema.static) {
+    async getOwnOnlineClassroomId(userId: string) {
+        const oc = await db.query.onlineClassrooms.findFirst({ where: { teacherId: userId } });
+        return oc?.id;
+    },
+
+    // Reservations on an online classroom are only visible to the teacher they
+    // belong to and to administrators.
+    async onlineVisibilityWhere(viewer?: Viewer): Promise<Record<string, any> | undefined> {
+        if (!viewer || viewer.isAdmin || !viewer.id) return undefined;
+
+        const ownOnlineId = await this.getOwnOnlineClassroomId(viewer.id);
+        return {
+            OR: [
+                { onlineClassroomId: { isNull: true } },
+                ...(ownOnlineId ? [{ onlineClassroomId: ownOnlineId }] : []),
+            ],
+        };
+    },
+
+    async getAll(query: typeof classroomReservationsQuerySchema.static, viewer?: Viewer) {
         const limit = getLimit(query.limit);
         const cursorWhere = getCursorWhere(query.cursor);
         const statusWhere = getInArrayWhere("status", query.status);
         const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
         const searchWhere = getFuzzySearchWhere(["name"], query.search);
         const viewWhere = this.buildViewWhere(query.view);
+        const onlineWhere = await this.onlineVisibilityWhere(viewer);
 
-        const conditions = [cursorWhere, statusWhere, dateWhere, searchWhere, viewWhere].filter(Boolean);
+        const conditions = [cursorWhere, statusWhere, dateWhere, searchWhere, viewWhere, onlineWhere].filter(Boolean);
         const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const data = await db.query.classroomReservations.findMany({
@@ -103,12 +144,15 @@ export const ClassroomReservationsService = {
         return mapReservation(res);
     },
 
-    async getCalendar(query: typeof calendarReservationsQuerySchema.static) {
+    async getCalendar(query: typeof calendarReservationsQuerySchema.static, viewer?: Viewer) {
         const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
         const classroomWhere = query.classroomId ? { classroomId: query.classroomId } : undefined;
+        const onlineClassroomWhere = query.onlineClassroomId ? { onlineClassroomId: query.onlineClassroomId } : undefined;
+        const includeOnlineWhere = query.includeOnline === false ? { onlineClassroomId: { isNull: true } } : undefined;
+        const visibilityWhere = await this.onlineVisibilityWhere(viewer);
 
-        const conditions = [dateWhere, classroomWhere].filter(Boolean);
-        const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
+        const conditions = [dateWhere, classroomWhere, onlineClassroomWhere, includeOnlineWhere, visibilityWhere].filter(Boolean);
+        const whereClause: any = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const data = await db.query.classroomReservations.findMany({
             where: whereClause,
@@ -116,7 +160,16 @@ export const ClassroomReservationsService = {
             with: calendarRelations,
         });
 
-        return data.map(mapReservation);
+        const mapped = data.map(mapReservation);
+        if (!viewer || viewer.isAdmin) {
+            return mapped.map((reservation) => ({ ...reservation, restricted: false }));
+        }
+
+        return mapped.map((reservation) => (
+            reservation.teacherId === viewer.id
+                ? { ...reservation, restricted: false }
+                : maskReservation(reservation)
+        ));
     },
 
     async setAttendees(reservationId: string, studentIds?: string[], groupIds?: string[]) {
@@ -225,6 +278,67 @@ export const ClassroomReservationsService = {
         if (!patched) return null;
         await this.setAttendees(id, studentIds, groupIds);
         return this.getById(id);
+    },
+
+    // The selected occurrence together with every later occurrence of the same cycle.
+    async getFutureSiblings(id: string) {
+        const selected = await db.query.classroomReservations.findFirst({ where: { id } });
+        if (!selected || !selected.cycleId) return { selected: selected ?? null, siblings: [] };
+
+        const siblings = await db.query.classroomReservations.findMany({
+            where: {
+                cycleId: selected.cycleId,
+                reservationTime: { gte: selected.reservationTime },
+            },
+            orderBy: (res, { asc }) => [asc(res.reservationTime)],
+        });
+
+        return { selected, siblings };
+    },
+
+    // Applies the changes to the selected occurrence and all future ones, shifting
+    // every date by the same delta so the recurrence spacing is preserved.
+    async applyFuture(id: string, payload: typeof patchClassroomReservationSchema.static) {
+        const { studentIds, groupIds, reservationTime, ...fields } = payload;
+        const { selected, siblings } = await this.getFutureSiblings(id);
+        if (!selected) return [];
+
+        const selectedTime = new Date(selected.reservationTime).getTime();
+        const delta = reservationTime ? new Date(reservationTime).getTime() - selectedTime : 0;
+
+        const updatedIds: string[] = [];
+        for (const occurrence of siblings) {
+            const nextTime = delta !== 0
+                ? new Date(new Date(occurrence.reservationTime).getTime() + delta)
+                : undefined;
+
+            const [updated] = await db
+                .update(table.classroomReservations)
+                .set({
+                    ...fields,
+                    ...(nextTime ? { reservationTime: nextTime } : {}),
+                    editedOn: new Date(),
+                })
+                .where(eq(table.classroomReservations.id, occurrence.id))
+                .returning();
+            if (!updated) continue;
+
+            await this.setAttendees(occurrence.id, studentIds, groupIds);
+            updatedIds.push(occurrence.id);
+        }
+
+        if (selected.cycleId && delta !== 0) {
+            const cycle = await db.query.reservationCycles.findFirst({ where: { id: selected.cycleId } });
+            if (cycle) {
+                await db
+                    .update(table.reservationCycles)
+                    .set({ anchorDate: new Date(new Date(cycle.anchorDate).getTime() + delta) })
+                    .where(eq(table.reservationCycles.id, selected.cycleId));
+            }
+        }
+
+        const updated = await Promise.all(updatedIds.map((updatedId) => this.getById(updatedId)));
+        return updated.filter(Boolean);
     },
 
     async startDueReservations() {

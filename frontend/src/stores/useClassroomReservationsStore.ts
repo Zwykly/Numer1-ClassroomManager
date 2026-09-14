@@ -4,11 +4,17 @@ import eden from "@/lib/eden";
 
 export type ClassroomReservation = typeof selectCalendarReservationSchema.static;
 
+export type ClassroomReservationFilter = {
+    classroomId?: string;
+    onlineClassroomId?: string;
+    includeOnline?: boolean;
+};
+
 type ClassroomReservationsState = {
     classroomReservations: ClassroomReservation[];
     isLoading: boolean;
     actions: {
-        fetchClassroomReservations: (from: Date, to: Date, classroomId?: string) => Promise<void>;
+        fetchClassroomReservations: (from: Date, to: Date, filter?: ClassroomReservationFilter) => Promise<void>;
         setClassroomReservations: (reservations: ClassroomReservation[]) => void;
         clearClassroomReservations: () => void;
     }
@@ -19,14 +25,16 @@ export const useClassroomReservationsStore = create<ClassroomReservationsState>(
     actions: {
         setClassroomReservations: (reservations: ClassroomReservation[]) => set({ classroomReservations: reservations }),
         clearClassroomReservations: () => set({ classroomReservations: [] }),
-        fetchClassroomReservations: async (from: Date, to: Date, classroomId?: string) => {
+        fetchClassroomReservations: async (from: Date, to: Date, filter?: ClassroomReservationFilter) => {
             set({ isLoading: true });
             try {
                 const response = await eden["classroom-reservations"].calendar.get({
                     query: {
                         from: from.toISOString(),
                         to: to.toISOString(),
-                        ...(classroomId ? { classroomId } : {}),
+                        ...(filter?.classroomId ? { classroomId: filter.classroomId } : {}),
+                        ...(filter?.onlineClassroomId ? { onlineClassroomId: filter.onlineClassroomId } : {}),
+                        ...(filter?.includeOnline === false ? { includeOnline: false } : {}),
                     },
                 });
 

@@ -20,4 +20,11 @@ export interface UserInfo {
   email: string;
   additionalInfo: string | null;
   role: string;
+  onlineClassroom?: {
+    id: string;
+    name: string;
+    teacherId: string;
+    comment?: string | null;
+    status?: string;
+  } | null;
 }

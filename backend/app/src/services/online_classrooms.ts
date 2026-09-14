@@ -5,12 +5,13 @@ import { insertOnlineClassroomSchema, updateOnlineClassroomSchema, patchOnlineCl
 import { getLimit, getCursorWhere, getInArrayWhere, buildPaginationResponse } from "../utils/drizzle";
 
 export const OnlineClassroomsService = {
-    async getAll(query: typeof onlineClassroomsQuerySchema.static) {
+    async getAll(query: typeof onlineClassroomsQuerySchema.static, viewer?: { id?: string; isAdmin: boolean }) {
         const limit = getLimit(query.limit);
         const cursorWhere = getCursorWhere(query.cursor);
         const statusWhere = getInArrayWhere("status", query.status);
+        const viewerWhere = viewer && !viewer.isAdmin && viewer.id ? { teacherId: viewer.id } : undefined;
 
-        const conditions = [cursorWhere, statusWhere].filter(Boolean);
+        const conditions = [cursorWhere, statusWhere, viewerWhere].filter(Boolean);
         const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const data = await db.query.onlineClassrooms.findMany({
@@ -18,15 +19,17 @@ export const OnlineClassroomsService = {
             limit,
             orderBy: (oc, { asc }) => [asc(oc.id)],
             with: {
+                users: true,
                 classroomReservations: true,
                 reservationCycles: true,
             }
         });
 
-        const mapped = data.map(c => ({
-            ...c,
-            reservations: c.classroomReservations,
-            reservationCycles: c.reservationCycles,
+        const mapped = data.map(({ users, classroomReservations, reservationCycles, ...base }) => ({
+            ...base,
+            teacher: users ?? undefined,
+            reservations: classroomReservations,
+            reservationCycles,
         }));
 
         return buildPaginationResponse(mapped, query.limit);
@@ -36,6 +39,7 @@ export const OnlineClassroomsService = {
         const oc = await db.query.onlineClassrooms.findFirst({
             where: { id },
             with: {
+                users: true,
                 classroomReservations: true,
                 reservationCycles: true,
             }
@@ -43,11 +47,24 @@ export const OnlineClassroomsService = {
 
         if (!oc) return null;
 
+        const { users, classroomReservations, reservationCycles, ...base } = oc;
         return {
-            ...oc,
-            reservations: oc.classroomReservations,
-            reservationCycles: oc.reservationCycles,
+            ...base,
+            teacher: users ?? undefined,
+            reservations: classroomReservations,
+            reservationCycles,
         };
+    },
+
+    // Lightweight ownership lookups used by access checks.
+    async getOwnerId(id: string) {
+        const oc = await db.query.onlineClassrooms.findFirst({ where: { id } });
+        return oc?.teacherId ?? null;
+    },
+
+    async getByTeacherId(teacherId: string) {
+        const oc = await db.query.onlineClassrooms.findFirst({ where: { teacherId } });
+        return oc?.id ?? null;
     },
 
     async create(payload: typeof insertOnlineClassroomSchema.static) {

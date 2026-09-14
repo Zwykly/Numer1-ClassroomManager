@@ -37,7 +37,7 @@ export function ActionModalsHost() {
     const currentUserId = UserData?.user?.userInfo?.id;
     const isAdmin = UserData?.user?.userInfo?.role === "admin";
 
-    const { createReservation, createRecurringReservation, patchReservation } = useReservationsActions();
+    const { createReservation, createRecurringReservation, patchReservation, patchFutureReservation } = useReservationsActions();
     const { createStudents, patchStudent } = useStudentsActions();
     const { createUser, patchUser } = useUsersActions();
     const { createGroup, patchGroup } = useGroupsActions();
@@ -74,6 +74,7 @@ export function ActionModalsHost() {
                 onCreate={createReservation}
                 onCreateRecurring={createRecurringReservation}
                 onUpdate={patchReservation}
+                onUpdateFuture={patchFutureReservation}
             />
 
             <StudentFormModal

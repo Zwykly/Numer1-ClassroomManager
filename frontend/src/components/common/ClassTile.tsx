@@ -112,7 +112,7 @@ export function ClassTile({ reservation, isOwn, className, onClick }: ClassTileP
                 className,
             )}
             style={isOnline
-                ? { backgroundColor: onlineSurface ? "hsl(0,0%,100%)" : background, borderColor: accent }
+                ? { backgroundColor: onlineSurface ? "hsl(0,0%,95%)" : background, borderColor: accent }
                 : { backgroundColor: background }}
         >
             {!isOnline && (

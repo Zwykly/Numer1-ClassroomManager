@@ -357,6 +357,33 @@ export function ReservationFormModal({
         }));
     };
 
+    // Students that are already covered by one of the selected groups.
+    const groupStudentIds = useMemo(() => {
+        const ids = new Set<string>();
+        for (const groupId of form.groupIds) {
+            const group = groups.find((item) => item.id === groupId);
+            for (const student of group?.students ?? []) ids.add(student.id);
+        }
+        return ids;
+    }, [groups, form.groupIds]);
+
+    // Adding a group replaces any of its members that were picked individually.
+    const toggleGroup = (id: string) => {
+        setForm((current) => {
+            if (current.groupIds.includes(id)) {
+                return { ...current, groupIds: current.groupIds.filter((value) => value !== id) };
+            }
+
+            const group = groups.find((item) => item.id === id);
+            const memberIds = new Set((group?.students ?? []).map((student) => student.id));
+            return {
+                ...current,
+                groupIds: [...current.groupIds, id],
+                studentIds: current.studentIds.filter((studentId) => !memberIds.has(studentId)),
+            };
+        });
+    };
+
     const validTime = Boolean(form.reservationTime) && !Number.isNaN(new Date(form.reservationTime).getTime());
     const validRoom = form.roomType === "classroom" ? Boolean(form.classroomId) : Boolean(form.onlineClassroomId);
     const validRecurring = !form.isRecurring
@@ -792,6 +819,7 @@ export function ReservationFormModal({
                         placeholder="Search students..."
                         items={students.map((student) => ({ id: student.id, name: `${student.firstName} ${student.lastName}` }))}
                         selected={form.studentIds}
+                        disabledIds={groupStudentIds}
                         onToggle={(id) => toggleId("studentIds", id)}
                     />
                     <MultiSelect
@@ -799,7 +827,7 @@ export function ReservationFormModal({
                         placeholder="Search groups..."
                         items={groups.map((group) => ({ id: group.id, name: group.name }))}
                         selected={form.groupIds}
-                        onToggle={(id) => toggleId("groupIds", id)}
+                        onToggle={toggleGroup}
                     />
                 </div>
 
@@ -825,10 +853,11 @@ type MultiSelectProps = {
     placeholder: string;
     items: { id: string; name: string }[];
     selected: string[];
+    disabledIds?: Set<string>;
     onToggle: (id: string) => void;
 };
 
-function MultiSelect({ label, placeholder, items, selected, onToggle }: MultiSelectProps) {
+function MultiSelect({ label, placeholder, items, selected, disabledIds, onToggle }: MultiSelectProps) {
     const [search, setSearch] = useState("");
 
     const filtered = useMemo(() => {
@@ -855,14 +884,20 @@ function MultiSelect({ label, placeholder, items, selected, onToggle }: MultiSel
                 )}
                 {filtered.map((item) => {
                     const isSelected = selected.includes(item.id);
+                    const isDisabled = !isSelected && Boolean(disabledIds?.has(item.id));
                     return (
                         <button
                             key={item.id}
                             type="button"
                             onClick={() => onToggle(item.id)}
+                            disabled={isDisabled}
+                            title={isDisabled ? "Already included in a selected group" : undefined}
                             className={cn(
                                 "flex items-center justify-between rounded-lg px-3 py-1.5 text-left text-sm transition",
-                                isSelected ? "bg-orange/10 text-orange" : "text-black/80 hover:bg-light-grey/60",
+                                isSelected
+                                    ? "bg-orange/10 text-orange"
+                                    : "text-black/80 hover:bg-light-grey/60",
+                                isDisabled && "cursor-not-allowed opacity-40 hover:bg-transparent",
                             )}
                         >
                             <span className="truncate">{item.name}</span>

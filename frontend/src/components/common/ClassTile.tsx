@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { clsx as cn } from "clsx";
-import { CheckCircle2, Lock, Repeat, XCircle } from "lucide-react";
+import { CheckCircle2, Lock, Repeat, Video, XCircle } from "lucide-react";
 import { teacherColor, teacherTint } from "@/utils/teacherColors";
 import type { ClassroomReservation } from "@/stores/useClassroomReservationsStore";
 
@@ -92,6 +92,11 @@ export function ClassTile({ reservation, isOwn, className, onClick }: ClassTileP
             ? "hsl(0,0%,94%)"
             : isOwn ? ownBackground : teacherTint(reservation.teacherId);
 
+    // Online classes get a distinct outline so they are easy to spot even when
+    // several classes share the same hour.
+    const isOnline = Boolean(reservation.onlineClassroomId);
+    const onlineSurface = isOnline && !isTerminal;
+
     const subtitle = classSubtitle(reservation);
 
     return (
@@ -99,24 +104,40 @@ export function ClassTile({ reservation, isOwn, className, onClick }: ClassTileP
             type="button"
             onClick={onClick}
             className={cn(
-                "relative flex h-full w-full flex-col justify-start overflow-hidden rounded-xl border border-black/5 px-3 py-1.5 text-left transition hover:brightness-[0.97]",
+                "relative flex h-full w-full flex-col justify-start overflow-hidden rounded-xl px-3 py-1.5 text-left transition hover:brightness-[0.97]",
+                isOnline ? "border-2 border-dashed" : "border border-black/5",
                 onClick && "cursor-pointer",
                 isCanceled && "opacity-80",
                 isOngoing && "ring-2 ring-emerald-500/70",
                 className,
             )}
-            style={{ backgroundColor: background }}
+            style={isOnline
+                ? { backgroundColor: onlineSurface ? "hsl(0,0%,100%)" : background, borderColor: accent }
+                : { backgroundColor: background }}
         >
-            <span className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: accent }} />
+            {!isOnline && (
+                <span className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: accent }} />
+            )}
             <div className="flex items-start justify-between gap-2">
-                <span
-                    className={cn(
-                        "truncate text-sm font-bold leading-tight",
-                        isTerminal ? "text-darker-grey" : "text-light-black",
-                        isCanceled && "line-through",
+                <span className="flex min-w-0 items-center gap-1.5">
+                    {isOnline && (
+                        <span
+                            className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
+                            style={{ backgroundColor: accent }}
+                            title="Online class"
+                        >
+                            <Video size={10} className="text-white" />
+                        </span>
                     )}
-                >
-                    {classTitle(reservation)}
+                    <span
+                        className={cn(
+                            "truncate text-sm font-bold leading-tight",
+                            isTerminal ? "text-darker-grey" : "text-light-black",
+                            isCanceled && "line-through",
+                        )}
+                    >
+                        {classTitle(reservation)}
+                    </span>
                 </span>
                 <span className="flex shrink-0 items-center gap-1 text-[10px] font-semibold text-darker-grey">
                     {isOngoing && (

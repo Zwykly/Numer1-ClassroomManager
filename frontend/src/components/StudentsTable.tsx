@@ -84,6 +84,18 @@ export function StudentsTable({
                             {student.additionalInfo && (
                                 <span className="text-sm text-darker-grey">{student.additionalInfo}</span>
                             )}
+                            {canManage && (student.teachers?.length ?? 0) > 0 && (
+                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                    {student.teachers?.map((teacher) => (
+                                        <span
+                                            key={teacher.id}
+                                            className="inline-flex items-center rounded-full border border-light-grey bg-white px-2.5 py-0.5 text-xs font-medium text-black"
+                                        >
+                                            {teacher.firstName} {teacher.lastName}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         {canManage && (
                             <div className="flex flex-row gap-1">{renderActions(student)}</div>
@@ -100,6 +112,7 @@ export function StudentsTable({
                             <th className="px-4 py-3 font-bold">Phone</th>
                             <th className="px-4 py-3 font-bold">Email</th>
                             <th className="px-4 py-3 font-bold">Additional info</th>
+                            {canManage && <th className="px-4 py-3 font-bold">Teachers</th>}
                             {canManage && <th className="px-4 py-3 text-right font-bold">Actions</th>}
                         </tr>
                     </thead>
@@ -117,6 +130,24 @@ export function StudentsTable({
                                 <td className="max-w-[16rem] truncate px-4 py-4 text-darker-grey" title={student.additionalInfo ?? undefined}>
                                     {student.additionalInfo || "-"}
                                 </td>
+                                {canManage && (
+                                    <td className="px-4 py-4">
+                                        {(student.teachers?.length ?? 0) > 0 ? (
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {student.teachers?.map((teacher) => (
+                                                    <span
+                                                        key={teacher.id}
+                                                        className="inline-flex items-center rounded-full border border-light-grey bg-white px-2.5 py-0.5 text-xs font-medium text-black"
+                                                    >
+                                                        {teacher.firstName} {teacher.lastName}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <span className="text-darker-grey">-</span>
+                                        )}
+                                    </td>
+                                )}
                                 {canManage && (
                                     <td className="px-4 py-4">
                                         <div className="flex flex-row justify-end gap-1">

@@ -3,7 +3,10 @@ import { Plus, X } from "lucide-react";
 import { clsx as cn } from "clsx";
 import { Modal } from "./common/Modal";
 import { Button } from "./common/Button";
+import { EntityPicker, type EntityPickerItem } from "./common/EntityPicker";
 import { randomId } from "@/utils/randomId";
+import { useAuth } from "@/utils/AuthProvider";
+import eden from "@/lib/eden";
 import type { NewStudent, Student, StudentPatch } from "@/stores/useStudentsStore";
 
 type StudentFormModalProps = {
@@ -14,8 +17,13 @@ type StudentFormModalProps = {
     onSubmitEdit: (id: string, data: StudentPatch) => Promise<void>;
 };
 
-type Draft = {
-    key: string;
+type Teacher = {
+    id: string;
+    firstName: string;
+    lastName: string;
+};
+
+type EditForm = {
     firstName: string;
     lastName: string;
     phoneNumber: string;
@@ -23,7 +31,10 @@ type Draft = {
     additionalInfo: string;
 };
 
-type EditForm = Omit<Draft, "key">;
+type Draft = EditForm & {
+    key: string;
+    teachers: Teacher[];
+};
 
 const STUDENT_COLORS = [
     "hsl(19,97%,51%)",
@@ -46,6 +57,12 @@ const emptyForm: EditForm = {
 const createDraft = (): Draft => ({
     key: randomId(),
     ...emptyForm,
+    teachers: [],
+});
+
+const toPickerItem = (teacher: Teacher): EntityPickerItem => ({
+    id: teacher.id,
+    label: `${teacher.firstName} ${teacher.lastName}`.trim(),
 });
 
 export function StudentFormModal({
@@ -56,13 +73,23 @@ export function StudentFormModal({
     onSubmitEdit,
 }: StudentFormModalProps) {
     const isEdit = Boolean(student);
+    const { UserData } = useAuth();
+    const isAdmin = UserData?.user?.userInfo?.role === "admin";
+
     const [drafts, setDrafts] = useState<Draft[]>([createDraft()]);
     const [selectedKey, setSelectedKey] = useState<string>("");
     const [editForm, setEditForm] = useState<EditForm>(emptyForm);
+    const [editTeachers, setEditTeachers] = useState<Teacher[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [teacherSearch, setTeacherSearch] = useState("");
+    const [teacherResults, setTeacherResults] = useState<Teacher[]>([]);
+    const [isSearchingTeachers, setIsSearchingTeachers] = useState(false);
 
     useEffect(() => {
         if (!open) return;
+        setTeacherSearch("");
+        setTeacherResults([]);
         if (student) {
             setEditForm({
                 firstName: student.firstName ?? "",
@@ -71,12 +98,52 @@ export function StudentFormModal({
                 email: student.email ?? "",
                 additionalInfo: student.additionalInfo ?? "",
             });
+            setEditTeachers(
+                (student.teachers ?? []).map((teacher) => ({
+                    id: teacher.id,
+                    firstName: teacher.firstName,
+                    lastName: teacher.lastName,
+                })),
+            );
         } else {
             const draft = createDraft();
             setDrafts([draft]);
             setSelectedKey(draft.key);
+            setEditTeachers([]);
         }
     }, [open, student]);
+
+    useEffect(() => {
+        if (!open || !isAdmin) return;
+
+        const query = teacherSearch.trim();
+        const timeout = setTimeout(async () => {
+            setIsSearchingTeachers(true);
+            try {
+                const response = await eden.users.get({
+                    query: {
+                        limit: 50,
+                        role: "teacher",
+                        ...(query ? { search: query } : {}),
+                    },
+                });
+                setTeacherResults(
+                    (response.data?.data ?? []).map((teacher) => ({
+                        id: teacher.id,
+                        firstName: teacher.firstName,
+                        lastName: teacher.lastName,
+                    })),
+                );
+            } catch (err) {
+                console.error("Failed to search teachers:", err);
+                setTeacherResults([]);
+            } finally {
+                setIsSearchingTeachers(false);
+            }
+        }, 250);
+
+        return () => clearTimeout(timeout);
+    }, [open, isAdmin, teacherSearch]);
 
     const selectedDraft = drafts.find((draft) => draft.key === selectedKey) ?? drafts[0];
     const selectedIndex = selectedDraft ? drafts.indexOf(selectedDraft) : 0;
@@ -86,6 +153,29 @@ export function StudentFormModal({
         setDrafts((current) =>
             current.map((draft) => (draft.key === key ? { ...draft, [field]: value } : draft)),
         );
+    };
+
+    const updateSelectedTeachers = (updater: (teachers: Teacher[]) => Teacher[]) => {
+        if (isEdit) {
+            setEditTeachers(updater);
+            return;
+        }
+        if (!selectedDraft) return;
+        setDrafts((current) =>
+            current.map((draft) => (draft.key === selectedDraft.key ? { ...draft, teachers: updater(draft.teachers) } : draft)),
+        );
+    };
+
+    const addTeacher = (item: EntityPickerItem) => {
+        const teacher = teacherResults.find((candidate) => candidate.id === item.id);
+        if (!teacher) return;
+        updateSelectedTeachers((teachers) =>
+            teachers.some((current) => current.id === teacher.id) ? teachers : [...teachers, teacher],
+        );
+    };
+
+    const removeTeacher = (id: string) => {
+        updateSelectedTeachers((teachers) => teachers.filter((teacher) => teacher.id !== id));
     };
 
     const addDraft = () => {
@@ -103,6 +193,10 @@ export function StudentFormModal({
         setDrafts(next);
     };
 
+    const selectedTeachers = isEdit ? editTeachers : selectedDraft?.teachers ?? [];
+    const selectedTeacherIds = new Set(selectedTeachers.map((teacher) => teacher.id));
+    const teacherCandidates = teacherResults.filter((teacher) => !selectedTeacherIds.has(teacher.id));
+
     const canSubmitAdd =
         drafts.length > 0 &&
         drafts.every((draft) => draft.firstName.trim() && draft.lastName.trim()) &&
@@ -116,6 +210,7 @@ export function StudentFormModal({
                 phoneNumber: editForm.phoneNumber.trim() || null,
                 email: editForm.email.trim() || null,
                 additionalInfo: editForm.additionalInfo.trim() || null,
+                teacherIds: editTeachers.map((teacher) => teacher.id),
             };
             setIsSubmitting(true);
             try {
@@ -134,6 +229,7 @@ export function StudentFormModal({
             phoneNumber: draft.phoneNumber.trim() || null,
             email: draft.email.trim() || null,
             additionalInfo: draft.additionalInfo.trim() || null,
+            teacherIds: draft.teachers.map((teacher) => teacher.id),
         }));
         setIsSubmitting(true);
         try {
@@ -143,6 +239,21 @@ export function StudentFormModal({
             setIsSubmitting(false);
         }
     };
+
+    const teacherPicker = isAdmin ? (
+        <EntityPicker
+            title="Teachers"
+            selected={selectedTeachers.map(toPickerItem)}
+            results={teacherCandidates.map(toPickerItem)}
+            search={teacherSearch}
+            onSearchChange={setTeacherSearch}
+            onAdd={addTeacher}
+            onRemove={removeTeacher}
+            isSearching={isSearchingTeachers}
+            placeholder="Search teachers by name..."
+            emptyText={teacherSearch.trim() ? "No matching teachers." : "Type a name to search."}
+        />
+    ) : null;
 
     return (
         <Modal
@@ -160,6 +271,7 @@ export function StudentFormModal({
                 <div className="flex flex-col gap-3">
                     <div className="h-1 w-full rounded-full" style={{ backgroundColor: STUDENT_COLORS[0] }} />
                     <StudentFields value={editForm} onChange={(field, value) => setEditForm((current) => ({ ...current, [field]: value }))} />
+                    {teacherPicker}
                     <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                         <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>Cancel</Button>
                         <Button
@@ -184,6 +296,7 @@ export function StudentFormModal({
                                 />
                             )}
                         </div>
+                        {teacherPicker && <div className="mt-3">{teacherPicker}</div>}
                         <div className="mt-auto flex flex-col-reverse gap-2 pt-6 sm:flex-row sm:justify-end">
                             <Button variant="secondary" className="w-full border border-grey sm:w-auto" onClick={() => onOpenChange(false)}>Cancel</Button>
                             <Button variant="primary" className="w-full sm:w-auto" onClick={handleSubmit} disabled={!canSubmitAdd}>

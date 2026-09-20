@@ -3,7 +3,9 @@ import { Plus } from "lucide-react";
 import { clsx as cn } from "clsx";
 import { Modal } from "./common/Modal";
 import { Button } from "./common/Button";
+import { EntityPicker, type EntityPickerItem } from "./common/EntityPicker";
 import { USER_COLORS } from "@/utils/userColors";
+import eden from "@/lib/eden";
 import type { NewUserAccount, User, UserPatch } from "@/stores/useUsersStore";
 
 type UserFormModalProps = {
@@ -36,6 +38,20 @@ const emptyForm: Form = {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+type GroupOption = {
+    id: string;
+    name: string;
+};
+
+type StudentOption = {
+    id: string;
+    firstName: string;
+    lastName: string;
+};
+
+const groupLabel = (group: GroupOption) => group.name;
+const studentLabel = (student: StudentOption) => `${student.firstName} ${student.lastName}`.trim();
+
 export function UserFormModal({
     open,
     onOpenChange,
@@ -46,6 +62,16 @@ export function UserFormModal({
     const isEdit = Boolean(user);
     const [form, setForm] = useState<Form>(emptyForm);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [groups, setGroups] = useState<GroupOption[]>([]);
+    const [groupSearch, setGroupSearch] = useState("");
+    const [groupResults, setGroupResults] = useState<GroupOption[]>([]);
+    const [isSearchingGroups, setIsSearchingGroups] = useState(false);
+
+    const [students, setStudents] = useState<StudentOption[]>([]);
+    const [studentSearch, setStudentSearch] = useState("");
+    const [studentResults, setStudentResults] = useState<StudentOption[]>([]);
+    const [isSearchingStudents, setIsSearchingStudents] = useState(false);
 
     useEffect(() => {
         if (!open) return;
@@ -59,10 +85,98 @@ export function UserFormModal({
                 color: user.color ?? "",
                 password: "",
             });
+            setGroups((user.groups ?? []).map((group) => ({ id: group.id, name: group.name })));
+            setStudents(
+                (user.students ?? []).map((student) => ({
+                    id: student.id,
+                    firstName: student.firstName,
+                    lastName: student.lastName,
+                })),
+            );
         } else {
             setForm(emptyForm);
+            setGroups([]);
+            setStudents([]);
         }
+        setGroupSearch("");
+        setGroupResults([]);
+        setStudentSearch("");
+        setStudentResults([]);
     }, [open, user]);
+
+    const showAssociations = form.role === "teacher";
+
+    useEffect(() => {
+        if (!open || !showAssociations) return;
+
+        const query = groupSearch.trim();
+        const timeout = setTimeout(async () => {
+            setIsSearchingGroups(true);
+            try {
+                const response = await eden.groups.get({
+                    query: { limit: 50, ...(query ? { search: query } : {}) },
+                });
+                setGroupResults((response.data?.data ?? []).map((group) => ({ id: group.id, name: group.name })));
+            } catch (err) {
+                console.error("Failed to search groups:", err);
+                setGroupResults([]);
+            } finally {
+                setIsSearchingGroups(false);
+            }
+        }, 250);
+
+        return () => clearTimeout(timeout);
+    }, [open, showAssociations, groupSearch]);
+
+    useEffect(() => {
+        if (!open || !showAssociations) return;
+
+        const query = studentSearch.trim();
+        const timeout = setTimeout(async () => {
+            setIsSearchingStudents(true);
+            try {
+                const response = await eden.students.get({
+                    query: { limit: 50, ...(query ? { search: query } : {}) },
+                });
+                setStudentResults(
+                    (response.data?.data ?? []).map((student) => ({
+                        id: student.id,
+                        firstName: student.firstName,
+                        lastName: student.lastName,
+                    })),
+                );
+            } catch (err) {
+                console.error("Failed to search students:", err);
+                setStudentResults([]);
+            } finally {
+                setIsSearchingStudents(false);
+            }
+        }, 250);
+
+        return () => clearTimeout(timeout);
+    }, [open, showAssociations, studentSearch]);
+
+    const groupIds = new Set(groups.map((group) => group.id));
+    const groupCandidates = groupResults.filter((group) => !groupIds.has(group.id));
+
+    const studentIds = new Set(students.map((student) => student.id));
+    const studentCandidates = studentResults.filter((student) => !studentIds.has(student.id));
+
+    const addGroup = (item: EntityPickerItem) => {
+        const group = groupResults.find((candidate) => candidate.id === item.id);
+        if (!group) return;
+        setGroups((current) => (current.some((entry) => entry.id === group.id) ? current : [...current, group]));
+    };
+
+    const removeGroup = (id: string) => setGroups((current) => current.filter((group) => group.id !== id));
+
+    const addStudent = (item: EntityPickerItem) => {
+        const student = studentResults.find((candidate) => candidate.id === item.id);
+        if (!student) return;
+        setStudents((current) => (current.some((entry) => entry.id === student.id) ? current : [...current, student]));
+    };
+
+    const removeStudent = (id: string) => setStudents((current) => current.filter((student) => student.id !== id));
 
     const setField = (field: keyof Form, value: string) => {
         setForm((current) => ({ ...current, [field]: value }));
@@ -87,6 +201,12 @@ export function UserFormModal({
                     role: form.role,
                     additionalInfo: form.additionalInfo.trim() || null,
                     color: form.color.trim() || null,
+                    ...(showAssociations
+                        ? {
+                            groupIds: groups.map((group) => group.id),
+                            studentIds: students.map((student) => student.id),
+                        }
+                        : {}),
                 };
                 await onUpdate(user.id, payload);
                 onOpenChange(false);
@@ -98,6 +218,12 @@ export function UserFormModal({
                     role: form.role,
                     additionalInfo: form.additionalInfo.trim() || null,
                     color: form.color.trim() || null,
+                    ...(showAssociations
+                        ? {
+                            groupIds: groups.map((group) => group.id),
+                            studentIds: students.map((student) => student.id),
+                        }
+                        : {}),
                     ...(form.password.trim() ? { password: form.password.trim() } : {}),
                 };
                 const password = await onCreate(payload);
@@ -120,7 +246,7 @@ export function UserFormModal({
                     ? "Update this account's details and access level."
                     : "Create a new account. A sample password will be generated and shown once the account is ready."
             }
-            className="max-w-xl"
+            className={showAssociations ? "max-w-3xl" : "max-w-xl"}
         >
             <div className="flex flex-col gap-3">
                 <div className="h-1 w-full rounded-full bg-orange" />
@@ -213,6 +339,35 @@ export function UserFormModal({
                         )}
                     </div>
                 </div>
+
+                {showAssociations && (
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                        <EntityPicker
+                            title="Groups"
+                            selected={groups.map((group) => ({ id: group.id, label: groupLabel(group) }))}
+                            results={groupCandidates.map((group) => ({ id: group.id, label: groupLabel(group) }))}
+                            search={groupSearch}
+                            onSearchChange={setGroupSearch}
+                            onAdd={addGroup}
+                            onRemove={removeGroup}
+                            isSearching={isSearchingGroups}
+                            placeholder="Search groups..."
+                            emptyText={groupSearch.trim() ? "No matching groups." : "Type a name to search."}
+                        />
+                        <EntityPicker
+                            title="Students"
+                            selected={students.map((student) => ({ id: student.id, label: studentLabel(student) }))}
+                            results={studentCandidates.map((student) => ({ id: student.id, label: studentLabel(student) }))}
+                            search={studentSearch}
+                            onSearchChange={setStudentSearch}
+                            onAdd={addStudent}
+                            onRemove={removeStudent}
+                            isSearching={isSearchingStudents}
+                            placeholder="Search students..."
+                            emptyText={studentSearch.trim() ? "No matching students." : "Type a name to search."}
+                        />
+                    </div>
+                )}
 
                 {!isEdit && (
                     <Field

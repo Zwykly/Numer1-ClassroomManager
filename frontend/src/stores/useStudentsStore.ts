@@ -1,10 +1,10 @@
 import { create } from "zustand/react";
 import type { selectCompositeStudentSchema } from "../../../backend/app/src/models/composite";
-import type { insertStudentSchema, patchStudentSchema } from "../../../backend/app/src/models/students";
+import type { createStudentSchema, patchStudentSchema } from "../../../backend/app/src/models/students";
 import eden from "@/lib/eden";
 
 export type Student = typeof selectCompositeStudentSchema.static;
-export type NewStudent = typeof insertStudentSchema.static;
+export type NewStudent = typeof createStudentSchema.static;
 export type StudentPatch = typeof patchStudentSchema.static;
 
 type StudentsState = {

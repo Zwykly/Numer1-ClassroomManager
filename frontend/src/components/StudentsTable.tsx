@@ -7,6 +7,7 @@ type StudentsTableProps = {
     students: Student[];
     isLoading: boolean;
     canManage: boolean;
+    onSelect?: (student: Student) => void;
     onAddToClass: (student: Student) => void;
     onAddToGroup: (student: Student) => void;
     onModify: (student: Student) => void;
@@ -17,6 +18,7 @@ export function StudentsTable({
     students,
     isLoading,
     canManage,
+    onSelect,
     onAddToClass,
     onAddToGroup,
     onModify,
@@ -35,28 +37,40 @@ export function StudentsTable({
             <button
                 title="Add to class"
                 className={cn(actionButtonStyles, actionColors.class)}
-                onClick={() => onAddToClass(student)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onAddToClass(student);
+                }}
             >
                 <School size={18} />
             </button>
             <button
                 title="Add to group"
                 className={cn(actionButtonStyles, actionColors.group)}
-                onClick={() => onAddToGroup(student)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onAddToGroup(student);
+                }}
             >
                 <UsersRound size={18} />
             </button>
             <button
                 title="Modify"
                 className={cn(actionButtonStyles, actionColors.modify)}
-                onClick={() => onModify(student)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onModify(student);
+                }}
             >
                 <Pencil size={18} />
             </button>
             <button
                 title="Delete"
                 className={cn(actionButtonStyles, actionColors.delete)}
-                onClick={() => onDelete(student)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onDelete(student);
+                }}
             >
                 <Trash2 size={18} />
             </button>
@@ -69,7 +83,11 @@ export function StudentsTable({
                 {students.map((student) => (
                     <div
                         key={student.id}
-                        className="flex flex-col gap-3 border-b border-light-grey px-1 py-4"
+                        onClick={onSelect ? () => onSelect(student) : undefined}
+                        className={cn(
+                            "flex flex-col gap-3 border-b border-light-grey px-1 py-4 transition",
+                            onSelect && "cursor-pointer hover:bg-light-grey/40",
+                        )}
                     >
                         <div className="flex flex-col gap-1">
                             <span className="font-bold text-black">
@@ -120,7 +138,11 @@ export function StudentsTable({
                         {students.map((student) => (
                             <tr
                                 key={student.id}
-                                className="border-b border-light-grey/70 transition last:border-0 hover:bg-light-grey/40"
+                                onClick={onSelect ? () => onSelect(student) : undefined}
+                                className={cn(
+                                    "border-b border-light-grey/70 transition last:border-0 hover:bg-light-grey/40",
+                                    onSelect && "cursor-pointer",
+                                )}
                             >
                                 <td className="px-4 py-4 font-bold text-black">
                                     {student.firstName} {student.lastName}

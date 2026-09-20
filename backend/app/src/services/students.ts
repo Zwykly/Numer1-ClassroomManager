@@ -42,7 +42,15 @@ export const StudentsService = {
             }
         });
 
-        return buildPaginationResponse(studentsData, query.limit);
+        // A teacher may only see this student's classes that they teach.
+        const scoped = viewer && !viewer.isAdmin && viewer.id
+            ? studentsData.map((student) => ({
+                ...student,
+                reservations: student.reservations.filter((reservation) => reservation.teacherId === viewer.id),
+            }))
+            : studentsData;
+
+        return buildPaginationResponse(scoped, query.limit);
     },
 
     async getById(id: string, viewer?: Viewer) {
@@ -58,6 +66,13 @@ export const StudentsService = {
         if (!student) return null;
         if (viewer && !viewer.isAdmin && viewer.id && !student.teachers.some((teacher) => teacher.id === viewer.id)) {
             return null;
+        }
+
+        if (viewer && !viewer.isAdmin && viewer.id) {
+            return {
+                ...student,
+                reservations: student.reservations.filter((reservation) => reservation.teacherId === viewer.id),
+            };
         }
 
         return student;

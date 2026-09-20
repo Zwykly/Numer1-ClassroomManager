@@ -86,7 +86,8 @@ export function MonthView({ selectedDate, reservations, onSelectDay }: MonthView
                                 </span>
                                 {count > 0 && (
                                     <span className="max-w-full truncate rounded-full bg-orange/10 px-2 py-0.5 text-[10px] font-bold text-orange sm:px-2.5 sm:py-1 sm:text-xs">
-                                        {count} {count === 1 ? "class" : "classes"}
+                                        {count}
+                                        <span className="hidden sm:inline"> {count === 1 ? "class" : "classes"}</span>
                                     </span>
                                 )}
                             </button>

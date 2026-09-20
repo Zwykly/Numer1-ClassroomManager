@@ -39,25 +39,25 @@ export function EntityPicker({
                 {title} ({selected.length})
             </span>
 
-            <div className="mt-2 flex max-h-36 flex-col gap-1.5 overflow-y-auto">
+            <div className="mt-2 flex max-h-36 flex-wrap gap-2 overflow-y-auto">
                 {selected.length === 0 && (
-                    <span className="py-4 text-center text-sm text-darker-grey">None selected yet.</span>
+                    <span className="py-2 text-sm text-darker-grey">None selected yet.</span>
                 )}
                 {selected.map((item) => (
-                    <div
+                    <span
                         key={item.id}
-                        className="flex items-center gap-2 rounded-lg bg-light-grey/60 px-2 py-1.5"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-orange/30 bg-orange/10 px-3 py-1 text-xs font-medium text-orange"
                     >
-                        <span className="flex-1 truncate text-sm text-black">{item.label}</span>
+                        {item.label}
                         <button
                             type="button"
                             title="Remove"
                             onClick={() => onRemove(item.id)}
-                            className="text-darker-grey transition hover:text-orange"
+                            className="text-orange/70 transition hover:text-orange"
                         >
-                            <X size={15} />
+                            <X size={13} />
                         </button>
-                    </div>
+                    </span>
                 ))}
             </div>
 

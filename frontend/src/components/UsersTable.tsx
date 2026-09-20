@@ -1,7 +1,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { clsx as cn } from "clsx";
 import type { User } from "@/stores/useUsersStore";
-import { teacherColor } from "@/utils/teacherColors";
+import { userColor } from "@/utils/userColors";
 import { actionButtonStyles, actionColors } from "@/utils/actionColors";
 
 type UsersTableProps = {
@@ -61,7 +61,7 @@ export function UsersTable({
                         <div className="flex flex-row items-center gap-3">
                             <span
                                 className="h-2.5 w-2.5 shrink-0 rounded-full"
-                                style={{ backgroundColor: teacherColor(user.id) }}
+                                style={{ backgroundColor: userColor(user.color) }}
                             />
                             <div className="flex min-w-0 flex-col gap-1">
                                 <span className="truncate font-bold text-black">
@@ -103,7 +103,7 @@ export function UsersTable({
                                     <div className="flex flex-row items-center gap-3">
                                         <span
                                             className="h-2.5 w-2.5 shrink-0 rounded-full"
-                                            style={{ backgroundColor: teacherColor(user.id) }}
+                                            style={{ backgroundColor: userColor(user.color) }}
                                         />
                                         <div className="flex flex-col">
                                             <span className="font-bold text-black">

@@ -6,7 +6,7 @@ import { Modal } from "./Modal";
 import { ConfirmModal } from "./ConfirmModal";
 import { Button } from "./Button";
 import { reservationAttendees } from "@/components/ReservationsTable";
-import { teacherColor } from "@/utils/teacherColors";
+import { userColor } from "@/utils/userColors";
 import type { Reservation } from "@/stores/useReservationsStore";
 
 type ClassDetailsModalProps = {
@@ -107,7 +107,7 @@ export function ClassDetailsModal({
                                 <span className="inline-flex items-center gap-2">
                                     <span
                                         className="h-2.5 w-2.5 rounded-full"
-                                        style={{ backgroundColor: teacherColor(reservation.teacherId) }}
+                                        style={{ backgroundColor: userColor(reservation.teacher?.color) }}
                                     />
                                     {reservation.teacher
                                         ? `${reservation.teacher.firstName} ${reservation.teacher.lastName}`

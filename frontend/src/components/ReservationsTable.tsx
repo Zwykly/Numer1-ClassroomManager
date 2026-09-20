@@ -2,7 +2,7 @@ import { Fragment, useState } from "react";
 import { Calendar, ChevronDown, ChevronRight, Clock, Pencil, Repeat, Trash2, Users } from "lucide-react";
 import { clsx as cn } from "clsx";
 import { format } from "date-fns";
-import { teacherColor } from "@/utils/teacherColors";
+import { userColor } from "@/utils/userColors";
 import { actionButtonStyles, actionColors } from "@/utils/actionColors";
 import type { Reservation } from "@/stores/useReservationsStore";
 
@@ -188,7 +188,7 @@ export function ReservationsTable({
                                         <span className="flex items-center gap-2">
                                             <span
                                                 className="h-2.5 w-2.5 shrink-0 rounded-full"
-                                                style={{ backgroundColor: teacherColor(group.teacher?.id) }}
+                                                style={{ backgroundColor: userColor(group.teacher?.color) }}
                                             />
                                             <span className="truncate font-bold text-black">{group.name || "Untitled class"}</span>
                                         </span>
@@ -280,7 +280,7 @@ export function ReservationsTable({
                                     <span className="flex items-center gap-2">
                                         <span
                                             className="h-2.5 w-2.5 shrink-0 rounded-full"
-                                            style={{ backgroundColor: teacherColor(reservation.teacherId) }}
+                                            style={{ backgroundColor: userColor(reservation.teacher?.color) }}
                                         />
                                         <span className="truncate font-bold text-black">{reservation.name || "Untitled class"}</span>
                                     </span>
@@ -436,7 +436,7 @@ export function ReservationsTable({
                                             <span className="flex items-center gap-2">
                                                 <span
                                                     className="h-2.5 w-2.5 shrink-0 rounded-full"
-                                                    style={{ backgroundColor: teacherColor(group.teacher?.id) }}
+                                                    style={{ backgroundColor: userColor(group.teacher?.color) }}
                                                     title={group.teacher ? `${group.teacher.firstName} ${group.teacher.lastName}` : undefined}
                                                 />
                                                 <span className="font-bold text-black">{group.name || "Untitled class"}</span>
@@ -566,7 +566,7 @@ export function ReservationsTable({
                                         <span className="flex items-center gap-2">
                                             <span
                                                 className="h-2.5 w-2.5 shrink-0 rounded-full"
-                                                style={{ backgroundColor: teacherColor(reservation.teacherId) }}
+                                                style={{ backgroundColor: userColor(reservation.teacher?.color) }}
                                                 title={reservation.teacher ? `${reservation.teacher.firstName} ${reservation.teacher.lastName}` : undefined}
                                             />
                                             <span className="font-bold text-black">

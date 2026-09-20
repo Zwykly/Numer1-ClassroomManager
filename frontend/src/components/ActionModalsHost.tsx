@@ -4,9 +4,11 @@ import { StudentFormModal } from "./StudentFormModal";
 import { UserFormModal } from "./UserFormModal";
 import { UserCredentialsModal } from "./UserCredentialsModal";
 import { GroupFormModal } from "./GroupFormModal";
+import { ClassroomFormModal } from "./ClassroomFormModal";
 import {
     useActionModalActions,
     useActiveActionModal,
+    useClassroomModalData,
     useGroupModalData,
     useReservationModalData,
     useStudentModalData,
@@ -16,6 +18,7 @@ import { useReservationsActions } from "@/stores/useReservationsStore";
 import { useStudentsActions } from "@/stores/useStudentsStore";
 import { useUsersActions, type NewUserAccount } from "@/stores/useUsersStore";
 import { useGroupsActions } from "@/stores/useGroupsStore";
+import { useClassroomsActions } from "@/stores/useClassroomsStore";
 import { useAuth } from "@/utils/AuthProvider";
 
 type CreatedCredentials = {
@@ -31,6 +34,7 @@ export function ActionModalsHost() {
     const student = useStudentModalData();
     const user = useUserModalData();
     const group = useGroupModalData();
+    const classroom = useClassroomModalData();
     const { close } = useActionModalActions();
 
     const { UserData } = useAuth();
@@ -41,6 +45,7 @@ export function ActionModalsHost() {
     const { createStudents, patchStudent } = useStudentsActions();
     const { createUser, patchUser } = useUsersActions();
     const { createGroup, patchGroup } = useGroupsActions();
+    const { createClassroom, patchClassroom } = useClassroomsActions();
 
     const [credentialsOpen, setCredentialsOpen] = useState(false);
     const [credentials, setCredentials] = useState<CreatedCredentials | null>(null);
@@ -99,6 +104,14 @@ export function ActionModalsHost() {
                 group={group}
                 onCreate={createGroup}
                 onUpdate={patchGroup}
+            />
+
+            <ClassroomFormModal
+                open={activeModal === "classroom"}
+                onOpenChange={handleClose}
+                classroom={classroom}
+                onCreate={createClassroom}
+                onUpdate={patchClassroom}
             />
 
             <UserCredentialsModal

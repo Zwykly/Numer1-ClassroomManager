@@ -25,7 +25,7 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
     const navigate = useNavigate();
     const { pathname } = useLocation();
     const { UserData, refetch } = useAuth();
-    const { openReservation, openStudent, openUser, openGroup } = useActionModalActions();
+    const { openReservation, openStudent, openUser, openGroup, openClassroom } = useActionModalActions();
     const { setDateToToday } = useSelectedDateActions();
 
     const userInfo = UserData?.user?.userInfo;
@@ -58,6 +58,7 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
         if (action.target === "student") openStudent();
         if (action.target === "user") openUser();
         if (action.target === "group") openGroup();
+        if (action.target === "classroom") openClassroom();
         onNavigate?.();
     };
 

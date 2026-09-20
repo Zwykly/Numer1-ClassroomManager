@@ -3,13 +3,14 @@ import {
     CalendarPlus,
     GraduationCap,
     Plus,
+    School,
     UserPlus,
     Users,
     UsersRound,
     type LucideIcon,
 } from "lucide-react";
 
-export type SidebarModalTarget = "reservation" | "student" | "user" | "group";
+export type SidebarModalTarget = "reservation" | "student" | "user" | "group" | "classroom";
 
 export type SidebarNavDescriptor =
     | { kind: "navigate"; id: string; label: string; icon: LucideIcon; to: string; adminOnly?: boolean }
@@ -28,6 +29,7 @@ export const SIDEBAR_NAVIGATION: SidebarNavDescriptor[] = [
     { kind: "navigate", id: "calendar", label: "My calendar", icon: CalendarDays, to: "/myHome" },
     { kind: "navigate", id: "students", label: "Manage students", icon: GraduationCap, to: "/manage-students" },
     { kind: "navigate", id: "reservations", label: "Manage reservations", icon: CalendarPlus, to: "/manage-reservations" },
+    { kind: "navigate", id: "classrooms", label: "Manage classrooms", icon: School, to: "/manage-classrooms", adminOnly: true },
     { kind: "navigate", id: "users", label: "Manage users", icon: Users, to: "/manage-users", adminOnly: true },
     { kind: "navigate", id: "groups", label: "Manage groups", icon: UsersRound, to: "/manage-groups" },
 ];
@@ -61,6 +63,12 @@ export const SIDEBAR_PAGES: Record<string, SidebarPageConfig> = {
         label: "This page",
         actions: [
             { kind: "modal", id: "new-group", label: "New group", icon: UsersRound, target: "group" },
+        ],
+    },
+    "/manage-classrooms": {
+        label: "This page",
+        actions: [
+            { kind: "modal", id: "new-classroom", label: "Add classroom", icon: School, target: "classroom" },
         ],
     },
 };

@@ -39,7 +39,7 @@ function mapReservation(res: any) {
 }
 
 // Hides the details of a class the viewer is not allowed to see. Only the status,
-// whether it recurs and the slot itself remain visible.
+// whether it recurs, the reserved room and the slot itself remain visible.
 function maskReservation(reservation: ReturnType<typeof mapReservation>) {
     return {
         ...reservation,
@@ -48,7 +48,6 @@ function maskReservation(reservation: ReturnType<typeof mapReservation>) {
         teacher: undefined,
         groups: [],
         students: [],
-        classroom: undefined,
         onlineClassroom: undefined,
         restricted: true,
     };

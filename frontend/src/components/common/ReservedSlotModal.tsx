@@ -1,7 +1,8 @@
 import { addMinutes, format } from "date-fns";
-import { Calendar, CheckCircle2, Clock, Lock, Repeat, XCircle } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, Lock, MapPin, Repeat, XCircle } from "lucide-react";
 import { clsx as cn } from "clsx";
 import { Modal } from "./Modal";
+import { classroomColor } from "@/utils/classroomColors";
 import type { ClassroomReservation } from "@/stores/useClassroomReservationsStore";
 
 type ReservedSlotModalProps = {
@@ -57,6 +58,22 @@ export function ReservedSlotModal({ open, onOpenChange, reservation }: ReservedS
                     </div>
 
                     <div className="flex flex-col gap-3 rounded-xl border border-light-grey bg-canvas p-4 text-sm">
+                        <span className="inline-flex items-center gap-2 text-darker-grey">
+                            <MapPin size={16} />
+                            <span className="inline-flex items-center gap-2">
+                                {reservation.classroom ? (
+                                    <>
+                                        <span
+                                            className="h-2.5 w-2.5 rounded-full"
+                                            style={{ backgroundColor: classroomColor(reservation.classroom.color, reservation.classroom.id) }}
+                                        />
+                                        {reservation.classroom.name}
+                                    </>
+                                ) : (
+                                    "Online classroom"
+                                )}
+                            </span>
+                        </span>
                         <span className="inline-flex items-center gap-2 text-darker-grey">
                             <Calendar size={16} />
                             {start ? format(start, "EEEE, d MMMM yyyy") : "-"}

@@ -16,6 +16,8 @@ import {
     type ConflictResult,
 } from "@/stores/useReservationsStore";
 import { useAuth } from "@/utils/AuthProvider";
+import { classroomColor } from "@/utils/classroomColors";
+import { userColor } from "@/utils/userColors";
 import eden from "@/lib/eden";
 
 type ReservationFormModalProps = {
@@ -30,8 +32,8 @@ type ReservationFormModalProps = {
     onUpdateFuture: (id: string, data: ReservationPatch) => Promise<void>;
 };
 
-type ClassroomOption = { id: string; name: string };
-type OnlineClassroomOption = { id: string; name: string };
+type ClassroomOption = { id: string; name: string; color?: string | null };
+type OnlineClassroomOption = { id: string; name: string; teacher?: { color?: string | null } | null };
 type TeacherOption = { id: string; firstName: string; lastName: string; role?: string | null };
 
 type Form = {
@@ -560,8 +562,29 @@ export function ReservationFormModal({
 
                 <div className="flex flex-col gap-3 sm:flex-row">
                     <label className="flex flex-1 flex-col">
-                        <span className="text-sm font-bold text-black">
+                        <span className="inline-flex items-center gap-2 text-sm font-bold text-black">
                             {form.roomType === "classroom" ? "Classroom" : "Online classroom"}
+                            {form.roomType === "classroom" && form.classroomId && (
+                                <span
+                                    className="h-2.5 w-2.5 rounded-full"
+                                    style={{
+                                        backgroundColor: classroomColor(
+                                            classrooms.find((classroom) => classroom.id === form.classroomId)?.color,
+                                            form.classroomId,
+                                        ),
+                                    }}
+                                />
+                            )}
+                            {form.roomType === "online" && form.onlineClassroomId && (
+                                <span
+                                    className="h-2.5 w-2.5 rounded-full"
+                                    style={{
+                                        backgroundColor: userColor(
+                                            onlineClassrooms.find((classroom) => classroom.id === form.onlineClassroomId)?.teacher?.color,
+                                        ),
+                                    }}
+                                />
+                            )}
                         </span>
                         {form.roomType === "classroom" ? (
                             <select

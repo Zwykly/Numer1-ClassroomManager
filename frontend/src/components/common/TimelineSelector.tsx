@@ -8,6 +8,8 @@ import { useSelectedView, useSelectedDate, useSelectedDateActions } from '../../
 import { useClassrooms, useClassroomsActions } from '../../stores/useClassroomsStore';
 import { useOnlineClassrooms, useOnlineClassroomsActions } from '../../stores/useOnlineClassroomsStore';
 import { CALENDAR_VIEWS, MOBILE_CALENDAR_VIEWS } from '../../utils/calendarRange';
+import { classroomColor } from '@/utils/classroomColors';
+import { userColor } from '@/utils/userColors';
 import { useIsMobile } from '@/utils/useMediaQuery';
 import { useAuth } from '@/utils/AuthProvider';
 
@@ -73,9 +75,36 @@ function ClassroomSelector() {
             })()
             : classrooms.find((classroom) => classroom.id === selectedClassroom)?.name ?? "All classrooms";
 
+    const allDots = [
+        ...classrooms.map((classroom) => classroomColor(classroom.color, classroom.id)),
+        ...onlineClassrooms.map((onlineClassroom) => userColor(onlineClassroom.teacher?.color)),
+    ];
+
+    const selectedDot = selectedOnlineId
+        ? userColor(onlineClassrooms.find((item) => item.id === selectedOnlineId)?.teacher?.color)
+        : selectedClassroom !== "all"
+            ? classroomColor(
+                classrooms.find((classroom) => classroom.id === selectedClassroom)?.color,
+                selectedClassroom,
+            )
+            : null;
+
     return (
         <Select.Root value={selectedClassroom} onValueChange={setSelectedClassroom}>
-            <Select.Trigger className={cn('inline-flex min-w-0 max-w-full w-fit items-center gap-1 text-black font-bold text-2xl sm:text-4xl cursor-pointer', disableRing)}>
+            <Select.Trigger className={cn('inline-flex min-w-0 max-w-full w-fit items-center gap-2 text-black font-bold text-2xl sm:text-4xl cursor-pointer', disableRing)}>
+                {selectedClassroom === "all" ? (
+                    <span className="flex shrink-0 flex-row flex-wrap items-center gap-1">
+                        {allDots.map((dot, index) => (
+                            <span
+                                key={index}
+                                className="h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5"
+                                style={{ backgroundColor: dot }}
+                            />
+                        ))}
+                    </span>
+                ) : selectedDot ? (
+                    <span className="h-3 w-3 shrink-0 rounded-full sm:h-4 sm:w-4" style={{ backgroundColor: selectedDot }} />
+                ) : null}
                 <Select.Value asChild>
                     <span className="truncate">{selectedClassroomName}</span>
                 </Select.Value>
@@ -106,6 +135,10 @@ function ClassroomSelector() {
                                         className={cn('text-lg sm:text-2xl py-1 px-3 gap-2 flex items-center transition duration-200 ease-in-out text-darker-grey hover:text-white hover:bg-orange transition-100 cursor-pointer rounded', disableRing)} 
                                         value={classroom.id}
                                     >
+                                        <span
+                                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                            style={{ backgroundColor: classroomColor(classroom.color, classroom.id) }}
+                                        />
                                         {classroom.name}
                                     </Select.Item>
                                 );
@@ -119,6 +152,10 @@ function ClassroomSelector() {
                                         className={cn('text-lg sm:text-2xl py-1 px-3 gap-2 flex items-center transition duration-200 ease-in-out text-darker-grey hover:text-white hover:bg-orange transition-100 cursor-pointer rounded', disableRing)}
                                         value={`online:${onlineClassroom.id}`}
                                     >
+                                        <span
+                                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                            style={{ backgroundColor: userColor(onlineClassroom.teacher?.color) }}
+                                        />
                                         {onlineClassroomLabel(onlineClassroom)}
                                     </Select.Item>
                                 );

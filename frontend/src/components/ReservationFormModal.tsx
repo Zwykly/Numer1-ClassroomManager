@@ -379,6 +379,17 @@ export function ReservationFormModal({
         });
     };
 
+    // A teacher always hosts online classes in their own online classroom. The
+    // classroom list may still be loading when they pick "online", so resolve it
+    // as soon as it becomes available.
+    useEffect(() => {
+        if (!open || isAdmin || form.roomType !== "online") return;
+        const resolvedId = ownOnlineClassroom?.id ?? onlineClassrooms[0]?.id;
+        if (resolvedId && form.onlineClassroomId !== resolvedId) {
+            setForm((current) => ({ ...current, onlineClassroomId: resolvedId }));
+        }
+    }, [open, isAdmin, form.roomType, form.onlineClassroomId, ownOnlineClassroom?.id, onlineClassrooms]);
+
     const toggleId = (field: "studentIds" | "groupIds", id: string) => {
         setForm((current) => ({
             ...current,

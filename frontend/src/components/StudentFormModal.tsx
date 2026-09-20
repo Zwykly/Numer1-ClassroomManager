@@ -309,7 +309,7 @@ export function StudentFormModal({
                         <span className="px-1 text-xs font-bold uppercase tracking-wide text-white/60">
                             Students ({drafts.length})
                         </span>
-                        <div className="mt-2 flex flex-1 flex-col gap-1.5 overflow-y-auto">
+                        <div className="mt-2 flex flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain">
                             {drafts.map((draft, index) => {
                                 const isSelected = draft.key === selectedDraft?.key;
                                 const color = STUDENT_COLORS[index % STUDENT_COLORS.length];

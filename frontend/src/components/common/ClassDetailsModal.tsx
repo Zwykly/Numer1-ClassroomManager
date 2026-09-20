@@ -141,7 +141,7 @@ export function ClassDetailsModal({
                                 <Users size={14} />
                                 Participants ({participants.length})
                             </span>
-                            <div className="mt-2 flex max-h-80 flex-col gap-1.5 overflow-y-auto rounded-xl border border-light-grey p-2">
+                            <div className="mt-2 flex max-h-80 flex-col gap-1.5 overflow-y-auto overscroll-contain rounded-xl border border-light-grey p-2">
                                 {participants.length === 0 ? (
                                     <span className="py-3 text-center text-sm text-darker-grey">
                                         No participants assigned.

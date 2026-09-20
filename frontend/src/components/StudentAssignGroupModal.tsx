@@ -56,7 +56,7 @@ export function StudentAssignGroupModal({
             }
             className="max-w-xl"
         >
-            <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
+            <div className="flex max-h-80 flex-col gap-2 overflow-y-auto overscroll-contain">
                 {groups.length === 0 && (
                     <div className="py-10 text-center text-darker-grey">
                         No groups available yet.

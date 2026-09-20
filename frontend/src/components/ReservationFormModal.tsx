@@ -909,7 +909,7 @@ function MultiSelect({ label, placeholder, items, selected, disabledIds, onToggl
                     className="w-full bg-transparent text-black placeholder:text-darker-grey focus:outline-none"
                 />
             </div>
-            <div className="mt-2 flex max-h-40 flex-col gap-1.5 overflow-y-auto rounded-xl border border-light-grey p-2">
+            <div className="mt-2 flex max-h-40 flex-col gap-1.5 overflow-y-auto overscroll-contain rounded-xl border border-light-grey p-2">
                 {filtered.length === 0 && (
                     <span className="py-3 text-center text-sm text-darker-grey">Nothing found.</span>
                 )}

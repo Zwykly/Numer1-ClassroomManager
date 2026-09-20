@@ -39,7 +39,7 @@ export function EntityPicker({
                 {title} ({selected.length})
             </span>
 
-            <div className="mt-2 flex max-h-36 flex-wrap gap-2 overflow-y-auto">
+            <div className="mt-2 flex max-h-36 flex-wrap gap-2 overflow-y-auto overscroll-contain">
                 {selected.length === 0 && (
                     <span className="py-2 text-sm text-darker-grey">None selected yet.</span>
                 )}
@@ -71,7 +71,7 @@ export function EntityPicker({
                 />
             </div>
 
-            <div className="mt-2 flex max-h-40 flex-col gap-1.5 overflow-y-auto">
+            <div className="mt-2 flex max-h-40 flex-col gap-1.5 overflow-y-auto overscroll-contain">
                 {isSearching && (
                     <span className="py-3 text-center text-sm text-darker-grey">Searching...</span>
                 )}

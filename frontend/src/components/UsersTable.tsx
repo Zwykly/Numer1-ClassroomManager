@@ -13,9 +13,9 @@ type UsersTableProps = {
 };
 
 function roleStyles(role: string) {
-    return role === "admin"
-        ? "bg-orange/10 text-orange"
-        : "bg-light-grey text-darker-grey";
+    if (role === "admin") return "bg-orange/10 text-orange";
+    if (role === "pending") return "bg-amber-500/10 text-amber-700";
+    return "bg-light-grey text-darker-grey";
 }
 
 function AssociationPills({ label, items }: { label: string; items: { id: string; name: string }[] }) {

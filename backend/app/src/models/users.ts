@@ -35,7 +35,7 @@ export const createUserAccountSchema = t.Composite([
         firstName: t.String({ minLength: 1 }),
         lastName: t.String({ minLength: 1 }),
         email: t.String({ format: 'email' }),
-        role: t.Union([t.Literal('admin'), t.Literal('teacher')]),
+        role: t.Union([t.Literal('admin'), t.Literal('teacher'), t.Literal('pending')]),
         password: t.Optional(t.String({ minLength: 8 })),
     })
 ]);

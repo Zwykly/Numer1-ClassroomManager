@@ -21,7 +21,7 @@ type Form = {
     firstName: string;
     lastName: string;
     email: string;
-    role: "admin" | "teacher";
+    role: "admin" | "teacher" | "pending";
     additionalInfo: string;
     color: string;
     password: string;
@@ -85,7 +85,7 @@ export function UserFormModal({
                 firstName: user.firstName ?? "",
                 lastName: user.lastName ?? "",
                 email: user.email ?? "",
-                role: user.role === "admin" ? "admin" : "teacher",
+                role: user.role === "admin" ? "admin" : user.role === "pending" ? "pending" : "teacher",
                 additionalInfo: user.additionalInfo ?? "",
                 color: user.color ?? "",
                 password: "",
@@ -329,7 +329,7 @@ export function UserFormModal({
                 <div className="flex flex-col">
                     <span className="text-sm font-bold text-black">Role</span>
                     <div className="mt-1 flex flex-row gap-2">
-                        {(["teacher", "admin"] as const).map((role) => {
+                        {(["teacher", "admin", "pending"] as const).map((role) => {
                             const isSelected = form.role === role;
                             return (
                                 <button
@@ -348,6 +348,11 @@ export function UserFormModal({
                             );
                         })}
                     </div>
+                    {form.role === "pending" && (
+                        <span className="mt-1.5 text-xs text-darker-grey">
+                            Pending accounts can sign in but have no access until you assign a role.
+                        </span>
+                    )}
                 </div>
 
                 <div className="flex flex-col">

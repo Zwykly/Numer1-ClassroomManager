@@ -29,7 +29,8 @@ export function ManageUsers() {
     }, [search]);
 
     const adminCount = users.filter((user) => user.role === "admin").length;
-    const teacherCount = users.filter((user) => user.role !== "admin").length;
+    const teacherCount = users.filter((user) => user.role === "teacher").length;
+    const pendingCount = users.filter((user) => user.role === "pending").length;
 
     const openAdd = () => {
         openUser();
@@ -82,6 +83,8 @@ export function ManageUsers() {
                             <Stat label="Admins" value={adminCount} accent />
                             <div className="h-9 w-px bg-light-grey" />
                             <Stat label="Teachers" value={teacherCount} />
+                            <div className="h-9 w-px bg-light-grey" />
+                            <Stat label="Pending" value={pendingCount} />
                         </div>
                     </div>
 

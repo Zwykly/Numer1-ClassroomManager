@@ -68,7 +68,7 @@ export function MonthView({ selectedDate, reservations, onSelectDay }: MonthView
                                 onClick={() => onSelectDay(day)}
                                 disabled={!inMonth}
                                 className={cn(
-                                    "relative flex min-h-[4.5rem] flex-col items-start gap-1 border-r border-light-grey p-1.5 text-left transition last:border-r-0 sm:min-h-[7rem] sm:gap-2 sm:p-3",
+                                    "relative flex min-h-[4.5rem] flex-col items-start gap-1 overflow-hidden border-r border-light-grey p-1.5 text-left transition last:border-r-0 sm:min-h-[7rem] sm:gap-2 sm:p-3",
                                     inMonth && "hover:bg-light-grey/60",
                                     !inMonth && "cursor-default bg-light-grey/40",
                                 )}
@@ -85,7 +85,7 @@ export function MonthView({ selectedDate, reservations, onSelectDay }: MonthView
                                     {day.getDate()}
                                 </span>
                                 {count > 0 && (
-                                    <span className="rounded-full bg-orange/10 px-2 py-0.5 text-[10px] font-bold text-orange sm:px-2.5 sm:py-1 sm:text-xs">
+                                    <span className="max-w-full truncate rounded-full bg-orange/10 px-2 py-0.5 text-[10px] font-bold text-orange sm:px-2.5 sm:py-1 sm:text-xs">
                                         {count} {count === 1 ? "class" : "classes"}
                                     </span>
                                 )}

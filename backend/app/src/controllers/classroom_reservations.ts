@@ -19,15 +19,19 @@ function requireUserId(user: AuthUser) {
     return user.userInfo.id;
 }
 
-async function assertNoConflicts(input: Parameters<typeof ConflictsService.check>[0]) {
-    const result = await ConflictsService.check(input);
+function viewerOf(user: AuthUser) {
+    return { id: user?.userInfo?.id, isAdmin: isAdmin(user) };
+}
+
+async function assertNoConflicts(input: Parameters<typeof ConflictsService.check>[0], user: AuthUser) {
+    const result = await ConflictsService.check({ ...input, viewer: viewerOf(user) });
     if (result.conflicts.length > 0) {
         throw status(409, result);
     }
 }
 
-async function assertNoSlotConflicts(slots: Date[], input: Parameters<typeof ConflictsService.checkSlots>[1]) {
-    const result = await ConflictsService.checkSlots(slots, input);
+async function assertNoSlotConflicts(slots: Date[], input: Parameters<typeof ConflictsService.checkSlots>[1], user: AuthUser) {
+    const result = await ConflictsService.checkSlots(slots, { ...input, viewer: viewerOf(user) });
     if (result.conflicts.length > 0) {
         throw status(409, result);
     }
@@ -89,9 +93,10 @@ export const ClassroomReservationsController = {
         const res = await ClassroomReservationsService.getById(id);
         if (!res) throw new NotFoundError("Classroom Reservation not found");
 
-        if (!isAdmin(user) && res.onlineClassroomId) {
-            const ownerId = await OnlineClassroomsService.getOwnerId(res.onlineClassroomId);
-            if (ownerId !== user?.userInfo?.id) throw new NotFoundError("Classroom Reservation not found");
+        // Non-admins can only read their own reservations; anything else is
+        // indistinguishable from a missing record.
+        if (!isAdmin(user) && res.teacherId !== user?.userInfo?.id) {
+            throw new NotFoundError("Classroom Reservation not found");
         }
 
         return res;
@@ -100,7 +105,7 @@ export const ClassroomReservationsController = {
     async checkConflicts({ body, user }: { body: typeof checkConflictsSchema.static; user: AuthUser }) {
         await assertOnlineAccess(user, body.onlineClassroomId);
         const teacherId = isAdmin(user) ? (body.teacherId ?? requireUserId(user)) : requireUserId(user);
-        return await ConflictsService.check({ ...body, teacherId });
+        return await ConflictsService.check({ ...body, teacherId, viewer: viewerOf(user) });
     },
 
     async create({ body, user }: { body: typeof createClassroomReservationSchema.static; user: AuthUser }) {
@@ -112,7 +117,7 @@ export const ClassroomReservationsController = {
             onlineClassroomId: body.onlineClassroomId ?? null,
             durationMinutes: body.durationMinutes ?? null,
             reservationTime: new Date(body.reservationTime as unknown as string).toISOString(),
-        });
+        }, user);
         const created = await ClassroomReservationsService.create({ ...body, teacherId });
         if (!created) throw new NotFoundError("Classroom Reservation not found");
         return created;
@@ -133,7 +138,7 @@ export const ClassroomReservationsController = {
                 numberOfOccurrences: body.numberOfOccurrences,
                 overrides: body.occurrenceOverrides,
             },
-        });
+        }, user);
         return await ClassroomReservationsService.createRecurring({ ...body, teacherId }, teacherId);
     },
 
@@ -147,7 +152,7 @@ export const ClassroomReservationsController = {
             durationMinutes: body.durationMinutes !== undefined ? body.durationMinutes : existing.durationMinutes,
             reservationTime: new Date((body.reservationTime ?? existing.reservationTime) as unknown as string).toISOString(),
             excludeId: id,
-        });
+        }, user);
         const updated = await ClassroomReservationsService.update(id, body);
         if (!updated) throw new NotFoundError("Classroom Reservation not found");
         return updated;
@@ -163,7 +168,7 @@ export const ClassroomReservationsController = {
             durationMinutes: body.durationMinutes !== undefined ? body.durationMinutes : existing.durationMinutes,
             reservationTime: new Date((body.reservationTime ?? existing.reservationTime) as unknown as string).toISOString(),
             excludeId: id,
-        });
+        }, user);
         const patched = await ClassroomReservationsService.patch(id, body);
         if (!patched) throw new NotFoundError("Classroom Reservation not found");
         return patched;
@@ -180,6 +185,7 @@ export const ClassroomReservationsController = {
             onlineClassroomId: body.onlineClassroomId !== undefined ? body.onlineClassroomId : existing.onlineClassroomId,
             durationMinutes: body.durationMinutes !== undefined ? body.durationMinutes : existing.durationMinutes,
             excludeCycleId: existing.cycleId ?? undefined,
+            viewer: viewerOf(user),
         });
     },
 
@@ -194,7 +200,7 @@ export const ClassroomReservationsController = {
             onlineClassroomId: body.onlineClassroomId !== undefined ? body.onlineClassroomId : existing.onlineClassroomId,
             durationMinutes: body.durationMinutes !== undefined ? body.durationMinutes : existing.durationMinutes,
             excludeCycleId: existing.cycleId ?? undefined,
-        });
+        }, user);
         return await ClassroomReservationsService.applyFuture(id, body);
     },
 

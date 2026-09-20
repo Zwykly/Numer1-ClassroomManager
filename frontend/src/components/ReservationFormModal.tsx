@@ -99,6 +99,9 @@ function formatConflictSpan(item: ConflictItem) {
 }
 
 function conflictItemMessage(item: ConflictItem) {
+    if (item.restricted) {
+        return "This time slot is already reserved.";
+    }
     const span = formatConflictSpan(item);
     if (item.type === "room") {
         return `Room "${item.roomName ?? "selected room"}" is already booked ${span}${item.name ? ` (${item.name})` : ""}.`;

@@ -119,9 +119,11 @@ export const ClassroomReservationsService = {
         const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
         const searchWhere = getFuzzySearchWhere(["name"], query.search);
         const viewWhere = this.buildViewWhere(query.view);
-        const onlineWhere = await this.onlineVisibilityWhere(viewer);
+        // The management list is private: a teacher only ever sees their own
+        // reservations, other teachers' classes are not returned at all.
+        const ownerWhere = viewer && !viewer.isAdmin && viewer.id ? { teacherId: viewer.id } : undefined;
 
-        const conditions = [cursorWhere, statusWhere, dateWhere, searchWhere, viewWhere, onlineWhere].filter(Boolean);
+        const conditions = [cursorWhere, statusWhere, dateWhere, searchWhere, viewWhere, ownerWhere].filter(Boolean);
         const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const data = await db.query.classroomReservations.findMany({

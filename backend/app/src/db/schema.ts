@@ -43,7 +43,7 @@ export const reservationCycles = p.pgTable("reservationCycles", {
 // To one przypisywane są do rezerwacji.
 export const classrooms = p.pgTable("classrooms", {
     id: p.uuid("id").primaryKey().defaultRandom(),
-    name: p.varchar("name").notNull(),
+    name: p.varchar("name").notNull().unique(),
     maxNumberOfPeople: p.integer("maxNumberOfPeople").notNull(),
     additionalInfo: p.text("additionalInfo"),
     status: p.varchar("status").notNull(),

@@ -1,4 +1,5 @@
 import { Home } from "../pages/Home";
+import { ManageClassrooms } from "../pages/ManageClassrooms";
 import { ManageGroups } from "../pages/ManageGroups";
 import { ManageReservations } from "../pages/ManageReservations";
 import { ManageStudents } from "../pages/ManageStudents";
@@ -24,6 +25,11 @@ export const privateRoutes = [
         path: "/manage-groups",
         element: ManageGroups,
         adminOnly: false,
+    },
+    {
+        path: "/manage-classrooms",
+        element: ManageClassrooms,
+        adminOnly: true,
     },
     {
         path: "/manage-users",

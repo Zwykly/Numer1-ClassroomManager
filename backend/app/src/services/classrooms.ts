@@ -1,16 +1,17 @@
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
 import { insertClassroomSchema, updateClassroomSchema, patchClassroomSchema, classroomsQuerySchema } from "../models/classrooms";
-import { getLimit, getCursorWhere, getInArrayWhere, buildPaginationResponse } from "../utils/drizzle";
+import { getLimit, getCursorWhere, getInArrayWhere, getFuzzySearchWhere, buildPaginationResponse } from "../utils/drizzle";
 
 export const ClassroomsService = {
     async getAll(query: typeof classroomsQuerySchema.static) {
         const limit = getLimit(query.limit);
         const cursorWhere = getCursorWhere(query.cursor);
         const statusWhere = getInArrayWhere("status", query.status);
+        const searchWhere = getFuzzySearchWhere(["name"], query.search);
 
-        const conditions = [cursorWhere, statusWhere].filter(Boolean);
+        const conditions = [cursorWhere, statusWhere, searchWhere].filter(Boolean);
         const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const data = await db.query.classrooms.findMany({
@@ -44,6 +45,15 @@ export const ClassroomsService = {
             ...classroom,
             reservations: classroom.classroomReservations
         };
+    },
+
+    async getByName(name: string) {
+        const [classroom] = await db
+            .select()
+            .from(table.classrooms)
+            .where(eq(table.classrooms.name, name))
+            .limit(1);
+        return classroom ?? null;
     },
 
     async create(payload: typeof insertClassroomSchema.static) {

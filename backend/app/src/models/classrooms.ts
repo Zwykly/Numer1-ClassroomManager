@@ -12,6 +12,7 @@ export const classroomsQuerySchema = t.Composite([
     paginationQuerySchema,
     t.Object({
         status: createFilterArraySchema(),
+        search: t.Optional(t.String()), // Fuzzy search on name
     })
 ]);
 

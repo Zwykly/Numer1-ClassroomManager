@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { clsx as cn } from "clsx";
 import { CheckCircle2, Lock, Repeat, Video, XCircle } from "lucide-react";
-import { teacherColor, teacherTint } from "@/utils/teacherColors";
+import { userColor, userTint } from "@/utils/userColors";
 import type { ClassroomReservation } from "@/stores/useClassroomReservationsStore";
 
 type ClassTileProps = {
@@ -84,13 +84,13 @@ export function ClassTile({ reservation, isOwn, className, onClick }: ClassTileP
         ? "hsl(0,72%,55%)"
         : isCompleted
             ? "hsl(0,0%,62%)"
-            : isOwn ? ownAccent : teacherColor(reservation.teacherId);
+            : isOwn ? ownAccent : userColor(reservation.teacher?.color);
 
     const background = isCanceled
         ? "hsl(0,70%,97%)"
         : isCompleted
             ? "hsl(0,0%,94%)"
-            : isOwn ? ownBackground : teacherTint(reservation.teacherId);
+            : isOwn ? ownBackground : userTint(reservation.teacher?.color);
 
     // Online classes get a distinct outline so they are easy to spot even when
     // several classes share the same hour.

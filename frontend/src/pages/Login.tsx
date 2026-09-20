@@ -3,7 +3,7 @@ import { LoginForm } from "../components/LoginForm";
 
 export function Login() {
     return (
-        <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-canvas p-4">
+        <div className="relative flex min-h-dvh w-full items-center justify-center overflow-y-auto overscroll-contain bg-canvas p-4">
             <img
                 src={loginBackground}
                 alt=""

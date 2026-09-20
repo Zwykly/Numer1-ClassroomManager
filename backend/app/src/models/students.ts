@@ -18,15 +18,25 @@ export const studentsQuerySchema = t.Composite([
 // Inserts
 export const insertStudentSchema = t.Omit(_insertStudentsSchema, ['id']);
 
+// Teachers that should be associated with the student
+const teacherFields = t.Object({
+    teacherIds: t.Optional(t.Array(t.String({ format: 'uuid' }))),
+});
+
+export const createStudentSchema = t.Composite([insertStudentSchema, teacherFields]);
+
 // Batch inserts
 export const insertStudentsBatchSchema = t.Object({
-    students: t.Array(insertStudentSchema, { minItems: 1 }),
+    students: t.Array(createStudentSchema, { minItems: 1 }),
 });
 
 // Selects
 export const selectSimpleStudentSchema = _selectStudentsSchema;
 
 // Updates
-export const updateStudentSchema = t.Omit(_updateStudentsSchema, ['id']);
+export const updateStudentSchema = t.Composite([t.Omit(_updateStudentsSchema, ['id']), teacherFields]);
 
-export const patchStudentSchema = t.Partial(t.Omit(_updateStudentsSchema, ['id']));
+export const patchStudentSchema = t.Composite([
+    t.Partial(t.Omit(_updateStudentsSchema, ['id'])),
+    teacherFields,
+]);

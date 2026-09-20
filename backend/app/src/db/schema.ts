@@ -60,7 +60,8 @@ export const users = p.pgTable("users", {
     lastName: p.varchar("lastName").notNull(),
     email: p.varchar("email").notNull(),
     additionalInfo: p.text("additionalInfo"),
-    role: rolesEnum().default("teacher")
+    role: rolesEnum().default("teacher"),
+    color: p.varchar("color")
 });
 
 // Tabela przejściowa, aby pomiędzy grupami a studentami była relacja wiele do wielu.
@@ -122,6 +123,14 @@ export const teacherGroups = p.pgTable("teacherGroups", {
     teacherId: p.uuid("teacherId").references(() => users.id).notNull(),
 });
 
+// Tabela przejściowa łącząca relacją wiele do wielu uczniów z nauczycielami.
+// Nauczyciel widzi oraz może przypisywać do grup jedynie swoich uczniów.
+export const teacherStudents = p.pgTable("teacherStudents", {
+    id: p.uuid("id").primaryKey().defaultRandom(),
+    studentId: p.uuid("studentId").references(() => students.id).notNull(),
+    teacherId: p.uuid("teacherId").references(() => users.id).notNull(),
+});
+
 
 export const table = {
     classroomReservations,
@@ -134,6 +143,7 @@ export const table = {
     reservationStudents,
     students,
     teacherGroups,
+    teacherStudents,
     reservationCycles,
 } as const;
 
@@ -208,6 +218,10 @@ export const relations = defineRelations({ ...table, user },
                 from: r.users.id.through(r.teacherGroups.teacherId),
                 to: r.groups.id.through(r.teacherGroups.groupId)
             }),
+            students: r.many.students({
+                from: r.users.id.through(r.teacherStudents.teacherId),
+                to: r.students.id.through(r.teacherStudents.studentId)
+            }),
             user: r.one.user({
                 from: r.users.authId,
                 to: r.user.id
@@ -231,6 +245,10 @@ export const relations = defineRelations({ ...table, user },
             groups: r.many.groups({
                 from: r.students.id.through(r.groupStudents.studentId),
                 to: r.groups.id.through(r.groupStudents.groupId)
+            }),
+            teachers: r.many.users({
+                from: r.students.id.through(r.teacherStudents.studentId),
+                to: r.users.id.through(r.teacherStudents.teacherId)
             }),
             reservations: r.many.classroomReservations({
                 from: r.students.id.through(r.reservationStudents.studentId),
@@ -278,6 +296,16 @@ export const relations = defineRelations({ ...table, user },
             }),
             users: r.one.users({
                 from: r.teacherGroups.teacherId,
+                to: r.users.id
+            })
+        },
+        teacherStudents: {
+            students: r.one.students({
+                from: r.teacherStudents.studentId,
+                to: r.students.id
+            }),
+            users: r.one.users({
+                from: r.teacherStudents.teacherId,
                 to: r.users.id
             })
         },

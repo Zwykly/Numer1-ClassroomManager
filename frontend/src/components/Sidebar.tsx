@@ -85,7 +85,7 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
                 </Button>
             </div>
 
-            <div className="mt-4 flex flex-1 flex-col overflow-y-auto px-4 pb-4">
+            <div className="mt-4 flex flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-4">
                 {pathname === "/myHome" && (
                     <div className="py-2">
                         <CalendarDatePicker />

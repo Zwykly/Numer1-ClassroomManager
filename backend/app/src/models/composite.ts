@@ -12,6 +12,7 @@ import { selectSimpleGroupStudentSchema } from './group_students';
 import { selectSimpleReservationGroupSchema } from './reservation_groups';
 import { selectSimpleReservationStudentSchema } from './reservation_students';
 import { selectSimpleTeacherGroupSchema } from './teacher_groups';
+import { selectSimpleTeacherStudentSchema } from './teacher_students';
 import { _selectUsersSchema } from './users';
 import { _selectClassroomsSchema } from './classrooms';
 import { _selectStudentsSchema } from './students';
@@ -29,6 +30,7 @@ export const selectCompositeUserSchema = t.Composite([
     t.Omit(_selectUsersSchema, ['authId']),
     t.Object({
         groups: t.Optional(t.Array(selectSimpleGroupSchema)),
+        students: t.Optional(t.Array(selectSimpleStudentSchema)),
         reservations: t.Optional(t.Array(selectSimpleClassroomReservationSchema)),
         onlineClassroom: t.Optional(selectSimpleOnlineClassroomSchema)
     })
@@ -43,6 +45,7 @@ export const createUserAccountResponseSchema = t.Object({
 export const selectCompositeStudentSchema = t.Composite([
     _selectStudentsSchema,
     t.Object({
+        teachers: t.Optional(t.Array(_selectSimpleUserSchema)),
         groups: t.Optional(t.Array(selectSimpleGroupSchema)),
         reservations: t.Optional(t.Array(selectSimpleClassroomReservationSchema)),
     })
@@ -123,4 +126,5 @@ export const paginatedGroupStudentsResponseSchema = createPaginationResponseSche
 export const paginatedReservationGroupsResponseSchema = createPaginationResponseSchema(selectSimpleReservationGroupSchema);
 export const paginatedReservationStudentsResponseSchema = createPaginationResponseSchema(selectSimpleReservationStudentSchema);
 export const paginatedTeacherGroupsResponseSchema = createPaginationResponseSchema(selectSimpleTeacherGroupSchema);
+export const paginatedTeacherStudentsResponseSchema = createPaginationResponseSchema(selectSimpleTeacherStudentSchema);
 

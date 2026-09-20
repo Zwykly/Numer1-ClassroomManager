@@ -6,7 +6,7 @@ import { Modal } from "./Modal";
 import { ConfirmModal } from "./ConfirmModal";
 import { Button } from "./Button";
 import { reservationAttendees } from "@/components/ReservationsTable";
-import { teacherColor } from "@/utils/teacherColors";
+import { userColor } from "@/utils/userColors";
 import type { Reservation } from "@/stores/useReservationsStore";
 
 type ClassDetailsModalProps = {
@@ -107,7 +107,7 @@ export function ClassDetailsModal({
                                 <span className="inline-flex items-center gap-2">
                                     <span
                                         className="h-2.5 w-2.5 rounded-full"
-                                        style={{ backgroundColor: teacherColor(reservation.teacherId) }}
+                                        style={{ backgroundColor: userColor(reservation.teacher?.color) }}
                                     />
                                     {reservation.teacher
                                         ? `${reservation.teacher.firstName} ${reservation.teacher.lastName}`
@@ -141,7 +141,7 @@ export function ClassDetailsModal({
                                 <Users size={14} />
                                 Participants ({participants.length})
                             </span>
-                            <div className="mt-2 flex max-h-80 flex-col gap-1.5 overflow-y-auto rounded-xl border border-light-grey p-2">
+                            <div className="mt-2 flex max-h-80 flex-col gap-1.5 overflow-y-auto overscroll-contain rounded-xl border border-light-grey p-2">
                                 {participants.length === 0 ? (
                                     <span className="py-3 text-center text-sm text-darker-grey">
                                         No participants assigned.

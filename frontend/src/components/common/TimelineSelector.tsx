@@ -30,7 +30,7 @@ export function TimelineSelector() {
 
     return(
         <div className="flex pt-4 px-4 pb-4 sm:pt-15 sm:px-6 sm:pb-0 bg-canvas flex-col w-full">
-            <div className="flex flex-row items-center justify-between gap-4">
+            <div className="flex flex-row flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 <ClassroomSelector />
                 <ViewSelector />
             </div>
@@ -75,9 +75,9 @@ function ClassroomSelector() {
 
     return (
         <Select.Root value={selectedClassroom} onValueChange={setSelectedClassroom}>
-            <Select.Trigger className={cn('inline-flex w-fit items-center gap-1 text-black font-bold text-2xl sm:text-4xl cursor-pointer', disableRing)}>
+            <Select.Trigger className={cn('inline-flex min-w-0 max-w-full w-fit items-center gap-1 text-black font-bold text-2xl sm:text-4xl cursor-pointer', disableRing)}>
                 <Select.Value asChild>
-                    <span>{selectedClassroomName}</span>
+                    <span className="truncate">{selectedClassroomName}</span>
                 </Select.Value>
                 <Select.Icon className='flex flex-col justify-end h-full'>
                     <ChevronDown />
@@ -85,12 +85,13 @@ function ClassroomSelector() {
             </Select.Trigger>
             <Select.Portal>
                 <Select.Content 
-                    className='z-50 bg-light-grey rounded-md shadow-lg select-none'
+                    className='z-50 max-h-[min(60vh,var(--radix-select-content-available-height))] overflow-hidden bg-light-grey rounded-md shadow-lg select-none'
                     side="bottom"
                     align="start"
                     position="popper"
+                    collisionPadding={8}
                 >
-                    <Select.Viewport>
+                    <Select.Viewport className='max-h-[inherit] overflow-y-auto overscroll-contain'>
                         <Select.Item 
                             className={cn('text-lg sm:text-2xl py-1 px-3 gap-2 flex items-center transition duration-200 ease-in-out text-darker-grey hover:text-white hover:bg-orange transition-100 cursor-pointer rounded', disableRing)} 
                             value="all"

@@ -10,28 +10,34 @@ const groupsRoutes = new Elysia({
     .use(authGuard)
     .get("/", GroupsController.getAll, {
         query: groupsQuerySchema,
-        response: paginatedGroupsResponseSchema
+        response: paginatedGroupsResponseSchema,
+        isAuth: true
     })
     .get("/:id", GroupsController.getById, {
         params: t.Object({ id: t.String() }),
-        response: selectCompositeGroupSchema
+        response: selectCompositeGroupSchema,
+        isAuth: true
     })
     .post("/", GroupsController.create, {
         body: createGroupSchema,
-        response: selectCompositeGroupSchema
+        response: selectCompositeGroupSchema,
+        isAuth: true
     })
     .put("/:id", GroupsController.update, {
         params: t.Object({ id: t.String() }),
         body: updateGroupSchema,
-        response: selectCompositeGroupSchema
+        response: selectCompositeGroupSchema,
+        isAuth: true
     })
     .patch("/:id", GroupsController.patch, {
         params: t.Object({ id: t.String() }),
         body: patchGroupSchema,
-        response: selectCompositeGroupSchema
+        response: selectCompositeGroupSchema,
+        isAuth: true
     })
     .delete("/:id", GroupsController.remove, {
         params: t.Object({ id: t.String() }),
+        isAdmin: true
     });
 
 export default groupsRoutes;

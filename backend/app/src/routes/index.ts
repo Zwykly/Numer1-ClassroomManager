@@ -10,6 +10,7 @@ import reservationGroupsRoutes from "./reservation_groups";
 import reservationStudentsRoutes from "./reservation_students";
 import studentsRoutes from "./students";
 import teacherGroupsRoutes from "./teacher_groups";
+import teacherStudentsRoutes from "./teacher_students";
 import reservationCyclesRoutes from "./reservation_cycles";
 
 const apiRoutes =  new Elysia()
@@ -23,6 +24,7 @@ const apiRoutes =  new Elysia()
     .use(reservationStudentsRoutes)
     .use(studentsRoutes)
     .use(teacherGroupsRoutes)
+    .use(teacherStudentsRoutes)
     .use(reservationCyclesRoutes)
 
 export default apiRoutes;

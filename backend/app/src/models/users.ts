@@ -19,11 +19,18 @@ export const usersQuerySchema = t.Composite([
 // Inserts
 export const insertUserSchema = t.Omit(_insertUsersSchema, ['id']);
 
+// Groups and students a teacher is associated with
+const associationFields = t.Object({
+    groupIds: t.Optional(t.Array(t.String({ format: 'uuid' }))),
+    studentIds: t.Optional(t.Array(t.String({ format: 'uuid' }))),
+});
+
 // Account creation (creates the auth account together with the business user)
 // Derived from the users insert shape: drop the DB-managed id and the authId
 // (owned by better-auth), require role and tighten name/email validation.
 export const createUserAccountSchema = t.Composite([
     t.Omit(_insertUsersSchema, ['id', 'authId']),
+    associationFields,
     t.Object({
         firstName: t.String({ minLength: 1 }),
         lastName: t.String({ minLength: 1 }),
@@ -39,6 +46,9 @@ export const selectSimpleUserSchema = t.Omit(_selectUsersSchema,
 );
 
 // Updates
-export const updateUserSchema = t.Omit(_updateUsersSchema, ['id']);
+export const updateUserSchema = t.Composite([t.Omit(_updateUsersSchema, ['id']), associationFields]);
 
-export const patchUserSchema = t.Partial(t.Omit(_updateUsersSchema, ['id']));
+export const patchUserSchema = t.Composite([
+    t.Partial(t.Omit(_updateUsersSchema, ['id'])),
+    associationFields,
+]);

@@ -190,11 +190,7 @@ export function TimelineView () {
                         reservations={visibleReservations}
                         currentUserId={currentUserId}
                         onSelectReservation={openDetails}
-                        columnWidth={
-                            view === "day"
-                                ? "calc(100vw - 4rem)"
-                                : "calc((100vw - 4rem) / 3)"
-                        }
+                        view={view}
                     />
                     {modals}
                 </div>

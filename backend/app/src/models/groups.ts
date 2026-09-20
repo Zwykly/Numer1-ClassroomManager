@@ -23,15 +23,21 @@ const studentFields = t.Object({
     studentIds: t.Optional(t.Array(t.String({ format: 'uuid' }))),
 });
 
-export const createGroupSchema = t.Composite([insertGroupSchema, studentFields]);
+// Teachers the group is associated with
+const teacherFields = t.Object({
+    teacherIds: t.Optional(t.Array(t.String({ format: 'uuid' }))),
+});
+
+export const createGroupSchema = t.Composite([insertGroupSchema, studentFields, teacherFields]);
 
 // Selects
 export const selectSimpleGroupSchema = _selectGroupsSchema;
 
 // Updates
-export const updateGroupSchema = t.Composite([t.Omit(_updateGroupsSchema, ['id']), studentFields]);
+export const updateGroupSchema = t.Composite([t.Omit(_updateGroupsSchema, ['id']), studentFields, teacherFields]);
 
 export const patchGroupSchema = t.Composite([
     t.Partial(t.Omit(_updateGroupsSchema, ['id'])),
     studentFields,
+    teacherFields,
 ]);

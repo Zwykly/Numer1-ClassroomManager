@@ -10,7 +10,7 @@ export function MobileHeader({ onOpenNav }: MobileHeaderProps) {
     const { openReservation } = useActionModalActions();
 
     return (
-        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-light-grey bg-white px-4 lg:hidden">
+        <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-light-grey bg-white px-4 pb-0 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-[env(safe-area-inset-top)] lg:hidden">
             <button
                 type="button"
                 onClick={onOpenNav}

@@ -1,18 +1,20 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isSameDay, isToday } from "date-fns";
-import { HOUR_HEIGHT, TIMELINE_HOURS, minutesFromTimelineStart } from "@/utils/calendarRange";
+import { HOUR_HEIGHT, TIMELINE_HOURS, minutesFromTimelineStart, type CalendarView } from "@/utils/calendarRange";
 import { DayTimeline } from "./DayTimeline";
 import { CurrentTimeLine } from "./CurrentTimeLine";
 import type { ClassroomReservation } from "@/stores/useClassroomReservationsStore";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+const TIME_GUTTER = "4rem";
+
 type MobileTimelineProps = {
     days: Date[];
     reservations: ClassroomReservation[];
     currentUserId?: string;
     onSelectReservation: (reservation: ClassroomReservation) => void;
-    columnWidth: string;
+    view: CalendarView;
 };
 
 export function MobileTimeline({
@@ -20,10 +22,13 @@ export function MobileTimeline({
     reservations,
     currentUserId,
     onSelectReservation,
-    columnWidth,
+    view,
 }: MobileTimelineProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const didInitScroll = useRef(false);
+    const [containerWidth, setContainerWidth] = useState(() =>
+        typeof window !== "undefined" ? window.innerWidth : 0,
+    );
 
     useEffect(() => {
         if (didInitScroll.current || !scrollContainerRef.current) return;
@@ -31,6 +36,22 @@ export function MobileTimeline({
         scrollContainerRef.current.scrollTop = Math.max(top - 100, 0);
         didInitScroll.current = true;
     }, []);
+
+    useEffect(() => {
+        const element = scrollContainerRef.current;
+        if (!element) return;
+        const update = () => setContainerWidth(element.clientWidth);
+        update();
+        const observer = new ResizeObserver(update);
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, []);
+
+    // Size columns from the actual scroll container instead of `100vw`, which
+    // includes scrollbars and unsafe areas on iOS and can overflow.
+    const columnWidth = view === "day"
+        ? `calc(${containerWidth}px - ${TIME_GUTTER})`
+        : `calc((${containerWidth}px - ${TIME_GUTTER}) / 3)`;
 
     return (
         <div ref={scrollContainerRef} className="relative min-h-0 flex-1 overflow-auto overscroll-contain bg-canvas">

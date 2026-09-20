@@ -1,19 +1,33 @@
 import { NotFoundError } from "elysia";
 import { StudentsService } from "../services/students";
-import { insertStudentSchema, insertStudentsBatchSchema, updateStudentSchema, patchStudentSchema, studentsQuerySchema } from "../models/students";
+import { createStudentSchema, insertStudentsBatchSchema, updateStudentSchema, patchStudentSchema, studentsQuerySchema } from "../models/students";
+
+type AuthUser = {
+    userInfo?: { id: string; role?: string | null } | null;
+} | null;
+
+function isAdmin(user: AuthUser) {
+    return user?.userInfo?.role === "admin";
+}
 
 export const StudentsController = {
-    async getAll({ query }: { query: typeof studentsQuerySchema.static }) {
-        return await StudentsService.getAll(query);
+    async getAll({ query, user }: { query: typeof studentsQuerySchema.static; user: AuthUser }) {
+        return await StudentsService.getAll(query, {
+            id: user?.userInfo?.id,
+            isAdmin: isAdmin(user),
+        });
     },
 
-    async getById({ params: { id } }: { params: { id: string } }) {
-        const student = await StudentsService.getById(id);
+    async getById({ params: { id }, user }: { params: { id: string }; user: AuthUser }) {
+        const student = await StudentsService.getById(id, {
+            id: user?.userInfo?.id,
+            isAdmin: isAdmin(user),
+        });
         if (!student) throw new NotFoundError( "Student not found");
         return student;
     },
 
-    async create({ body }: { body: typeof insertStudentSchema.static }) {
+    async create({ body }: { body: typeof createStudentSchema.static }) {
         const created = await StudentsService.create(body);
         if (!created) throw new NotFoundError( "Student not found");
         return created;

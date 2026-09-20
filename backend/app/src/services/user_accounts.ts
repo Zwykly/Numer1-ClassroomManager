@@ -50,6 +50,9 @@ export const UserAccountsService = {
         const updated = await UsersService.patch(created.id, {
             role: payload.role,
             additionalInfo: payload.additionalInfo ?? null,
+            color: payload.color ?? null,
+            groupIds: payload.groupIds,
+            studentIds: payload.studentIds,
         });
 
         if (!updated) {

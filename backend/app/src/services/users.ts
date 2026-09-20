@@ -22,6 +22,7 @@ export const UsersService = {
             orderBy: (users, { asc }) => [asc(users.id)],
             with: {
                 groups: true,
+                students: true,
                 classroomReservations: true,
                 onlineClassrooms: true,
             }
@@ -30,6 +31,7 @@ export const UsersService = {
         const mappedUsers = usersData.map(user => ({
             ...user,
             groups: user.groups,
+            students: user.students,
             reservations: user.classroomReservations,
             onlineClassroom: user.onlineClassrooms.length > 0 ? user.onlineClassrooms[0] : undefined,
         }));
@@ -42,6 +44,7 @@ export const UsersService = {
             where: { id },
             with: {
                 groups: true,
+                students: true,
                 classroomReservations: true,
                 onlineClassrooms: true,
             }
@@ -52,6 +55,7 @@ export const UsersService = {
         return {
             ...user,
             groups: user.groups,
+            students: user.students,
             reservations: user.classroomReservations,
             onlineClassroom: user.onlineClassrooms.length > 0 ? user.onlineClassrooms[0] : undefined,
         };
@@ -62,6 +66,7 @@ export const UsersService = {
             where: { authId },
             with: {
                 groups: true,
+                students: true,
                 classroomReservations: true,
                 onlineClassrooms: true,
             }
@@ -72,6 +77,7 @@ export const UsersService = {
         return {
             ...user,
             groups: user.groups,
+            students: user.students,
             reservations: user.classroomReservations,
             onlineClassroom: user.onlineClassrooms.length > 0 ? user.onlineClassrooms[0] : undefined,
         };
@@ -101,24 +107,52 @@ export const UsersService = {
         return created?.id ?? null;
     },
 
+    async setGroups(userId: string, groupIds?: string[]) {
+        if (!groupIds) return;
+
+        await db.delete(table.teacherGroups).where(eq(table.teacherGroups.teacherId, userId));
+        if (groupIds.length > 0) {
+            await db.insert(table.teacherGroups).values(
+                groupIds.map((groupId) => ({ groupId, teacherId: userId })),
+            );
+        }
+    },
+
+    async setStudents(userId: string, studentIds?: string[]) {
+        if (!studentIds) return;
+
+        await db.delete(table.teacherStudents).where(eq(table.teacherStudents.teacherId, userId));
+        if (studentIds.length > 0) {
+            await db.insert(table.teacherStudents).values(
+                studentIds.map((studentId) => ({ studentId, teacherId: userId })),
+            );
+        }
+    },
+
     async update(id: string, payload: typeof updateUserSchema.static) {
+        const { groupIds, studentIds, ...user } = payload;
         const [updatedUser] = await db
             .update(table.users)
-            .set(payload)
+            .set(user)
             .where(eq(table.users.id, id))
             .returning();
         if (!updatedUser) return null;
+        await this.setGroups(id, groupIds);
+        await this.setStudents(id, studentIds);
         await this.syncAuthUser(updatedUser);
         return this.getById(id);
     },
 
     async patch(id: string, payload: typeof patchUserSchema.static) {
+        const { groupIds, studentIds, ...user } = payload;
         const [patchedUser] = await db
             .update(table.users)
-            .set(payload)
+            .set(user)
             .where(eq(table.users.id, id))
             .returning();
         if (!patchedUser) return null;
+        await this.setGroups(id, groupIds);
+        await this.setStudents(id, studentIds);
         await this.syncAuthUser(patchedUser);
         return this.getById(id);
     },
@@ -137,6 +171,9 @@ export const UsersService = {
     },
 
     async remove(id: string) {
+        await db.delete(table.teacherStudents).where(eq(table.teacherStudents.teacherId, id));
+        await db.delete(table.teacherGroups).where(eq(table.teacherGroups.teacherId, id));
+
         const [removedUser] = await db
             .delete(table.users)
             .where(eq(table.users.id, id))

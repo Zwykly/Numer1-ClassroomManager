@@ -3,6 +3,7 @@ import { db } from "../db/db";
 import { table } from "../db/schema";
 import { createGroupSchema, updateGroupSchema, patchGroupSchema, groupsQuerySchema } from "../models/groups";
 import { getLimit, getCursorWhere, getFuzzySearchWhere, buildPaginationResponse } from "../utils/drizzle";
+import { TeacherStudentsService } from "./teacher_students";
 
 type Viewer = {
     id?: string;
@@ -74,16 +75,37 @@ export const GroupsService = {
                 studentIds.map((studentId) => ({ groupId, studentId })),
             );
         }
+
+        // Every teacher of the group automatically receives its members.
+        const teacherIds = await TeacherStudentsService.getTeacherIdsForGroup(groupId);
+        for (const teacherId of teacherIds) {
+            await TeacherStudentsService.addStudents(teacherId, studentIds);
+        }
     },
 
     async setTeachers(groupId: string, teacherIds?: string[]) {
         if (!teacherIds) return;
+
+        const previous = await db
+            .select({ teacherId: table.teacherGroups.teacherId })
+            .from(table.teacherGroups)
+            .where(eq(table.teacherGroups.groupId, groupId));
+        const previousIds = new Set(previous.map((row) => row.teacherId));
 
         await db.delete(table.teacherGroups).where(eq(table.teacherGroups.groupId, groupId));
         if (teacherIds.length > 0) {
             await db.insert(table.teacherGroups).values(
                 teacherIds.map((teacherId) => ({ groupId, teacherId })),
             );
+        }
+
+        // Newly assigned teachers inherit every student already in the group.
+        const added = teacherIds.filter((teacherId) => !previousIds.has(teacherId));
+        if (added.length > 0) {
+            const studentIds = await TeacherStudentsService.getStudentIdsForGroups([groupId]);
+            for (const teacherId of added) {
+                await TeacherStudentsService.addStudents(teacherId, studentIds);
+            }
         }
     },
 

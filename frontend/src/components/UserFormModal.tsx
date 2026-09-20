@@ -4,6 +4,7 @@ import { clsx as cn } from "clsx";
 import { Modal } from "./common/Modal";
 import { Button } from "./common/Button";
 import { EntityPicker, type EntityPickerItem } from "./common/EntityPicker";
+import { RemoveStudentsModal } from "./RemoveStudentsModal";
 import { USER_COLORS } from "@/utils/userColors";
 import eden from "@/lib/eden";
 import type { NewUserAccount, User, UserPatch } from "@/stores/useUsersStore";
@@ -41,6 +42,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 type GroupOption = {
     id: string;
     name: string;
+    students?: StudentOption[];
 };
 
 type StudentOption = {
@@ -72,6 +74,9 @@ export function UserFormModal({
     const [studentSearch, setStudentSearch] = useState("");
     const [studentResults, setStudentResults] = useState<StudentOption[]>([]);
     const [isSearchingStudents, setIsSearchingStudents] = useState(false);
+
+    const [pendingRemoval, setPendingRemoval] = useState<{ teacherName: string; students: StudentOption[] } | null>(null);
+    const [removeOpen, setRemoveOpen] = useState(false);
 
     useEffect(() => {
         if (!open) return;
@@ -116,7 +121,15 @@ export function UserFormModal({
                 const response = await eden.groups.get({
                     query: { limit: 50, ...(query ? { search: query } : {}) },
                 });
-                setGroupResults((response.data?.data ?? []).map((group) => ({ id: group.id, name: group.name })));
+                setGroupResults((response.data?.data ?? []).map((group) => ({
+                    id: group.id,
+                    name: group.name,
+                    students: (group.students ?? []).map((student) => ({
+                        id: student.id,
+                        firstName: student.firstName,
+                        lastName: student.lastName,
+                    })),
+                })));
             } catch (err) {
                 console.error("Failed to search groups:", err);
                 setGroupResults([]);
@@ -166,9 +179,48 @@ export function UserFormModal({
         const group = groupResults.find((candidate) => candidate.id === item.id);
         if (!group) return;
         setGroups((current) => (current.some((entry) => entry.id === group.id) ? current : [...current, group]));
+
+        // Students of a newly assigned group are automatically assigned too.
+        const members = group.students ?? [];
+        if (members.length > 0) {
+            setStudents((current) => {
+                const ids = new Set(current.map((student) => student.id));
+                const additions = members.filter((student) => !ids.has(student.id));
+                return additions.length > 0 ? [...current, ...additions] : current;
+            });
+        }
     };
 
-    const removeGroup = (id: string) => setGroups((current) => current.filter((group) => group.id !== id));
+    const removeGroup = async (id: string) => {
+        const group = groups.find((entry) => entry.id === id);
+        setGroups((current) => current.filter((entry) => entry.id !== id));
+        if (!group) return;
+
+        let members = group.students;
+        if (!members) {
+            try {
+                const response = await eden.groups({ id }).get();
+                members = (response.data?.students ?? []).map((student) => ({
+                    id: student.id,
+                    firstName: student.firstName,
+                    lastName: student.lastName,
+                }));
+            } catch (error) {
+                console.error("Failed to load group students:", error);
+                members = [];
+            }
+        }
+
+        const assignedIds = new Set(students.map((student) => student.id));
+        const candidates = members.filter((member) => assignedIds.has(member.id));
+        if (candidates.length === 0) return;
+
+        setPendingRemoval({
+            teacherName: `${form.firstName} ${form.lastName}`.trim(),
+            students: candidates,
+        });
+        setRemoveOpen(true);
+    };
 
     const addStudent = (item: EntityPickerItem) => {
         const student = studentResults.find((candidate) => candidate.id === item.id);
@@ -237,6 +289,7 @@ export function UserFormModal({
     };
 
     return (
+        <>
         <Modal
             open={open}
             onOpenChange={onOpenChange}
@@ -397,6 +450,20 @@ export function UserFormModal({
                 </div>
             </div>
         </Modal>
+
+        <RemoveStudentsModal
+            open={removeOpen}
+            onOpenChange={setRemoveOpen}
+            teacherName={pendingRemoval?.teacherName ?? "this teacher"}
+            students={pendingRemoval?.students ?? []}
+            onRemove={(selectedIds) => {
+                const ids = new Set(selectedIds);
+                setStudents((current) => current.filter((student) => !ids.has(student.id)));
+                setPendingRemoval(null);
+            }}
+            onKeep={() => setPendingRemoval(null)}
+        />
+        </>
     );
 }
 

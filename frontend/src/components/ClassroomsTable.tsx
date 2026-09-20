@@ -144,7 +144,7 @@ export function ClassroomsTable({ classrooms, isLoading, canManage, onEdit, onDe
                 <div className="flex flex-col gap-4">
                     <div>
                         <span className="text-xs font-bold uppercase tracking-wide text-darker-grey">Capacity</span>
-                        <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-bold text-black">
+                        <p className="mt-1 flex w-fit items-center gap-1.5 text-sm font-bold text-black">
                             <Users size={15} className="text-darker-grey" />
                             {classroom.maxNumberOfPeople} people
                         </p>
@@ -159,7 +159,7 @@ export function ClassroomsTable({ classrooms, isLoading, canManage, onEdit, onDe
                         <span className="text-xs font-bold uppercase tracking-wide text-darker-grey">
                             Total classes
                         </span>
-                        <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-bold text-black">
+                        <p className="mt-1 flex w-fit items-center gap-1.5 text-sm font-bold text-black">
                             <Building2 size={15} className="text-darker-grey" />
                             {classes.length}
                         </p>

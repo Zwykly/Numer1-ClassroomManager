@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
 import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema } from "../models/classroom_reservations";
@@ -343,26 +343,28 @@ export const ClassroomReservationsService = {
     },
 
     async startDueReservations() {
-        const now = new Date();
+        // reservationTime is stored as UTC wall-clock in a timestamp column, so
+        // compare it against the UTC wall-clock rather than the session timezone.
         const started = await db
             .update(table.classroomReservations)
-            .set({ status: "ongoing", editedOn: now })
+            .set({ status: "ongoing", editedOn: new Date() })
             .where(and(
                 inArray(table.classroomReservations.status, ["scheduled", "cyclical"]),
-                lte(table.classroomReservations.reservationTime, now),
+                sql`${table.classroomReservations.reservationTime} <= timezone('UTC', now())`,
             ))
             .returning({ id: table.classroomReservations.id });
         return started.length;
     },
 
     async completeFinishedReservations() {
+        // Only finish a class once its full duration has elapsed.
         const completed = await db
             .update(table.classroomReservations)
             .set({ status: "completed", editedOn: new Date() })
             .where(and(
                 eq(table.classroomReservations.status, "ongoing"),
                 isNotNull(table.classroomReservations.durationMinutes),
-                sql`${table.classroomReservations.reservationTime} + (${table.classroomReservations.durationMinutes} * interval '1 minute') <= now()`,
+                sql`${table.classroomReservations.reservationTime} + (${table.classroomReservations.durationMinutes} * interval '1 minute') <= timezone('UTC', now())`,
             ))
             .returning({ id: table.classroomReservations.id });
         return completed.length;

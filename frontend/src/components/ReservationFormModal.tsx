@@ -147,6 +147,7 @@ export function ReservationFormModal({
 
     // The server already scopes the fetched list to the teacher's own classroom.
     const teacherOnlineClassroomId = ownOnlineClassroom?.id ?? onlineClassrooms[0]?.id;
+    const teacherOnlineClassroomName = ownOnlineClassroom?.name ?? onlineClassrooms[0]?.name ?? "Your online classroom";
 
     const durationOptions = useMemo(() => {
         const options = new Set(DURATION_OPTIONS);
@@ -591,7 +592,9 @@ export function ReservationFormModal({
                                     className="h-2.5 w-2.5 rounded-full"
                                     style={{
                                         backgroundColor: userColor(
-                                            onlineClassrooms.find((classroom) => classroom.id === form.onlineClassroomId)?.teacher?.color,
+                                            isAdmin
+                                                ? onlineClassrooms.find((classroom) => classroom.id === form.onlineClassroomId)?.teacher?.color
+                                                : UserData?.user?.userInfo?.color,
                                         ),
                                     }}
                                 />
@@ -610,12 +613,11 @@ export function ReservationFormModal({
                                     </option>
                                 ))}
                             </select>
-                        ) : (
+                        ) : isAdmin ? (
                             <select
                                 value={form.onlineClassroomId}
                                 onChange={(event) => setField("onlineClassroomId", event.target.value)}
-                                disabled={!isAdmin}
-                                className={cn(inputClass, !isAdmin && "cursor-not-allowed bg-light-grey text-darker-grey")}
+                                className={inputClass}
                             >
                                 <option value="">Select an online classroom...</option>
                                 {onlineClassroomOptions.map((classroom) => (
@@ -624,6 +626,13 @@ export function ReservationFormModal({
                                     </option>
                                 ))}
                             </select>
+                        ) : (
+                            <div
+                                className={cn(inputClass, "flex cursor-default select-none items-center bg-light-grey text-darker-grey")}
+                                title="You can only host online classes in your own online classroom"
+                            >
+                                <span className="truncate">{teacherOnlineClassroomName}</span>
+                            </div>
                         )}
                     </label>
 

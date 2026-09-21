@@ -1,0 +1,70 @@
+name: classroom-manager
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-classroom}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-classroom}
+      POSTGRES_DB: ${POSTGRES_DB:-classroom_manager}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - classroom
+
+  backend:
+    image: ${BACKEND_IMAGE:-zwykly/numer1-classroommanager-backend:latest}
+    build:
+      context: .
+      dockerfile: backend/app/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-classroom}:${POSTGRES_PASSWORD:-classroom}@db:5432/${POSTGRES_DB:-classroom_manager}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-http://localhost:3030}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@classroom.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}
+      ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME:-Admin}
+      ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:-User}
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    networks:
+      - classroom
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-zwykly/numer1-classroommanager-frontend:latest}
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      PORT: "3030"
+      BUN_PUBLIC_API_URL: ${BUN_PUBLIC_API_URL:-http://localhost:3000}
+    ports:
+      - "${FRONTEND_PORT:-3030}:3030"
+    networks:
+      - classroom
+
+volumes:
+  db_data:
+
+networks:
+  classroom:
+    driver: bridge

@@ -9,7 +9,7 @@ const DAY_END_HOUR = 20;
 const MAX_SUGGESTION_DAYS = 21;
 const MAX_SUGGESTION_ATTEMPTS = 400;
 
-type CheckInput = typeof checkConflictsSchema.static;
+type CheckInput = typeof checkConflictsSchema.static & { viewer?: { id?: string; isAdmin: boolean } };
 type BusyReservation = any;
 
 function teacherName(reservation: BusyReservation): string | null {
@@ -19,6 +19,13 @@ function teacherName(reservation: BusyReservation): string | null {
 
 function roomName(reservation: BusyReservation): string | null {
     return reservation.classrooms?.name ?? reservation.onlineClassrooms?.name ?? null;
+}
+
+// A conflict may only expose its details when it belongs to the viewer (or the
+// viewer is an administrator). Otherwise the reservation is fully anonymised.
+function canSeeDetails(input: CheckInput, reservation: BusyReservation): boolean {
+    if (!input.viewer || input.viewer.isAdmin) return true;
+    return Boolean(input.viewer.id) && reservation.teacherId === input.viewer.id;
 }
 
 function roundUpToStep(date: Date, stepMinutes: number): Date {
@@ -163,14 +170,16 @@ export const ConflictsService = {
             const items = busy
                 .map((reservation) => {
                     const reasons = this.matchesProposed(start, input, reservation);
+                    const visible = canSeeDetails(input, reservation);
                     return reasons.map((type) => ({
                         type,
                         reservationId: reservation.id,
-                        name: reservation.name ?? null,
+                        name: visible ? (reservation.name ?? null) : null,
                         reservationTime: new Date(reservation.reservationTime).toISOString(),
-                        durationMinutes: reservation.durationMinutes ?? null,
-                        teacherName: teacherName(reservation),
-                        roomName: roomName(reservation),
+                        durationMinutes: visible ? (reservation.durationMinutes ?? null) : null,
+                        teacherName: visible ? teacherName(reservation) : null,
+                        roomName: visible ? roomName(reservation) : null,
+                        restricted: visible ? undefined : true,
                     }));
                 })
                 .flat();

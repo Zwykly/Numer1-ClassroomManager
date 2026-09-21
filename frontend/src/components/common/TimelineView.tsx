@@ -175,6 +175,7 @@ export function TimelineView () {
                         day={selectedDay}
                         reservations={dayReservations}
                         currentUserId={currentUserId}
+                        isAdmin={isAdmin}
                         onSelectReservation={openDetails}
                     />
                     {modals}
@@ -189,6 +190,7 @@ export function TimelineView () {
                         days={displayedDays}
                         reservations={visibleReservations}
                         currentUserId={currentUserId}
+                        isAdmin={isAdmin}
                         onSelectReservation={openDetails}
                         view={view}
                     />
@@ -244,6 +246,7 @@ export function TimelineView () {
                                         day={day}
                                         reservations={reservations}
                                         currentUserId={currentUserId}
+                                        isAdmin={isAdmin}
                                         onSelectReservation={openDetails}
                                     />
                                 );

@@ -8,6 +8,7 @@ type DayTimelineData = {
     day: Date;
     reservations: ClassroomReservation[];
     currentUserId?: string;
+    isAdmin?: boolean;
     onSelectReservation?: (reservation: ClassroomReservation) => void;
 }
 
@@ -77,6 +78,7 @@ export function DayTimeline (
         day,
         reservations,
         currentUserId,
+        isAdmin,
         onSelectReservation,
         ...props
     } : DayTimelineData ) {
@@ -109,6 +111,7 @@ export function DayTimeline (
                         <ClassTile
                             reservation={reservation}
                             isOwn={reservation.teacherId === currentUserId}
+                            isAdmin={isAdmin}
                             onClick={onSelectReservation ? () => onSelectReservation(reservation) : undefined}
                         />
                     </div>

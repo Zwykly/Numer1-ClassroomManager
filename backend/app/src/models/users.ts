@@ -35,7 +35,7 @@ export const createUserAccountSchema = t.Composite([
         firstName: t.String({ minLength: 1 }),
         lastName: t.String({ minLength: 1 }),
         email: t.String({ format: 'email' }),
-        role: t.Union([t.Literal('admin'), t.Literal('teacher')]),
+        role: t.Union([t.Literal('admin'), t.Literal('teacher'), t.Literal('pending')]),
         password: t.Optional(t.String({ minLength: 8 })),
     })
 ]);
@@ -44,6 +44,15 @@ export const createUserAccountSchema = t.Composite([
 export const selectSimpleUserSchema = t.Omit(_selectUsersSchema,
     ['authId', 'email', 'additionalInfo', 'role']
 );
+
+// Self-service password change
+export const setPasswordSchema = t.Object({
+    newPassword: t.String({ minLength: 8 }),
+});
+
+export const setPasswordResponseSchema = t.Object({
+    success: t.Boolean(),
+});
 
 // Updates
 export const updateUserSchema = t.Composite([t.Omit(_updateUsersSchema, ['id']), associationFields]);

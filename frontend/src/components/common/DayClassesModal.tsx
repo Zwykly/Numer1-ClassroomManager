@@ -9,10 +9,11 @@ type DayClassesModalProps = {
     day: Date | null;
     reservations: ClassroomReservation[];
     currentUserId?: string;
+    isAdmin?: boolean;
     onSelectReservation?: (reservation: ClassroomReservation) => void;
 };
 
-export function DayClassesModal({ open, onOpenChange, day, reservations, currentUserId, onSelectReservation }: DayClassesModalProps) {
+export function DayClassesModal({ open, onOpenChange, day, reservations, currentUserId, isAdmin, onSelectReservation }: DayClassesModalProps) {
     const count = reservations.length;
 
     return (
@@ -33,6 +34,7 @@ export function DayClassesModal({ open, onOpenChange, day, reservations, current
                             <ClassTile
                                 reservation={reservation}
                                 isOwn={reservation.teacherId === currentUserId}
+                                isAdmin={isAdmin}
                                 onClick={onSelectReservation ? () => onSelectReservation(reservation) : undefined}
                             />
                         </div>

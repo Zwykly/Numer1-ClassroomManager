@@ -135,10 +135,18 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
 
             <div className="border-t border-light-grey p-4">
                 <div className="flex items-center gap-3">
-                    <div className="flex min-w-0 flex-1 flex-col">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            navigate("/profile");
+                            onNavigate?.();
+                        }}
+                        title="View your profile"
+                        className="flex min-w-0 flex-1 flex-col rounded-lg px-1 py-0.5 text-left transition hover:bg-orange/10"
+                    >
                         <span className="truncate text-sm font-bold text-black">{fullName}</span>
                         <span className="truncate text-xs capitalize text-darker-grey">{role}</span>
-                    </div>
+                    </button>
                     <button
                         type="button"
                         onClick={handleSignOut}

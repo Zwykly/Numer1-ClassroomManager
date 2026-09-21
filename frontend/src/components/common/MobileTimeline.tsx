@@ -13,6 +13,7 @@ type MobileTimelineProps = {
     days: Date[];
     reservations: ClassroomReservation[];
     currentUserId?: string;
+    isAdmin?: boolean;
     onSelectReservation: (reservation: ClassroomReservation) => void;
     view: CalendarView;
 };
@@ -21,6 +22,7 @@ export function MobileTimeline({
     days,
     reservations,
     currentUserId,
+    isAdmin,
     onSelectReservation,
     view,
 }: MobileTimelineProps) {
@@ -96,6 +98,7 @@ export function MobileTimeline({
                                 day={day}
                                 reservations={dayReservations}
                                 currentUserId={currentUserId}
+                                isAdmin={isAdmin}
                                 onSelectReservation={onSelectReservation}
                             />
                         </div>

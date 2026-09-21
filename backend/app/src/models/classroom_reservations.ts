@@ -98,6 +98,7 @@ const conflictItemSchema = t.Object({
     durationMinutes: t.Union([t.Integer(), t.Null()]),
     teacherName: t.Union([t.String(), t.Null()]),
     roomName: t.Union([t.String(), t.Null()]),
+    restricted: t.Optional(t.Boolean()),
 });
 
 export const conflictResultSchema = t.Object({

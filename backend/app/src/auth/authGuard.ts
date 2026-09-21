@@ -7,11 +7,15 @@ export const authGuard = new Elysia()
         isAuth: {
             async resolve({ request }) {
                 const session = await auth.api.getSession(request);
-                console.log("session", session);
                 if (!session || !session.user) {
                     return status(401, "Unauthorized");
                 }
                 const userInfo = await UsersService.getByAuthId(session.user.id);
+                // Accounts created through the public API start as "pending" and
+                // have no access until an administrator assigns them a role.
+                if (!userInfo || userInfo.role === "pending") {
+                    return status(403, "Forbidden");
+                }
                 return {
                     session: session.session,
                     user: {

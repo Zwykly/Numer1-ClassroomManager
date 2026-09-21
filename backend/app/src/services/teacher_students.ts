@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
 import { insertTeacherStudentSchema, updateTeacherStudentSchema, patchTeacherStudentSchema, teacherStudentsQuerySchema } from "../models/teacher_students";
@@ -16,6 +16,59 @@ export const TeacherStudentsService = {
         });
 
         return buildPaginationResponse(data, query.limit);
+    },
+
+    // Ids of every student currently associated with a teacher.
+    async getStudentIds(teacherId: string) {
+        const rows = await db
+            .select({ studentId: table.teacherStudents.studentId })
+            .from(table.teacherStudents)
+            .where(eq(table.teacherStudents.teacherId, teacherId));
+        return rows.map((row) => row.studentId);
+    },
+
+    // Ids of every student that belongs to any of the given groups.
+    async getStudentIdsForGroups(groupIds: string[]) {
+        if (groupIds.length === 0) return [];
+        const rows = await db
+            .select({ studentId: table.groupStudents.studentId })
+            .from(table.groupStudents)
+            .where(inArray(table.groupStudents.groupId, groupIds));
+        return [...new Set(rows.map((row) => row.studentId))];
+    },
+
+    async getGroupIdsForTeacher(teacherId: string) {
+        const rows = await db
+            .select({ groupId: table.teacherGroups.groupId })
+            .from(table.teacherGroups)
+            .where(eq(table.teacherGroups.teacherId, teacherId));
+        return rows.map((row) => row.groupId);
+    },
+
+    async getTeacherIdsForGroup(groupId: string) {
+        const rows = await db
+            .select({ teacherId: table.teacherGroups.teacherId })
+            .from(table.teacherGroups)
+            .where(eq(table.teacherGroups.groupId, groupId));
+        return rows.map((row) => row.teacherId);
+    },
+
+    // Associates students with a teacher, skipping pairs that already exist.
+    async addStudents(teacherId: string, studentIds: string[]) {
+        if (studentIds.length === 0) return;
+
+        const existing = await db
+            .select({ studentId: table.teacherStudents.studentId })
+            .from(table.teacherStudents)
+            .where(eq(table.teacherStudents.teacherId, teacherId));
+        const existingIds = new Set(existing.map((row) => row.studentId));
+
+        const toInsert = [...new Set(studentIds)].filter((studentId) => !existingIds.has(studentId));
+        if (toInsert.length === 0) return;
+
+        await db
+            .insert(table.teacherStudents)
+            .values(toInsert.map((studentId) => ({ teacherId, studentId })));
     },
 
     async getById(id: string) {

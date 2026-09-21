@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, KeyRound, Pencil, Trash2 } from "lucide-react";
 import { clsx as cn } from "clsx";
 import type { User } from "@/stores/useUsersStore";
 import { userColor } from "@/utils/userColors";
@@ -10,12 +10,13 @@ type UsersTableProps = {
     isLoading: boolean;
     onModify: (user: User) => void;
     onDelete: (user: User) => void;
+    onResetPassword: (user: User) => void;
 };
 
 function roleStyles(role: string) {
-    return role === "admin"
-        ? "bg-orange/10 text-orange"
-        : "bg-light-grey text-darker-grey";
+    if (role === "admin") return "bg-orange/10 text-orange";
+    if (role === "pending") return "bg-amber-500/10 text-amber-700";
+    return "bg-light-grey text-darker-grey";
 }
 
 function AssociationPills({ label, items }: { label: string; items: { id: string; name: string }[] }) {
@@ -47,6 +48,7 @@ export function UsersTable({
     isLoading,
     onModify,
     onDelete,
+    onResetPassword,
 }: UsersTableProps) {
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -61,16 +63,32 @@ export function UsersTable({
     const renderActions = (user: User) => (
         <>
             <button
+                title="Reset password"
+                className={cn(actionButtonStyles, actionColors.class)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onResetPassword(user);
+                }}
+            >
+                <KeyRound size={18} />
+            </button>
+            <button
                 title="Modify"
                 className={cn(actionButtonStyles, actionColors.modify)}
-                onClick={() => onModify(user)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onModify(user);
+                }}
             >
                 <Pencil size={18} />
             </button>
             <button
                 title="Delete"
                 className={cn(actionButtonStyles, actionColors.delete)}
-                onClick={() => onDelete(user)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onDelete(user);
+                }}
             >
                 <Trash2 size={18} />
             </button>

@@ -1,7 +1,7 @@
-import { selectCompositeUserSchema, paginatedUsersResponseSchema, createUserAccountResponseSchema } from "../models/composite";
+import { selectCompositeUserSchema, paginatedUsersResponseSchema, createUserAccountResponseSchema, resetPasswordResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
 import { UsersController } from "../controllers/users";
-import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema, createUserAccountSchema } from "../models/users";
+import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema, createUserAccountSchema, setPasswordSchema, setPasswordResponseSchema } from "../models/users";
 import { authGuard } from "../auth/authGuard";
 
 const usersRoutes = new Elysia({
@@ -31,6 +31,20 @@ const usersRoutes = new Elysia({
     .post("/account", UsersController.createAccount, {
         body: createUserAccountSchema,
         response: createUserAccountResponseSchema,
+        isAdmin: true
+    })
+    .post("/me/password", UsersController.resetCurrentPassword, {
+        response: resetPasswordResponseSchema,
+        isAuth: true
+    })
+    .patch("/me/password", UsersController.setCurrentPassword, {
+        body: setPasswordSchema,
+        response: setPasswordResponseSchema,
+        isAuth: true
+    })
+    .post("/:id/password", UsersController.resetPassword, {
+        params: t.Object({ id: t.String() }),
+        response: resetPasswordResponseSchema,
         isAdmin: true
     })
     .put("/:id", UsersController.update, {

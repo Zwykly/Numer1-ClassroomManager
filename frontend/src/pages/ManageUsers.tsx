@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { Button } from "../components/common/Button";
 import { ConfirmModal } from "../components/common/ConfirmModal";
 import { UsersTable } from "../components/UsersTable";
+import { UserCredentialsModal } from "../components/UserCredentialsModal";
 import {
     useUsers,
     useUsersLoading,
@@ -14,12 +15,19 @@ import { useActionModalActions } from "@/stores/useActionModalStore";
 export function ManageUsers() {
     const users = useUsers();
     const isLoading = useUsersLoading();
-    const { fetchUsers, deleteUser } = useUsersActions();
+    const { fetchUsers, deleteUser, resetUserPassword } = useUsersActions();
     const { openUser } = useActionModalActions();
 
     const [search, setSearch] = useState("");
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [credentialsOpen, setCredentialsOpen] = useState(false);
+    const [credentials, setCredentials] = useState<{
+        firstName: string;
+        lastName: string;
+        email: string;
+        password: string;
+    } | null>(null);
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -29,7 +37,8 @@ export function ManageUsers() {
     }, [search]);
 
     const adminCount = users.filter((user) => user.role === "admin").length;
-    const teacherCount = users.filter((user) => user.role !== "admin").length;
+    const teacherCount = users.filter((user) => user.role === "teacher").length;
+    const pendingCount = users.filter((user) => user.role === "pending").length;
 
     const openAdd = () => {
         openUser();
@@ -48,6 +57,18 @@ export function ManageUsers() {
         if (!selectedUser) return;
         await deleteUser(selectedUser.id);
         setDeleteOpen(false);
+    };
+
+    const handleResetPassword = async (user: User) => {
+        const password = await resetUserPassword(user.id);
+        if (!password) return;
+        setCredentials({
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            password,
+        });
+        setCredentialsOpen(true);
     };
 
     return (
@@ -82,6 +103,8 @@ export function ManageUsers() {
                             <Stat label="Admins" value={adminCount} accent />
                             <div className="h-9 w-px bg-light-grey" />
                             <Stat label="Teachers" value={teacherCount} />
+                            <div className="h-9 w-px bg-light-grey" />
+                            <Stat label="Pending" value={pendingCount} />
                         </div>
                     </div>
 
@@ -91,6 +114,7 @@ export function ManageUsers() {
                             isLoading={isLoading}
                             onModify={openModify}
                             onDelete={openDelete}
+                            onResetPassword={handleResetPassword}
                         />
                     </div>
                 </div>
@@ -107,6 +131,14 @@ export function ManageUsers() {
                 confirmLabel="Delete"
                 isDestructive
                 onConfirm={confirmDelete}
+            />
+
+            <UserCredentialsModal
+                open={credentialsOpen}
+                onOpenChange={setCredentialsOpen}
+                credentials={credentials}
+                title="Password reset"
+                description="Share this new password with the user. It is only shown once."
             />
         </div>
     );

@@ -47,9 +47,10 @@ export const classrooms = p.pgTable("classrooms", {
     maxNumberOfPeople: p.integer("maxNumberOfPeople").notNull(),
     additionalInfo: p.text("additionalInfo"),
     status: p.varchar("status").notNull(),
+    color: p.varchar("color"),
 });
 
-export const rolesEnum = p.pgEnum("roles", ["admin", "teacher"]);
+export const rolesEnum = p.pgEnum("roles", ["admin", "teacher", "pending"]);
 
 // Użytkownik to nauczyciel, ma on wyznaczoną rolę czyli może być zwykłym lub adminem.
 // Jest to tabela przechowująca tylko informacje o użytkowniku, nie przechowuje ona loginu

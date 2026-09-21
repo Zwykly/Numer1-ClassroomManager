@@ -4,11 +4,17 @@ import { ManageGroups } from "../pages/ManageGroups";
 import { ManageReservations } from "../pages/ManageReservations";
 import { ManageStudents } from "../pages/ManageStudents";
 import { ManageUsers } from "../pages/ManageUsers";
+import { Profile } from "../pages/Profile";
 
 export const privateRoutes = [
     {
         path: "/myHome",
         element: Home,
+        adminOnly: false,
+    },
+    {
+        path: "/profile",
+        element: Profile,
         adminOnly: false,
     },
     {

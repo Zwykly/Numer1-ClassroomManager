@@ -76,8 +76,9 @@ export const auth = betterAuth({
                         firstName: user.firstName,
                         lastName: user.lastName,
 
-                        // Handle fields that might be optional or have defaults
-                        role: "teacher",
+                        // Newly signed-up accounts start with no access; an
+                        // administrator must promote them to teacher or admin.
+                        role: "pending",
                         additionalInfo: null,
                     };
                     try {

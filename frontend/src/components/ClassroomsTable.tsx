@@ -4,6 +4,7 @@ import { clsx as cn } from "clsx";
 import { format } from "date-fns";
 import type { Classroom } from "@/stores/useClassroomsStore";
 import { buildClassroomClasses, countClassroomClasses, upcomingClassroomClasses, type ClassroomClassEntry } from "@/utils/classroomClasses";
+import { classroomColor } from "@/utils/classroomColors";
 import { actionButtonStyles, actionColors } from "@/utils/actionColors";
 
 type ClassroomsTableProps = {
@@ -195,6 +196,10 @@ export function ClassroomsTable({ classrooms, isLoading, canManage, onEdit, onDe
                                         <span className={cn(actionButtonStyles, "inline-flex shrink-0 p-1.5", actionColors.expand)}>
                                             {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                                         </span>
+                                        <span
+                                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                            style={{ backgroundColor: classroomColor(classroom.color, classroom.id) }}
+                                        />
                                         <span className="truncate font-bold text-black">{classroom.name}</span>
                                     </div>
                                     {canManage && renderActions(classroom)}
@@ -255,7 +260,15 @@ export function ClassroomsTable({ classrooms, isLoading, canManage, onEdit, onDe
                                                 {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-4 font-bold text-black">{classroom.name}</td>
+                                        <td className="px-4 py-4">
+                                            <span className="inline-flex items-center gap-2 font-bold text-black">
+                                                <span
+                                                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                                    style={{ backgroundColor: classroomColor(classroom.color, classroom.id) }}
+                                                />
+                                                {classroom.name}
+                                            </span>
+                                        </td>
                                         <td className="px-4 py-4 text-darker-grey">
                                             <span className="inline-flex items-center gap-1.5">
                                                 <Users size={15} className="text-darker-grey" />

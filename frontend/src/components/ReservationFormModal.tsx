@@ -16,6 +16,8 @@ import {
     type ConflictResult,
 } from "@/stores/useReservationsStore";
 import { useAuth } from "@/utils/AuthProvider";
+import { classroomColor } from "@/utils/classroomColors";
+import { userColor } from "@/utils/userColors";
 import eden from "@/lib/eden";
 
 type ReservationFormModalProps = {
@@ -30,8 +32,8 @@ type ReservationFormModalProps = {
     onUpdateFuture: (id: string, data: ReservationPatch) => Promise<void>;
 };
 
-type ClassroomOption = { id: string; name: string };
-type OnlineClassroomOption = { id: string; name: string };
+type ClassroomOption = { id: string; name: string; color?: string | null };
+type OnlineClassroomOption = { id: string; name: string; teacher?: { color?: string | null } | null };
 type TeacherOption = { id: string; firstName: string; lastName: string; role?: string | null };
 
 type Form = {
@@ -99,6 +101,9 @@ function formatConflictSpan(item: ConflictItem) {
 }
 
 function conflictItemMessage(item: ConflictItem) {
+    if (item.restricted) {
+        return "This time slot is already reserved.";
+    }
     const span = formatConflictSpan(item);
     if (item.type === "room") {
         return `Room "${item.roomName ?? "selected room"}" is already booked ${span}${item.name ? ` (${item.name})` : ""}.`;
@@ -142,6 +147,7 @@ export function ReservationFormModal({
 
     // The server already scopes the fetched list to the teacher's own classroom.
     const teacherOnlineClassroomId = ownOnlineClassroom?.id ?? onlineClassrooms[0]?.id;
+    const teacherOnlineClassroomName = ownOnlineClassroom?.name ?? onlineClassrooms[0]?.name ?? "Your online classroom";
 
     const durationOptions = useMemo(() => {
         const options = new Set(DURATION_OPTIONS);
@@ -374,6 +380,17 @@ export function ReservationFormModal({
         });
     };
 
+    // A teacher always hosts online classes in their own online classroom. The
+    // classroom list may still be loading when they pick "online", so resolve it
+    // as soon as it becomes available.
+    useEffect(() => {
+        if (!open || isAdmin || form.roomType !== "online") return;
+        const resolvedId = ownOnlineClassroom?.id ?? onlineClassrooms[0]?.id;
+        if (resolvedId && form.onlineClassroomId !== resolvedId) {
+            setForm((current) => ({ ...current, onlineClassroomId: resolvedId }));
+        }
+    }, [open, isAdmin, form.roomType, form.onlineClassroomId, ownOnlineClassroom?.id, onlineClassrooms]);
+
     const toggleId = (field: "studentIds" | "groupIds", id: string) => {
         setForm((current) => ({
             ...current,
@@ -557,8 +574,31 @@ export function ReservationFormModal({
 
                 <div className="flex flex-col gap-3 sm:flex-row">
                     <label className="flex flex-1 flex-col">
-                        <span className="text-sm font-bold text-black">
+                        <span className="inline-flex items-center gap-2 text-sm font-bold text-black">
                             {form.roomType === "classroom" ? "Classroom" : "Online classroom"}
+                            {form.roomType === "classroom" && form.classroomId && (
+                                <span
+                                    className="h-2.5 w-2.5 rounded-full"
+                                    style={{
+                                        backgroundColor: classroomColor(
+                                            classrooms.find((classroom) => classroom.id === form.classroomId)?.color,
+                                            form.classroomId,
+                                        ),
+                                    }}
+                                />
+                            )}
+                            {form.roomType === "online" && form.onlineClassroomId && (
+                                <span
+                                    className="h-2.5 w-2.5 rounded-full"
+                                    style={{
+                                        backgroundColor: userColor(
+                                            isAdmin
+                                                ? onlineClassrooms.find((classroom) => classroom.id === form.onlineClassroomId)?.teacher?.color
+                                                : UserData?.user?.userInfo?.color,
+                                        ),
+                                    }}
+                                />
+                            )}
                         </span>
                         {form.roomType === "classroom" ? (
                             <select
@@ -573,12 +613,11 @@ export function ReservationFormModal({
                                     </option>
                                 ))}
                             </select>
-                        ) : (
+                        ) : isAdmin ? (
                             <select
                                 value={form.onlineClassroomId}
                                 onChange={(event) => setField("onlineClassroomId", event.target.value)}
-                                disabled={!isAdmin}
-                                className={cn(inputClass, !isAdmin && "cursor-not-allowed bg-light-grey text-darker-grey")}
+                                className={inputClass}
                             >
                                 <option value="">Select an online classroom...</option>
                                 {onlineClassroomOptions.map((classroom) => (
@@ -587,6 +626,13 @@ export function ReservationFormModal({
                                     </option>
                                 ))}
                             </select>
+                        ) : (
+                            <div
+                                className={cn(inputClass, "flex cursor-default select-none items-center bg-light-grey text-darker-grey")}
+                                title="You can only host online classes in your own online classroom"
+                            >
+                                <span className="truncate">{teacherOnlineClassroomName}</span>
+                            </div>
                         )}
                     </label>
 

@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { db } from "../db/db";
 import { table } from "../db/schema";
 import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema } from "../models/classroom_reservations";
@@ -39,7 +39,7 @@ function mapReservation(res: any) {
 }
 
 // Hides the details of a class the viewer is not allowed to see. Only the status,
-// whether it recurs and the slot itself remain visible.
+// whether it recurs, the reserved room and the slot itself remain visible.
 function maskReservation(reservation: ReturnType<typeof mapReservation>) {
     return {
         ...reservation,
@@ -48,7 +48,6 @@ function maskReservation(reservation: ReturnType<typeof mapReservation>) {
         teacher: undefined,
         groups: [],
         students: [],
-        classroom: undefined,
         onlineClassroom: undefined,
         restricted: true,
     };
@@ -119,9 +118,11 @@ export const ClassroomReservationsService = {
         const dateWhere = getDateRangeWhere("reservationTime", query.from, query.to);
         const searchWhere = getFuzzySearchWhere(["name"], query.search);
         const viewWhere = this.buildViewWhere(query.view);
-        const onlineWhere = await this.onlineVisibilityWhere(viewer);
+        // The management list is private: a teacher only ever sees their own
+        // reservations, other teachers' classes are not returned at all.
+        const ownerWhere = viewer && !viewer.isAdmin && viewer.id ? { teacherId: viewer.id } : undefined;
 
-        const conditions = [cursorWhere, statusWhere, dateWhere, searchWhere, viewWhere, onlineWhere].filter(Boolean);
+        const conditions = [cursorWhere, statusWhere, dateWhere, searchWhere, viewWhere, ownerWhere].filter(Boolean);
         const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : { AND: conditions }) : undefined;
 
         const data = await db.query.classroomReservations.findMany({
@@ -342,26 +343,28 @@ export const ClassroomReservationsService = {
     },
 
     async startDueReservations() {
-        const now = new Date();
+        // reservationTime is stored as UTC wall-clock in a timestamp column, so
+        // compare it against the UTC wall-clock rather than the session timezone.
         const started = await db
             .update(table.classroomReservations)
-            .set({ status: "ongoing", editedOn: now })
+            .set({ status: "ongoing", editedOn: new Date() })
             .where(and(
                 inArray(table.classroomReservations.status, ["scheduled", "cyclical"]),
-                lte(table.classroomReservations.reservationTime, now),
+                sql`${table.classroomReservations.reservationTime} <= timezone('UTC', now())`,
             ))
             .returning({ id: table.classroomReservations.id });
         return started.length;
     },
 
     async completeFinishedReservations() {
+        // Only finish a class once its full duration has elapsed.
         const completed = await db
             .update(table.classroomReservations)
             .set({ status: "completed", editedOn: new Date() })
             .where(and(
                 eq(table.classroomReservations.status, "ongoing"),
                 isNotNull(table.classroomReservations.durationMinutes),
-                sql`${table.classroomReservations.reservationTime} + (${table.classroomReservations.durationMinutes} * interval '1 minute') <= now()`,
+                sql`${table.classroomReservations.reservationTime} + (${table.classroomReservations.durationMinutes} * interval '1 minute') <= timezone('UTC', now())`,
             ))
             .returning({ id: table.classroomReservations.id });
         return completed.length;

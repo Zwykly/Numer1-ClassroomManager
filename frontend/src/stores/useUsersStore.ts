@@ -15,6 +15,8 @@ type UsersState = {
         createUser: (data: NewUserAccount) => Promise<string | null>;
         patchUser: (id: string, data: UserPatch) => Promise<void>;
         deleteUser: (id: string) => Promise<void>;
+        resetUserPassword: (id: string) => Promise<string | null>;
+        setOwnPassword: (newPassword: string) => Promise<boolean>;
     }
 }
 
@@ -63,7 +65,25 @@ export const useUsersStore = create<UsersState>()((set, get) => ({
             } catch (error) {
                 console.error("Failed to delete user:", error);
             }
-        }
+        },
+        resetUserPassword: async (id: string) => {
+            try {
+                const response = await eden.users({ id }).password.post();
+                return response.data?.password ?? null;
+            } catch (error) {
+                console.error("Failed to reset user password:", error);
+                return null;
+            }
+        },
+        setOwnPassword: async (newPassword: string) => {
+            try {
+                const response = await eden.users.me.password.patch({ newPassword });
+                return !response.error;
+            } catch (error) {
+                console.error("Failed to set password:", error);
+                return false;
+            }
+        },
     }
 }));
 

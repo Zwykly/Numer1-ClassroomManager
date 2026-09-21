@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { clsx as cn } from "clsx";
 import { Modal } from "./common/Modal";
 import { Button } from "./common/Button";
+import { CLASSROOM_COLORS } from "@/utils/classroomColors";
 import type { Classroom, ClassroomPatch, NewClassroom } from "@/stores/useClassroomsStore";
 
 type ClassroomFormModalProps = {
@@ -20,6 +22,7 @@ type Form = {
     maxNumberOfPeople: string;
     status: ClassroomStatus;
     additionalInfo: string;
+    color: string;
 };
 
 const emptyForm: Form = {
@@ -27,6 +30,7 @@ const emptyForm: Form = {
     maxNumberOfPeople: "",
     status: "active",
     additionalInfo: "",
+    color: "",
 };
 
 const inputClass =
@@ -54,6 +58,7 @@ export function ClassroomFormModal({
                     ? (classroom.status as ClassroomStatus)
                     : "active",
                 additionalInfo: classroom.additionalInfo ?? "",
+                color: classroom.color ?? "",
             });
         } else {
             setForm(emptyForm);
@@ -82,6 +87,7 @@ export function ClassroomFormModal({
                 maxNumberOfPeople: capacity,
                 status: form.status,
                 additionalInfo: form.additionalInfo.trim() || null,
+                color: form.color.trim() || null,
             };
 
             if (isEdit && classroom) {
@@ -156,6 +162,49 @@ export function ClassroomFormModal({
                                 </button>
                             );
                         })}
+                    </div>
+                </div>
+
+                <div className="flex flex-col">
+                    <span className="text-sm font-bold text-black">Color</span>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                        {CLASSROOM_COLORS.map((swatch) => {
+                            const isSelected = form.color.toLowerCase() === swatch;
+                            return (
+                                <button
+                                    key={swatch}
+                                    type="button"
+                                    title={swatch}
+                                    onClick={() => setField("color", swatch)}
+                                    className={cn(
+                                        "h-8 w-8 rounded-full border-2 transition",
+                                        isSelected ? "border-black" : "border-transparent hover:border-grey",
+                                    )}
+                                    style={{ backgroundColor: swatch }}
+                                />
+                            );
+                        })}
+                        <label
+                            title="Custom color"
+                            className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-grey text-darker-grey transition hover:border-orange hover:text-orange"
+                        >
+                            <Plus size={16} />
+                            <input
+                                type="color"
+                                value={form.color || "#e07a5f"}
+                                onChange={(event) => setField("color", event.target.value)}
+                                className="absolute inset-0 cursor-pointer opacity-0"
+                            />
+                        </label>
+                        {form.color && (
+                            <button
+                                type="button"
+                                onClick={() => setField("color", "")}
+                                className="text-xs font-bold text-darker-grey transition hover:text-orange"
+                            >
+                                Clear
+                            </button>
+                        )}
                     </div>
                 </div>
 

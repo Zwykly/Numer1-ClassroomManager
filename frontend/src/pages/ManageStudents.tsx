@@ -6,7 +6,6 @@ import { ConfirmModal } from "../components/common/ConfirmModal";
 import { StudentsTable } from "../components/StudentsTable";
 import { StudentAssignGroupModal } from "../components/StudentAssignGroupModal";
 import { StudentClassModal } from "../components/StudentClassModal";
-import { StudentDetailsModal } from "../components/StudentDetailsModal";
 import {
     useStudents,
     useStudentsLoading,
@@ -28,7 +27,6 @@ export function ManageStudents() {
     const [search, setSearch] = useState("");
     const [groupOpen, setGroupOpen] = useState(false);
     const [classOpen, setClassOpen] = useState(false);
-    const [detailsOpen, setDetailsOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
@@ -55,11 +53,6 @@ export function ManageStudents() {
     const openClass = (student: Student) => {
         setSelectedStudent(student);
         setClassOpen(true);
-    };
-
-    const openDetails = (student: Student) => {
-        setSelectedStudent(student);
-        setDetailsOpen(true);
     };
 
     const openDelete = (student: Student) => {
@@ -101,7 +94,6 @@ export function ManageStudents() {
                             students={students}
                             isLoading={isLoading}
                             canManage={isAdmin}
-                            onSelect={openDetails}
                             onAddToClass={openClass}
                             onAddToGroup={openGroup}
                             onModify={openModify}
@@ -120,13 +112,6 @@ export function ManageStudents() {
                 open={classOpen}
                 onOpenChange={setClassOpen}
                 student={selectedStudent}
-            />
-
-            <StudentDetailsModal
-                open={detailsOpen}
-                onOpenChange={setDetailsOpen}
-                student={selectedStudent}
-                isAdmin={isAdmin}
             />
 
             <ConfirmModal

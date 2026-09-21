@@ -1,16 +1,16 @@
 export const CLASSROOM_COLORS = [
-    "#e07a5f",
-    "#d4a373",
-    "#a3b18a",
-    "#81b29a",
-    "#6d9dc5",
-    "#7c90db",
-    "#9d8189",
-    "#b08968",
-    "#8e9aaf",
-    "#c9ada7",
-    "#84a59d",
-    "#e6b89c",
+    "#4a90d9",
+    "#2fa79b",
+    "#5fa845",
+    "#d6a419",
+    "#e07f2e",
+    "#d95f74",
+    "#8a72cf",
+    "#3fa9c4",
+    "#b09b2e",
+    "#d97f7f",
+    "#6f95d9",
+    "#8cbf3f",
 ] as const;
 
 const FALLBACK_COLOR = "hsl(0,0%,62%)";

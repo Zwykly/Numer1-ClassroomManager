@@ -45,6 +45,15 @@ export const selectSimpleUserSchema = t.Omit(_selectUsersSchema,
     ['authId', 'email', 'additionalInfo', 'role']
 );
 
+// Self-service password change
+export const setPasswordSchema = t.Object({
+    newPassword: t.String({ minLength: 8 }),
+});
+
+export const setPasswordResponseSchema = t.Object({
+    success: t.Boolean(),
+});
+
 // Updates
 export const updateUserSchema = t.Composite([t.Omit(_updateUsersSchema, ['id']), associationFields]);
 

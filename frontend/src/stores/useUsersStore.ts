@@ -16,7 +16,7 @@ type UsersState = {
         patchUser: (id: string, data: UserPatch) => Promise<void>;
         deleteUser: (id: string) => Promise<void>;
         resetUserPassword: (id: string) => Promise<string | null>;
-        resetOwnPassword: () => Promise<string | null>;
+        setOwnPassword: (newPassword: string) => Promise<boolean>;
     }
 }
 
@@ -75,15 +75,15 @@ export const useUsersStore = create<UsersState>()((set, get) => ({
                 return null;
             }
         },
-        resetOwnPassword: async () => {
+        setOwnPassword: async (newPassword: string) => {
             try {
-                const response = await eden.users.me.password.post();
-                return response.data?.password ?? null;
+                const response = await eden.users.me.password.patch({ newPassword });
+                return !response.error;
             } catch (error) {
-                console.error("Failed to reset password:", error);
-                return null;
+                console.error("Failed to set password:", error);
+                return false;
             }
-        }
+        },
     }
 }));
 

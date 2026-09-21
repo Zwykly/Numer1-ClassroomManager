@@ -1,7 +1,7 @@
 import { NotFoundError, status } from "elysia";
 import { UsersService } from "../services/users";
 import { UserAccountsService } from "../services/user_accounts";
-import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema, createUserAccountSchema } from "../models/users";
+import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema, createUserAccountSchema, setPasswordSchema } from "../models/users";
 
 export const UsersController = {
     async getAll({ query }: { query: typeof usersQuerySchema.static }) {
@@ -61,6 +61,17 @@ export const UsersController = {
             throw status(500, "Failed to reset password");
         }
         return { password: result.password };
+    },
+
+    async setCurrentPassword({ body, user }: { body: typeof setPasswordSchema.static; user: any }) {
+        const userId = user?.userInfo?.id;
+        if (!userId) throw status(403, "No user profile linked to this session");
+        const result = await UserAccountsService.setPassword(userId, body.newPassword, false);
+        if (!result.ok) {
+            if (result.reason === "USER_NOT_FOUND") throw new NotFoundError("User not found");
+            throw status(500, "Failed to set password");
+        }
+        return { success: true };
     },
 
     async update({ params: { id }, body }: { params: { id: string }, body: typeof updateUserSchema.static }) {

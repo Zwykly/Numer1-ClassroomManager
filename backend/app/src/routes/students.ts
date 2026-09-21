@@ -1,24 +1,48 @@
+import { selectCompositeStudentSchema, paginatedStudentsResponseSchema, selectStudentsBatchResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { studentsController } from "../controllers/students";
-import { insertStudentSchema, selectStudentSchema, updateStudentSchema, removeStudentSchema } from "../models/students"
+import { StudentsController } from "../controllers/students";
+import { createStudentSchema, insertStudentsBatchSchema, updateStudentSchema, patchStudentSchema, studentsQuerySchema } from "../models/students";
+import { authGuard } from "../auth/authGuard";
 
 const studentsRoutes = new Elysia({
     prefix: "/students",
 })
-    .get("/", async () => await studentsController.getAllStudents(), {
-        response: t.Array(selectStudentSchema)
+    .use(authGuard)
+    .get("/", StudentsController.getAll, {
+        query: studentsQuerySchema,
+        response: paginatedStudentsResponseSchema,
+        isAuth: true
     })
-    .post("/", async ({ body }) => await studentsController.createStudent(body), {
-        body: insertStudentSchema,
-        response: selectStudentSchema
+    .get("/:id", StudentsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectCompositeStudentSchema,
+        isAuth: true
     })
-    .put("/", async ({ body }) => await studentsController.updateStudent(body), {
+    .post("/", StudentsController.create, {
+        body: createStudentSchema,
+        response: selectCompositeStudentSchema,
+        isAdmin: true
+    })
+    .post("/batch", StudentsController.createMany, {
+        body: insertStudentsBatchSchema,
+        response: selectStudentsBatchResponseSchema,
+        isAdmin: true
+    })
+    .put("/:id", StudentsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateStudentSchema,
-        response: selectStudentSchema
+        response: selectCompositeStudentSchema,
+        isAdmin: true
     })
-    .delete("/", async ({ body }) => await studentsController.removeStudent(body), {
-        body: removeStudentSchema,
-        response: selectStudentSchema
+    .patch("/:id", StudentsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchStudentSchema,
+        response: selectCompositeStudentSchema,
+        isAdmin: true
+    })
+    .delete("/:id", StudentsController.remove, {
+        params: t.Object({ id: t.String() }),
+        isAdmin: true
     });
 
 export default studentsRoutes;

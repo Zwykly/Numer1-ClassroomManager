@@ -1,24 +1,43 @@
+import { selectCompositeGroupSchema, paginatedGroupsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { groupsController } from "../controllers/groups";
-import { insertGroupSchema, selectGroupSchema, updateGroupSchema, removeGroupSchema } from "../models/groups"
+import { GroupsController } from "../controllers/groups";
+import { createGroupSchema, updateGroupSchema, patchGroupSchema, groupsQuerySchema } from "../models/groups";
+import { authGuard } from "../auth/authGuard";
 
 const groupsRoutes = new Elysia({
     prefix: "/groups",
 })
-    .get("/", async () => await groupsController.getAllGroups(), {
-        response: t.Array(selectGroupSchema)
+    .use(authGuard)
+    .get("/", GroupsController.getAll, {
+        query: groupsQuerySchema,
+        response: paginatedGroupsResponseSchema,
+        isAuth: true
     })
-    .post("/", async ({ body }) => await groupsController.createGroup(body), {
-        body: insertGroupSchema,
-        response: selectGroupSchema
+    .get("/:id", GroupsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectCompositeGroupSchema,
+        isAuth: true
     })
-    .put("/", async ({ body }) => await groupsController.updateGroup(body), {
+    .post("/", GroupsController.create, {
+        body: createGroupSchema,
+        response: selectCompositeGroupSchema,
+        isAuth: true
+    })
+    .put("/:id", GroupsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateGroupSchema,
-        response: selectGroupSchema
+        response: selectCompositeGroupSchema,
+        isAuth: true
     })
-    .delete("/", async ({ body }) => await groupsController.removeGroup(body), {
-        body: removeGroupSchema,
-        response: selectGroupSchema
+    .patch("/:id", GroupsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchGroupSchema,
+        response: selectCompositeGroupSchema,
+        isAuth: true
+    })
+    .delete("/:id", GroupsController.remove, {
+        params: t.Object({ id: t.String() }),
+        isAdmin: true
     });
 
 export default groupsRoutes;

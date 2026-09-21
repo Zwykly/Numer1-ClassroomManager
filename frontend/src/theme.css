@@ -1,0 +1,13 @@
+@theme {
+    --color-orange: hsl(19,97%,51%);
+    --color-white: hsl(0,0%,100%);
+    --color-canvas: hsl(30,14%,97%);
+    --color-light-grey: hsl(0,0%,89%);
+    --color-grey: hsl(0,0%,76%);
+    --color-grid: hsl(0,0%,80%);
+    --color-dark-grey: hsl(0,0%,60%);
+    --color-darker-grey: hsl(0,0%,43%);
+    --color-light-black: hsl(0,0%,15%);
+    --color-black: hsl(0,0%,5%);
+    --font-display: 'Geist', sans-serif;
+}

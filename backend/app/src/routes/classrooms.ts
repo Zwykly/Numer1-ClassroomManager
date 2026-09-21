@@ -1,24 +1,43 @@
+import { selectCompositeClassroomSchema, paginatedClassroomsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { classroomsController } from "../controllers/classrooms";
-import { insertClassroomSchema, selectClassroomSchema, updateClassroomSchema, removeClassroomSchema } from "../models/classrooms"
+import { ClassroomsController } from "../controllers/classrooms";
+import { insertClassroomSchema, updateClassroomSchema, patchClassroomSchema, classroomsQuerySchema } from "../models/classrooms";
+import { authGuard } from "../auth/authGuard";
 
 const classroomsRoutes = new Elysia({
     prefix: "/classrooms",
 })
-    .get("/", async () => await classroomsController.getAllClassrooms(), {
-        response: t.Array(selectClassroomSchema)
+    .use(authGuard)
+    .get("/", ClassroomsController.getAll, {
+        query: classroomsQuerySchema,
+        response: paginatedClassroomsResponseSchema,
+        isAuth: true
     })
-    .post("/", async ({ body }) => await classroomsController.createClassroom(body), {
+    .get("/:id", ClassroomsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectCompositeClassroomSchema,
+        isAuth: true
+    })
+    .post("/", ClassroomsController.create, {
         body: insertClassroomSchema,
-        response: selectClassroomSchema
+        response: selectCompositeClassroomSchema,
+        isAdmin: true
     })
-    .put("/", async ({ body }) => await classroomsController.updateClassroom(body), {
+    .put("/:id", ClassroomsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateClassroomSchema,
-        response: selectClassroomSchema
+        response: selectCompositeClassroomSchema,
+        isAdmin: true
     })
-    .delete("/", async ({ body }) => await classroomsController.removeClassroom(body), {
-        body: removeClassroomSchema,
-        response: selectClassroomSchema
+    .patch("/:id", ClassroomsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchClassroomSchema,
+        response: selectCompositeClassroomSchema,
+        isAdmin: true
+    })
+    .delete("/:id", ClassroomsController.remove, {
+        params: t.Object({ id: t.String() }),
+        isAdmin: true
     });
 
 export default classroomsRoutes;

@@ -1,0 +1,170 @@
+import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
+import { clsx as cn } from "clsx";
+import { Button } from "../components/common/Button";
+import { ConfirmModal } from "../components/common/ConfirmModal";
+import { ReservationsTable } from "../components/ReservationsTable";
+import {
+    useReservations,
+    useReservationsLoading,
+    useReservationsActions,
+    type Reservation,
+    type ReservationView,
+} from "@/stores/useReservationsStore";
+import { useActionModalActions } from "@/stores/useActionModalStore";
+import { useAuth } from "@/utils/AuthProvider";
+
+const FILTERS: { value: ReservationView; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "recurring", label: "Recurring" },
+    { value: "upcoming", label: "Scheduled" },
+    { value: "archived", label: "Archived" },
+];
+
+export function ManageReservations() {
+    const reservations = useReservations();
+    const isLoading = useReservationsLoading();
+    const { fetchReservations, deleteReservation } = useReservationsActions();
+    const { openReservation } = useActionModalActions();
+    const { UserData } = useAuth();
+    const currentUserId = UserData?.user?.userInfo?.id;
+    const isAdmin = UserData?.user?.userInfo?.role === "admin";
+
+    const [view, setView] = useState<ReservationView>("all");
+    const [search, setSearch] = useState("");
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            fetchReservations(view, search.trim() || undefined);
+        }, 300);
+        return () => clearTimeout(timeout);
+    }, [view, search]);
+
+    const recurringCount = reservations.filter(
+        (reservation) => reservation.cycleId || reservation.status === "cyclical",
+    ).length;
+    const upcomingCount = reservations.filter((reservation) => reservation.status === "scheduled").length;
+
+    const openAdd = () => {
+        openReservation();
+    };
+
+    const openModify = (reservation: Reservation) => {
+        openReservation(reservation);
+    };
+
+    const openDelete = (reservation: Reservation) => {
+        setSelectedReservation(reservation);
+        setDeleteOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!selectedReservation) return;
+        try {
+            await deleteReservation(selectedReservation.id);
+            setDeleteOpen(false);
+        } catch (error) {
+            console.error("Failed to delete reservation:", error);
+        }
+    };
+
+    return (
+        <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto overscroll-contain bg-canvas">
+            <div className="flex flex-col px-4 pt-8 pb-10 sm:px-6 lg:px-8 lg:pt-15">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <span className="text-xs font-bold uppercase tracking-[0.2em] text-orange">
+                                Scheduling
+                            </span>
+                            <h1 className="mt-1 text-black font-bold text-3xl sm:text-4xl">Classes</h1>
+                            <p className="mt-2 max-w-xl text-sm text-darker-grey">
+                                Reserve classrooms, schedule recurring classes and keep track of who is attending.
+                            </p>
+                        </div>
+                        <Button variant="primary" className="w-full gap-2 sm:w-auto" onClick={openAdd}>
+                            <Plus size={20} />
+                            Reserve a class
+                        </Button>
+                    </div>
+
+                    <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+                        <div className="flex flex-row flex-wrap items-center gap-2">
+                            {FILTERS.map((filter) => (
+                                <button
+                                    key={filter.value}
+                                    onClick={() => setView(filter.value)}
+                                    className={cn(
+                                        "rounded-xl border px-4 py-2 text-sm font-bold transition",
+                                        view === filter.value
+                                            ? "border-orange bg-orange/10 text-orange"
+                                            : "border-light-grey bg-white text-darker-grey hover:border-grey",
+                                    )}
+                                >
+                                    {filter.label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex flex-row items-center gap-6">
+                            <Stat label="Total" value={reservations.length} />
+                            <div className="h-9 w-px bg-light-grey" />
+                            <Stat label="Recurring" value={recurringCount} accent />
+                            <div className="h-9 w-px bg-light-grey" />
+                            <Stat label="Scheduled" value={upcomingCount} />
+                        </div>
+                    </div>
+
+                    <input
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Search by class name..."
+                        className="mt-5 w-full max-w-sm rounded-xl border border-grey bg-white px-4 py-2 text-black placeholder:text-darker-grey focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30"
+                    />
+
+                    <div className="mt-6">
+                        <ReservationsTable
+                            reservations={reservations}
+                            isLoading={isLoading}
+                            currentUserId={currentUserId}
+                            isAdmin={isAdmin}
+                            groupRecurring={view !== "upcoming"}
+                            onModify={openModify}
+                            onDelete={openDelete}
+                        />
+                    </div>
+                </div>
+
+            <ConfirmModal
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                title="Delete class"
+                message={
+                    selectedReservation
+                        ? `Are you sure you want to delete "${selectedReservation.name || "this class"}"? This cannot be undone.`
+                        : "Are you sure you want to delete this class?"
+                }
+                confirmLabel="Delete"
+                isDestructive
+                onConfirm={confirmDelete}
+            />
+        </div>
+    );
+}
+
+type StatProps = {
+    label: string;
+    value: number;
+    accent?: boolean;
+};
+
+function Stat({ label, value, accent }: StatProps) {
+    return (
+        <div className="flex flex-col">
+            <span className="text-xs font-bold uppercase tracking-wide text-darker-grey">{label}</span>
+            <span className={accent ? "text-2xl font-bold text-orange" : "text-2xl font-bold text-black"}>
+                {value}
+            </span>
+        </div>
+    );
+}

@@ -1,47 +1,39 @@
-import { db } from "..";
-import { insertReservationStudentSchema, updateReservationStudentSchema, removeReservationStudentSchema } from "../models/reservation_students";
-import { table } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { NotFoundError } from "elysia";
+import { ReservationStudentsService } from "../services/reservation_students";
+import { insertReservationStudentSchema, updateReservationStudentSchema, patchReservationStudentSchema, reservationStudentsQuerySchema } from "../models/reservation_students";
 
-const createReservationStudent = async (payload: typeof insertReservationStudentSchema.static) => {
-    const [newReservationStudent] = await db
-        .insert(table.reservationStudents)
-        .values(payload)
-        .returning();
-    return newReservationStudent;
-};
+export const ReservationStudentsController = {
+    async getAll({ query }: { query: typeof reservationStudentsQuerySchema.static }) {
+        return await ReservationStudentsService.getAll(query);
+    },
 
-const getAllReservationStudents = async () => {
-    const reservationStudents = await db
-        .select()
-        .from(table.reservationStudents);
-    return reservationStudents;
-};
+    async getById({ params: { id } }: { params: { id: string } }) {
+        const rs = await ReservationStudentsService.getById(id);
+        if (!rs) throw new NotFoundError( "Reservation Student relation not found");
+        return rs;
+    },
 
-const updateReservationStudent = async (payload: typeof updateReservationStudentSchema.static) => {
-    if (!payload.id) throw new Error("ID is required");
+    async create({ body }: { body: typeof insertReservationStudentSchema.static }) {
+        const created = await ReservationStudentsService.create(body);
+        if (!created) throw new NotFoundError( "Reservation Student relation not found");
+        return created;
+    },
 
-    const [updatedReservationStudent] = await db
-        .update(table.reservationStudents)
-        .set(payload)
-        .where(eq(table.reservationStudents.id, payload.id))
-        .returning();
-    return updatedReservationStudent;
-};
+    async update({ params: { id }, body }: { params: { id: string }, body: typeof updateReservationStudentSchema.static }) {
+        const updated = await ReservationStudentsService.update(id, body);
+        if (!updated) throw new NotFoundError( "Reservation Student relation not found");
+        return updated;
+    },
 
-const removeReservationStudent = async (payload: typeof removeReservationStudentSchema.static) => {
-    const [removedReservationStudent] = await db
-        .delete(table.reservationStudents)
-        .where(eq(table.reservationStudents.id, payload.id))
-        .returning();
-    return removedReservationStudent;
-};
+    async patch({ params: { id }, body }: { params: { id: string }, body: typeof patchReservationStudentSchema.static }) {
+        const patched = await ReservationStudentsService.patch(id, body);
+        if (!patched) throw new NotFoundError( "Reservation Student relation not found");
+        return patched;
+    },
 
-export const reservationStudentsController = {
-    createReservationStudent,
-    getAllReservationStudents,
-    updateReservationStudent,
-    removeReservationStudent,
+    async remove({ params: { id } }: { params: { id: string } }) {
+        const removed = await ReservationStudentsService.remove(id);
+        if (!removed) throw new NotFoundError( "Reservation Student relation not found");
+        return { success: true, reservationStudent: removed };
+    }
 } as const;
-
-export type reservationStudentsController = typeof reservationStudentsController;

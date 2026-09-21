@@ -1,47 +1,39 @@
-import { db } from "..";
-import { insertTeacherGroupSchema, updateTeacherGroupSchema, removeTeacherGroupSchema } from "../models/teacher_groups";
-import { table } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { NotFoundError } from "elysia";
+import { TeacherGroupsService } from "../services/teacher_groups";
+import { insertTeacherGroupSchema, updateTeacherGroupSchema, patchTeacherGroupSchema, teacherGroupsQuerySchema } from "../models/teacher_groups";
 
-const createTeacherGroup = async (payload: typeof insertTeacherGroupSchema.static) => {
-    const [newTeacherGroup] = await db
-        .insert(table.teacherGroups)
-        .values(payload)
-        .returning();
-    return newTeacherGroup;
-};
+export const TeacherGroupsController = {
+    async getAll({ query }: { query: typeof teacherGroupsQuerySchema.static }) {
+        return await TeacherGroupsService.getAll(query);
+    },
 
-const getAllTeacherGroups = async () => {
-    const teacherGroups = await db
-        .select()
-        .from(table.teacherGroups);
-    return teacherGroups;
-};
+    async getById({ params: { id } }: { params: { id: string } }) {
+        const tg = await TeacherGroupsService.getById(id);
+        if (!tg) throw new NotFoundError( "Teacher Group relation not found");
+        return tg;
+    },
 
-const updateTeacherGroup = async (payload: typeof updateTeacherGroupSchema.static) => {
-    if (!payload.id) throw new Error("ID is required");
+    async create({ body }: { body: typeof insertTeacherGroupSchema.static }) {
+        const created = await TeacherGroupsService.create(body);
+        if (!created) throw new NotFoundError( "Teacher Group relation not found");
+        return created;
+    },
 
-    const [updatedTeacherGroup] = await db
-        .update(table.teacherGroups)
-        .set(payload)
-        .where(eq(table.teacherGroups.id, payload.id))
-        .returning();
-    return updatedTeacherGroup;
-};
+    async update({ params: { id }, body }: { params: { id: string }, body: typeof updateTeacherGroupSchema.static }) {
+        const updated = await TeacherGroupsService.update(id, body);
+        if (!updated) throw new NotFoundError( "Teacher Group relation not found");
+        return updated;
+    },
 
-const removeTeacherGroup = async (payload: typeof removeTeacherGroupSchema.static) => {
-    const [removedTeacherGroup] = await db
-        .delete(table.teacherGroups)
-        .where(eq(table.teacherGroups.id, payload.id))
-        .returning();
-    return removedTeacherGroup;
-};
+    async patch({ params: { id }, body }: { params: { id: string }, body: typeof patchTeacherGroupSchema.static }) {
+        const patched = await TeacherGroupsService.patch(id, body);
+        if (!patched) throw new NotFoundError( "Teacher Group relation not found");
+        return patched;
+    },
 
-export const teacherGroupsController = {
-    createTeacherGroup,
-    getAllTeacherGroups,
-    updateTeacherGroup,
-    removeTeacherGroup,
+    async remove({ params: { id } }: { params: { id: string } }) {
+        const removed = await TeacherGroupsService.remove(id);
+        if (!removed) throw new NotFoundError( "Teacher Group relation not found");
+        return { success: true, teacherGroup: removed };
+    }
 } as const;
-
-export type teacherGroupsController = typeof teacherGroupsController;

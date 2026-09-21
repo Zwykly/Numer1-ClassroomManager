@@ -1,28 +1,67 @@
+import { selectCompositeUserSchema, paginatedUsersResponseSchema, createUserAccountResponseSchema, resetPasswordResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { usersController } from "../controllers/users";
-import { insertUserSchema, selectUserSchema, updateUserSchema, removeUserSchema, loginRequestUsersSchema, loginResponseUsersSchema } from "../models/users"
+import { UsersController } from "../controllers/users";
+import { insertUserSchema, updateUserSchema, patchUserSchema, usersQuerySchema, createUserAccountSchema, setPasswordSchema, setPasswordResponseSchema } from "../models/users";
+import { authGuard } from "../auth/authGuard";
 
 const usersRoutes = new Elysia({
     prefix: "/users",
 })
-    .post("/login", async ({ body }) => await usersController.loginUser(body), {
-        body: loginRequestUsersSchema,
-        response: loginResponseUsersSchema
+    .use(authGuard)
+    .get("/", UsersController.getAll, {
+        query: usersQuerySchema,
+        response: paginatedUsersResponseSchema,
+        isAdmin: true
     })
-    .get("/", async () => await usersController.getAllUsers(), {
-        response: t.Array(selectUserSchema)
+    .get("/:id", UsersController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectCompositeUserSchema,
+        isAdmin: true
     })
-    .post("/", async ({ body }) => await usersController.createUser(body), {
+    .get("/auth/:authId", UsersController.getByAuthId, {
+        params: t.Object({ authId: t.String() }),
+        response: selectCompositeUserSchema,
+        isAdmin: true
+    })
+    .post("/", UsersController.create, {
         body: insertUserSchema,
-        response: selectUserSchema
+        response: selectCompositeUserSchema,
+        isAdmin: true
     })
-    .put("/", async ({ body }) => await usersController.updateUser(body), {
+    .post("/account", UsersController.createAccount, {
+        body: createUserAccountSchema,
+        response: createUserAccountResponseSchema,
+        isAdmin: true
+    })
+    .post("/me/password", UsersController.resetCurrentPassword, {
+        response: resetPasswordResponseSchema,
+        isAuth: true
+    })
+    .patch("/me/password", UsersController.setCurrentPassword, {
+        body: setPasswordSchema,
+        response: setPasswordResponseSchema,
+        isAuth: true
+    })
+    .post("/:id/password", UsersController.resetPassword, {
+        params: t.Object({ id: t.String() }),
+        response: resetPasswordResponseSchema,
+        isAdmin: true
+    })
+    .put("/:id", UsersController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateUserSchema,
-        response: selectUserSchema
+        response: selectCompositeUserSchema,
+        isAdmin: true
     })
-    .delete("/", async ({ body }) => await usersController.removeUser(body), {
-        body: removeUserSchema,
-        response: selectUserSchema
+    .patch("/:id", UsersController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchUserSchema,
+        response: selectCompositeUserSchema,
+        isAdmin: true
+    })
+    .delete("/:id", UsersController.remove, {
+        params: t.Object({ id: t.String() }),
+        isAdmin: true
     });
 
 export default usersRoutes;

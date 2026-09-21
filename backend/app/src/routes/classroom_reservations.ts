@@ -1,25 +1,70 @@
-import { Elysia , t} from "elysia";
-import { classroomReservationsController } from "../controllers/classroom_reservations";
-import { insertClassroomReservationSchema, selectClassroomReservationSchema, updateClassroomReservationSchema, removeClassroomReservationSchema} from "../models/classroom_reservations"
+import { selectCompositeClassroomReservationSchema, paginatedClassroomReservationsResponseSchema, recurringClassroomReservationsResponseSchema, calendarClassroomReservationsResponseSchema } from "../models/composite";
+import { Elysia, t } from "elysia";
+import { ClassroomReservationsController } from "../controllers/classroom_reservations";
+import { createClassroomReservationSchema, createRecurringReservationSchema, updateClassroomReservationSchema, patchClassroomReservationSchema, classroomReservationsQuerySchema, calendarReservationsQuerySchema, checkConflictsSchema, conflictResultSchema } from "../models/classroom_reservations";
+import { authGuard } from "../auth/authGuard";
 
 const classroomReservationsRoutes = new Elysia({
     prefix: "/classroom-reservations",
+})
+    .use(authGuard)
+    .get("/", ClassroomReservationsController.getAll, {
+        query: classroomReservationsQuerySchema,
+        response: paginatedClassroomReservationsResponseSchema,
+        isAuth: true
     })
-    .get("/", async () => await classroomReservationsController.getAllClassroomReservations(), {
-        response: t.Array(selectClassroomReservationSchema)
+    .get("/calendar", ClassroomReservationsController.getCalendar, {
+        query: calendarReservationsQuerySchema,
+        response: calendarClassroomReservationsResponseSchema,
+        isAuth: true
     })
-    .post("/", async ({ body }) => await classroomReservationsController.createClassroomReservation(body), {
-        body: insertClassroomReservationSchema,
-        response: selectClassroomReservationSchema
+    .get("/:id", ClassroomReservationsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectCompositeClassroomReservationSchema,
+        isAuth: true
     })
-    .put("/", async ({ body }) => await classroomReservationsController.updateClassroomReservation(body), {
+    .post("/", ClassroomReservationsController.create, {
+        body: createClassroomReservationSchema,
+        response: selectCompositeClassroomReservationSchema,
+        isAuth: true
+    })
+    .post("/conflicts", ClassroomReservationsController.checkConflicts, {
+        body: checkConflictsSchema,
+        response: conflictResultSchema,
+        isAuth: true
+    })
+    .post("/:id/future-conflicts", ClassroomReservationsController.checkFutureConflicts, {
+        params: t.Object({ id: t.String() }),
+        body: patchClassroomReservationSchema,
+        response: conflictResultSchema,
+        isAuth: true
+    })
+    .patch("/:id/future", ClassroomReservationsController.patchFuture, {
+        params: t.Object({ id: t.String() }),
+        body: patchClassroomReservationSchema,
+        response: recurringClassroomReservationsResponseSchema,
+        isAuth: true
+    })
+    .post("/recurring", ClassroomReservationsController.createRecurring, {
+        body: createRecurringReservationSchema,
+        response: recurringClassroomReservationsResponseSchema,
+        isAuth: true
+    })
+    .put("/:id", ClassroomReservationsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateClassroomReservationSchema,
-        response: selectClassroomReservationSchema
+        response: selectCompositeClassroomReservationSchema,
+        isAuth: true
     })
-    .delete("/", async ({ body }) => await classroomReservationsController.removeClassroomReservation(body), {
-        body: removeClassroomReservationSchema,
-        response: selectClassroomReservationSchema
+    .patch("/:id", ClassroomReservationsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchClassroomReservationSchema,
+        response: selectCompositeClassroomReservationSchema,
+        isAuth: true
+    })
+    .delete("/:id", ClassroomReservationsController.remove, {
+        params: t.Object({ id: t.String() }),
+        isAuth: true
     });
-
 
 export default classroomReservationsRoutes;

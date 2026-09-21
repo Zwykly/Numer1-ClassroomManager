@@ -1,24 +1,37 @@
+import { paginatedReservationStudentsResponseSchema } from "../models/composite";
 import { Elysia, t } from "elysia";
-import { reservationStudentsController } from "../controllers/reservation_students";
-import { insertReservationStudentSchema, selectReservationStudentSchema, updateReservationStudentSchema, removeReservationStudentSchema } from "../models/reservation_students"
+import { ReservationStudentsController } from "../controllers/reservation_students";
+import { insertReservationStudentSchema, selectSimpleReservationStudentSchema, updateReservationStudentSchema, patchReservationStudentSchema, reservationStudentsQuerySchema } from "../models/reservation_students";
+import { authGuard } from "../auth/authGuard";
 
 const reservationStudentsRoutes = new Elysia({
     prefix: "/reservation-students",
 })
-    .get("/", async () => await reservationStudentsController.getAllReservationStudents(), {
-        response: t.Array(selectReservationStudentSchema)
+    .use(authGuard)
+    .get("/", ReservationStudentsController.getAll, {
+        query: reservationStudentsQuerySchema,
+        response: paginatedReservationStudentsResponseSchema
     })
-    .post("/", async ({ body }) => await reservationStudentsController.createReservationStudent(body), {
+    .get("/:id", ReservationStudentsController.getById, {
+        params: t.Object({ id: t.String() }),
+        response: selectSimpleReservationStudentSchema
+    })
+    .post("/", ReservationStudentsController.create, {
         body: insertReservationStudentSchema,
-        response: selectReservationStudentSchema
+        response: selectSimpleReservationStudentSchema
     })
-    .put("/", async ({ body }) => await reservationStudentsController.updateReservationStudent(body), {
+    .put("/:id", ReservationStudentsController.update, {
+        params: t.Object({ id: t.String() }),
         body: updateReservationStudentSchema,
-        response: selectReservationStudentSchema
+        response: selectSimpleReservationStudentSchema
     })
-    .delete("/", async ({ body }) => await reservationStudentsController.removeReservationStudent(body), {
-        body: removeReservationStudentSchema,
-        response: selectReservationStudentSchema
+    .patch("/:id", ReservationStudentsController.patch, {
+        params: t.Object({ id: t.String() }),
+        body: patchReservationStudentSchema,
+        response: selectSimpleReservationStudentSchema
+    })
+    .delete("/:id", ReservationStudentsController.remove, {
+        params: t.Object({ id: t.String() }),
     });
 
 export default reservationStudentsRoutes;

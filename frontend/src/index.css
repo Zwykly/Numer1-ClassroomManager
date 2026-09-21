@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+@import "tailwindcss";
+@import "./theme.css";
+@import "./utilities.css";
+@layer base {
+  :root {
+    @apply text-black bg-canvas;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+  }
+
+  html,
+  body,
+  #root {
+    @apply h-full;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overscroll-behavior: none;
+  }
+
+  body {
+    @apply block min-w-[320px] h-full relative m-0 font-display overflow-hidden bg-canvas;
+    overscroll-behavior: none;
+  }
+
+  /* Keep form controls at 16px on mobile so iOS Safari does not auto-zoom on focus. */
+  @media (max-width: 1023px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+}

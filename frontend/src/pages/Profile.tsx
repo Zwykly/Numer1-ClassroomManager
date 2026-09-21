@@ -2,6 +2,7 @@ import { useState } from "react";
 import { KeyRound, Mail, UserRound, Video } from "lucide-react";
 import { clsx as cn } from "clsx";
 import { Button } from "../components/common/Button";
+import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { useUsersActions } from "@/stores/useUsersStore";
 import { useAuth } from "@/utils/AuthProvider";
 import { userColor } from "@/utils/userColors";
@@ -12,18 +13,12 @@ const roleStyles: Record<string, string> = {
     pending: "bg-amber-500/10 text-amber-700",
 };
 
-const inputClass =
-    "mt-1 w-full rounded-xl border border-grey bg-white px-3 py-2 text-black placeholder:text-darker-grey focus:border-orange focus:outline-none focus:ring-2 focus:ring-orange/30";
-
 export function Profile() {
     const { UserData } = useAuth();
     const { setOwnPassword } = useUsersActions();
     const userInfo = UserData?.user?.userInfo;
 
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [isSaving, setIsSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [passwordOpen, setPasswordOpen] = useState(false);
     const [success, setSuccess] = useState<string | null>(null);
 
     const firstName = userInfo?.firstName ?? UserData?.user?.name?.split(" ")[0] ?? "";
@@ -31,35 +26,11 @@ export function Profile() {
     const fullName = `${firstName} ${lastName}`.trim() || "Your account";
     const role = userInfo?.role ?? "teacher";
 
-    const canSubmit = newPassword.trim().length >= 8 && newPassword === confirmPassword && !isSaving;
-
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault();
-        setError(null);
+    const handleReset = async (newPassword: string) => {
         setSuccess(null);
-
-        if (newPassword.trim().length < 8) {
-            setError("Password must be at least 8 characters long.");
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            setError("The passwords do not match.");
-            return;
-        }
-
-        setIsSaving(true);
-        try {
-            const ok = await setOwnPassword(newPassword);
-            if (!ok) {
-                setError("Could not update your password. Please try again.");
-                return;
-            }
-            setNewPassword("");
-            setConfirmPassword("");
-            setSuccess("Your password has been updated.");
-        } finally {
-            setIsSaving(false);
-        }
+        const ok = await setOwnPassword(newPassword);
+        if (ok) setSuccess("Your password has been updated.");
+        return ok;
     };
 
     return (
@@ -116,62 +87,36 @@ export function Profile() {
                         )}
                     </div>
 
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t border-light-grey pt-6">
+                    <div className="flex flex-col gap-3 border-t border-light-grey pt-6">
                         <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-darker-grey">
                             <KeyRound size={14} />
                             Password
                         </span>
                         <p className="text-sm text-darker-grey">
-                            Choose a new password for your account. It must be at least 8 characters long.
+                            Change the password you use to sign in to Classroom Manager.
                         </p>
-
-                        <label className="flex flex-col">
-                            <span className="text-sm font-bold text-black">New password</span>
-                            <input
-                                type="password"
-                                autoComplete="new-password"
-                                value={newPassword}
-                                onChange={(event) => setNewPassword(event.target.value)}
-                                placeholder="At least 8 characters"
-                                className={inputClass}
-                            />
-                        </label>
-
-                        <label className="flex flex-col">
-                            <span className="text-sm font-bold text-black">Confirm new password</span>
-                            <input
-                                type="password"
-                                autoComplete="new-password"
-                                value={confirmPassword}
-                                onChange={(event) => setConfirmPassword(event.target.value)}
-                                placeholder="Repeat the new password"
-                                className={inputClass}
-                            />
-                        </label>
-
-                        {error && (
-                            <p className="rounded-xl bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700">
-                                {error}
-                            </p>
-                        )}
                         {success && (
                             <p className="rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700">
                                 {success}
                             </p>
                         )}
-
                         <Button
-                            type="submit"
                             variant="primary"
                             className="w-full gap-2 sm:w-auto"
-                            disabled={!canSubmit}
+                            onClick={() => setPasswordOpen(true)}
                         >
                             <KeyRound size={18} />
-                            {isSaving ? "Saving..." : "Save password"}
+                            Change password
                         </Button>
-                    </form>
+                    </div>
                 </div>
             </div>
+
+            <ChangePasswordModal
+                open={passwordOpen}
+                onOpenChange={setPasswordOpen}
+                onReset={handleReset}
+            />
         </div>
     );
 }

@@ -40,6 +40,9 @@ export const createUserAccountResponseSchema = t.Object({
     user: selectCompositeUserSchema,
     password: t.String(),
 });
+export const resetPasswordResponseSchema = t.Object({
+    password: t.String(),
+});
 
 // --- Students ---
 export const selectCompositeStudentSchema = t.Composite([

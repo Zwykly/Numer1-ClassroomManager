@@ -12,12 +12,16 @@ type UserCredentialsModalProps = {
         email: string;
         password: string;
     } | null;
+    title?: string;
+    description?: string;
 };
 
 export function UserCredentialsModal({
     open,
     onOpenChange,
     credentials,
+    title = "Account created",
+    description = "Share these credentials with the user. The password is only shown once.",
 }: UserCredentialsModalProps) {
     const [copied, setCopied] = useState(false);
 
@@ -47,8 +51,8 @@ export function UserCredentialsModal({
         <Modal
             open={open}
             onOpenChange={onOpenChange}
-            title="Account created"
-            description="Share these credentials with the user. The password is only shown once."
+            title={title}
+            description={description}
             className="max-w-md"
         >
             {credentials && (

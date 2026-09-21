@@ -43,6 +43,26 @@ export const UsersController = {
         return { user: result.user, password: result.password };
     },
 
+    async resetPassword({ params: { id } }: { params: { id: string } }) {
+        const result = await UserAccountsService.resetPassword(id, true);
+        if (!result.ok) {
+            if (result.reason === "USER_NOT_FOUND") throw new NotFoundError("User not found");
+            throw status(500, "Failed to reset password");
+        }
+        return { password: result.password };
+    },
+
+    async resetCurrentPassword({ user }: { user: any }) {
+        const userId = user?.userInfo?.id;
+        if (!userId) throw status(403, "No user profile linked to this session");
+        const result = await UserAccountsService.resetPassword(userId, false);
+        if (!result.ok) {
+            if (result.reason === "USER_NOT_FOUND") throw new NotFoundError("User not found");
+            throw status(500, "Failed to reset password");
+        }
+        return { password: result.password };
+    },
+
     async update({ params: { id }, body }: { params: { id: string }, body: typeof updateUserSchema.static }) {
         const updated = await UsersService.update(id, body);
         if (!updated) throw new NotFoundError( "User not found");

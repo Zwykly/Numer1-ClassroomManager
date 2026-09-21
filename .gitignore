@@ -1,0 +1,6 @@
+# Local environment files (compose reads .env)
+.env
+.env.local
+.env.*.local
+
+.DS_Store

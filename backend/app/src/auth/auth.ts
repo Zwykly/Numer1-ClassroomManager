@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 import { insertUserSchema, selectSimpleUserSchema } from "../models/users";
 import { UsersService } from "../services/users";
 import { openAPI } from "better-auth/plugins";
+import { getAllowedHosts, getAllowedOrigins } from "../utils/origins";
 
 type InsertUserPayload = typeof insertUserSchema.static;
 
@@ -19,29 +20,10 @@ export const auth = betterAuth({
         schema: auth_schema,
     }),
     baseURL: {
-        allowedHosts: [
-            "localhost",
-            "localhost:*",
-            "127.0.0.1",
-            "127.0.0.1:*",
-            "192.168.*",
-            "10.*",
-            "172.*",
-            "zwykly.duckdns.org",
-            "zwykly.duckdns.org:*",
-        ],
-        fallback: "http://localhost:3000",
+        allowedHosts: getAllowedHosts(),
+        fallback: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
     },
-    trustedOrigins: [
-        "http://localhost:3030",
-        "http://zwykly.duckdns.org",
-        "http://zwykly.duckdns.org:3030",
-        "http://localhost:*",
-        "http://127.0.0.1:*",
-        "http://192.168.*",
-        "http://10.*",
-        "http://172.*",
-    ],
+    trustedOrigins: getAllowedOrigins(),
     emailAndPassword: {
         enabled: true,
     },

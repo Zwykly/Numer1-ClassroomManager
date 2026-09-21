@@ -5,14 +5,13 @@ import { auth } from "./auth/auth";
 export { db } from "./db/db";
 import { cors } from "@elysiajs/cors";
 import { startReservationStatusJob } from "./jobs/reservation_status";
-
-const localNetworkOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|zwykly\.duckdns\.org)(:\d+)?$/;
+import { isOriginAllowed } from "./utils/origins";
 
 const app = new Elysia()
   .mount(auth.handler)
   .use(openapi())
   .use(cors({
-    origin: localNetworkOrigin,
+    origin: (request: Request) => isOriginAllowed(request.headers.get("origin")),
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"]
